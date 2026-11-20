@@ -150,7 +150,8 @@
       "src": "images/entrevistas/fabricio-borges.webp",
       "alt": "Retrato de Fabrício Borges",
       "w": 502,
-      "h": 628
+      "h": 628,
+      "focus": "54% 15%"
     },
     "quote": "",
     "highlight": "",
@@ -257,7 +258,8 @@
       "src": "images/entrevistas/miliano.webp",
       "alt": "Retrato de Miliano",
       "w": 454,
-      "h": 568
+      "h": 568,
+      "focus": "50% 48%"
     },
     "quote": "",
     "highlight": "",
@@ -285,7 +287,8 @@
       "src": "images/entrevistas/nana-coloral.webp",
       "alt": "Retrato de Nana Coloral",
       "w": 960,
-      "h": 1200
+      "h": 1200,
+      "focus": "60% 8%"
     },
     "quote": "",
     "highlight": "",
@@ -336,7 +339,8 @@
       "src": "images/entrevistas/soulra.webp",
       "alt": "Retrato de Soulra",
       "w": 960,
-      "h": 1200
+      "h": 1200,
+      "focus": "50% 0%"
     },
     "quote": "",
     "highlight": "",
