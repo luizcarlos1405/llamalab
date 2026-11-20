@@ -4,7 +4,7 @@ import { esc, excerpt, stripMarkdown, isUpcoming, eventEnd, eventStop } from '..
 import { SITE } from '../config.js';
 import { createContext, pageContext } from './context.js';
 import {
-  homePage, agendaPage, eventPage, newsListPage, newsPage, interviewsPage, interviewPage, sobrePage, contratePage, notFoundPage,
+  homePage, agendaPage, eventPage, newsListPage, newsPage, interviewsPage, interviewPage, sobrePage, contratePage, notFoundPage, offlinePage,
 } from './pages.js';
 
 // Every page as { path, html }, plus the sitemap, feed and calendar files.
@@ -26,8 +26,8 @@ export function renderSite(data, opts) {
   page('sobre/index.html', sobrePage);
   page('contrate/index.html', contratePage);
 
-  // GitHub Pages serves 404.html at whatever URL was asked for, so its links
-  // must be absolute paths.
+  // GitHub Pages serves 404.html at whatever URL was asked for, and the service worker
+  // does the same with offline.html, so their links must be absolute paths.
   const base = new URL(`${ctx.siteUrl}/`).pathname;
   const anywhere = (path) => {
     const P = pageContext(ctx, path);
@@ -37,6 +37,7 @@ export function renderSite(data, opts) {
     return P;
   };
   files.push({ path: '404.html', html: notFoundPage(anywhere('404.html')) });
+  files.push({ path: 'offline.html', html: offlinePage(anywhere('offline.html')) });
 
   files.push({ path: 'sitemap.xml', html: sitemap(ctx, files) });
   files.push({ path: 'feed.xml', html: feed(ctx) });

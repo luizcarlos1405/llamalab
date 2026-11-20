@@ -56,6 +56,7 @@ export async function build({ siteUrl = process.env.SITE_URL || SITE.defaultUrl,
   }
   await fs.writeFile(path.join(OUT, '.nojekyll'), '');
   await fs.writeFile(path.join(OUT, 'version.json'), `${JSON.stringify({ sha: process.env.GITHUB_SHA || 'local', builtAt: new Date().toISOString(), today }, null, 2)}\n`);
+  await writeWorker(version);
 
   if (!quiet) {
     for (const w of warnings) console.warn(`warning: ${w}`);
@@ -160,6 +161,48 @@ export function readImageSize(buf) {
     }
   }
   return null;
+}
+
+// The service worker (src/sw.js) with the files it may keep for offline use, by pack, each
+// with a hash of its content: a new version only downloads what changed.
+//   base   every visitor: the CSS, scripts and fonts, the offline page, the home page, the agenda
+//   site   the installed app: every other page, the events' .ics files, every image
+//   admin  editors: the admin's page, modules, styles and fonts
+const BASE = ['assets/site.css', 'assets/site.js', 'assets/radio.js', 'assets/favicon.svg', 'assets/fonts/anton-400.woff2', 'assets/fonts/outfit-300-800.woff2'];
+const ADMIN = ['assets/admin.css', 'assets/fonts.css', 'assets/fonts/bagel-fat-one-400.woff2', 'assets/icons/admin-192.png'];
+
+async function writeWorker(assets) {
+  await fs.rm(path.join(OUT, 'src/sw.js'), { force: true });
+  const entries = [];
+  const add = async (u, file, p) => {
+    const content = await fs.readFile(path.join(OUT, file));
+    entries.push({ u, r: crypto.createHash('sha256').update(content).digest('hex').slice(0, 12), p });
+  };
+  for (const file of await listFiles(OUT)) {
+    if (file === 'index.html') await add('./', file, 'base');
+    else if (file === 'agenda/index.html') await add('agenda/', file, 'base');
+    else if (file === 'offline.html' || BASE.includes(file)) await add(file, file, 'base');
+    else if (file.endsWith('/index.html')) await add(file.slice(0, -'index.html'.length), file, 'site');
+    else if (/^agenda\/[^/]+\/evento\.ics$/.test(file) || /^images\/.+\.(webp|png|jpe?g|gif)$/i.test(file)) await add(file, file, 'site');
+    else if (file === 'admin.html') await add('admin', file, 'admin');
+    else if ((file.startsWith('src/') && file.endsWith('.js')) || ADMIN.includes(file)) await add(file, file, 'admin');
+  }
+  const template = await fs.readFile(path.join(ROOT, 'src/sw.js'), 'utf8');
+  const versionOf = crypto.createHash('sha256').update(template).update(JSON.stringify(entries)).digest('hex').slice(0, 10);
+  const line = `const BUILD = ${JSON.stringify({ version: versionOf, assets, files: entries })};`;
+  const worker = template.replace(/^const BUILD = .*$/m, () => line);
+  if (worker === template) throw new Error('src/sw.js: the "const BUILD = …" line is missing');
+  await fs.writeFile(path.join(OUT, 'sw.js'), worker);
+}
+
+async function listFiles(dir, prefix = '') {
+  const out = [];
+  for (const entry of await fs.readdir(path.join(dir, prefix), { withFileTypes: true })) {
+    const rel = prefix ? `${prefix}/${entry.name}` : entry.name;
+    if (entry.isDirectory()) out.push(...await listFiles(dir, rel));
+    else out.push(rel);
+  }
+  return out.sort();
 }
 
 // Short hash of the CSS/JS so browsers fetch new versions after a deploy.

@@ -409,3 +409,21 @@ export function notFoundPage(P) {
 </section>`;
   return layout(P, { title: 'Página não encontrada', main, cta: false });
 }
+
+// What the service worker (src/sw.js) shows offline for a page this device hasn't saved, at
+// whatever address was asked for: its links are absolute paths, like the 404's.
+export function offlinePage(P) {
+  const main = `<section class="nf404">
+  ${stage()}
+  <div style="position:relative;z-index:2">
+    <p class="eyebrow"><span class="off" aria-hidden="true"></span>Sem internet</p>
+    <h1 class="h2 m" data-split>${split('Sem sinal por aqui.')}</h1>
+    <p class="lead" style="margin:24px 0 30px;max-width:520px">Essa página ainda não foi salva neste aparelho. Quando a conexão voltar, ela abre normalmente.</p>
+    <div class="btns"><button class="btn btn-solid" type="button" data-retry>Tentar de novo <span class="arr" aria-hidden="true">↻</span></button><a class="btn btn-ghost" href="${P.href('agenda/')}">Ver a agenda</a></div>
+    <p class="saved">A capa, a agenda e as páginas que você já abriu funcionam sem internet. <b data-app-note>Com o app instalado, o site inteiro.</b></p>
+  </div>
+  <div class="lla"><div class="glow"></div>${llama('')}</div>
+  <div class="noise"></div>
+</section>`;
+  return layout(P, { title: 'Sem internet', main, cta: false, bodyClass: 'offline-page', head: '<meta name="robots" content="noindex">' });
+}

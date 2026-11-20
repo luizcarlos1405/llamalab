@@ -84,10 +84,19 @@
     toastTimer = setTimeout(() => toastEl.classList.remove('on'), 2400);
   };
 
+  // the site opened as an installed app (from the home screen), not in a browser tab
+  const installed = () => matchMedia('(display-mode: standalone), (display-mode: fullscreen), (display-mode: minimal-ui), (display-mode: window-controls-overlay)').matches || navigator.standalone === true;
+
   function mount() {
     /* events that already ended (the daily rebuild also moves them) */
     $$('[data-until]').forEach((el) => {
       if (el.dataset.until < today) el.remove();
+    });
+
+    /* the offline page, which the service worker shows for pages this device hasn't saved */
+    $$('[data-retry]').forEach((btn) => btn.addEventListener('click', () => location.reload()));
+    $$('[data-app-note]').forEach((el) => {
+      el.hidden = installed();
     });
 
     /* reveal on scroll */
@@ -506,6 +515,39 @@
   addEventListener('resize', wake);
   d.addEventListener('pointermove', wake, { passive: true });
   wake();
+
+  /* Offline: the service worker (sw.js, built from src/sw.js) keeps the base files and the
+     pages and images opened along the way. ?sw=off in the address removes it and what it
+     saved, in this browser, until ?sw=on. */
+  const SW_KEY = 'llamalab:sw';
+  (() => {
+    if (!('serviceWorker' in navigator) || html.hasAttribute('data-preview')) return;
+    let off = false;
+    try {
+      const m = /[?&]sw=(on|off)\b/.exec(location.search);
+      if (m && m[1] === 'off') localStorage.setItem(SW_KEY, 'off');
+      if (m && m[1] === 'on') localStorage.removeItem(SW_KEY);
+      off = localStorage.getItem(SW_KEY) === 'off';
+    } catch { /* storage blocked: keep the worker */ }
+    if (off) {
+      navigator.serviceWorker.getRegistrations().then((regs) => regs.forEach((r) => r.unregister()));
+      if (window.caches) caches.keys().then((names) => names.filter((n) => n.startsWith('llamalab-')).forEach((n) => caches.delete(n)));
+      return;
+    }
+    // A page that loaded before the worker ran (the first visit) tells it about itself and its
+    // images, so the page someone arrived on stays readable too.
+    const arrived = !navigator.serviceWorker.controller;
+    const register = () => navigator.serviceWorker.register(`${root()}sw.js`)
+      .then(() => arrived && navigator.serviceWorker.ready)
+      .then((reg) => {
+        if (!reg || !reg.active) return;
+        const images = $$('img').filter((im) => im.complete && im.naturalWidth).map((im) => im.currentSrc || im.src);
+        reg.active.postMessage({ type: 'seen', urls: [location.href, ...images] });
+      })
+      .catch(() => { /* no offline copy: the site works as before */ });
+    if (d.readyState === 'complete') register();
+    else addEventListener('load', register, { once: true });
+  })();
 
   /* From page to page without reloading, once the radio is on (radio.js adds radio-on
      to <html> when Spotify's player exists), so the music keeps going. The new page's
