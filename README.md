@@ -35,7 +35,9 @@ data/*.json, images/  ──>  scripts/build.mjs  ──>  _site/  ──>  GitH
 ## Motion on slower phones
 
 The stage (beams, grain, the swaying llama, the flowing ribbons) is built to move without
-redrawing: only transforms and opacity animate. Devices that still can't keep up get a lighter
+redrawing: only transforms and opacity animate. Its shrinking and dimming as the page scrolls is a CSS
+scroll-driven animation where the browser has them (Chrome, Edge, Safari 26), so it keeps pace with the
+finger on phones; elsewhere `site.js` does it. Phones get no blur behind the nav and the pill. Devices that still can't keep up get a lighter
 version: for a few seconds after a page opens, [`assets/site.js`](assets/site.js) watches how often
 frames come, and if they come slowly it adds `lite` to `<html>`. Lite has no grain, no blur behind the
 nav and the "Próximo rolê" pill, still llama details, and ribbons that move only with the scroll. The
