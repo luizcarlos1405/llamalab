@@ -316,7 +316,7 @@ export function interviewsPage(P) {
       ${feat.summary ? `<p class="lead" style="margin-top:22px;max-width:620px">${esc(excerpt(feat.summary, 260))}</p>` : ''}
       <div class="btns" style="margin-top:28px"><a class="btn btn-k" href="${interviewUrl(P, feat)}">Ler a entrevista <span class="arr">→</span></a></div>
     </div>
-    <a href="${interviewUrl(P, feat)}" class="media-glow" aria-label="${esc(feat.title)}"><div class="media cover">${feat.photo ? img(P, feat.photo, { cls: 'bw' }) : ''}<span class="num">${esc(interviewNo(P, feat))}</span></div></a>
+    <a href="${interviewUrl(P, feat)}" class="media-glow" aria-label="${esc(feat.title)}"><div class="media cover">${feat.photo ? img(P, feat.photo) : ''}<span class="num">${esc(interviewNo(P, feat))}</span></div></a>
   </div>` : `<div class="empty"><p class="h3">Nenhuma entrevista por enquanto.</p><a class="btn btn-k" href="${esc(rolêLink(P, 'interview'))}" target="_blank" rel="noopener">Quero dar entrevista <span class="arr">→</span></a></div>`;
   const main = `${pageHero(P, { crumbs: [['Entrevistas']], eyebrow: 'Entrevistas', title: 'Backstage', titleClass: 'outline', lead: 'Papo reto com quem faz a cultura de Dourados acontecer: música, rap, teatro, circo, artes visuais e o que mais vier.' })}
 <section class="panel light sec"><div class="wrap">
@@ -342,7 +342,7 @@ export function interviewPage(P, it) {
       ${it.role ? `<p class="lead" data-r style="--d:150ms;margin-top:22px">${esc(it.name)}${it.name ? ' — ' : ''}${esc(it.role)}</p>` : ''}
       <p class="byline">${[it.author && `por ${esc(it.author)}`, esc(fmtLong(it.date))].filter(Boolean).join(' · ')}</p>
     </div>
-    ${it.photo && it.photo.src ? `<div class="media-glow" data-r style="--d:200ms"><div class="media cover">${img(P, it.photo, { cls: 'bw', eager: true })}<span class="num">${esc(interviewNo(P, it))}</span></div></div>` : ''}
+    ${it.photo && it.photo.src ? `<div class="media-glow" data-r style="--d:200ms"><div class="media cover">${img(P, it.photo, { eager: true })}<span class="num">${esc(interviewNo(P, it))}</span></div></div>` : ''}
   </div>
   <div class="noise"></div>
 </section>`;

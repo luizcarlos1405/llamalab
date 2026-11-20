@@ -268,7 +268,7 @@ export function interviewNo(P, it) {
 }
 
 export function card(P, it, { feat = false, tag = 'h3', reveal = false, i = 0 } = {}) {
-  const photo = it.photo && it.photo.src ? img(P, it.photo, { cls: 'bw', alt: '' }) : llamaFallback();
+  const photo = it.photo && it.photo.src ? img(P, it.photo, { alt: '' }) : llamaFallback();
   const text = it.quote ? `<q>${esc(excerpt(it.quote, 140))}</q>` : `<p class="sum">${esc(excerpt(it.summary || stripMarkdown(it.body), 150))}</p>`;
   const role = [it.area, it.role && excerpt(it.role, 60)].filter(Boolean).join(' · ');
   return `<a class="card${feat ? ' feat' : ''}" href="${interviewUrl(P, it)}" data-cat="${esc(slugify(it.area || 'papo'))}"${reveal ? ` data-r style="--d:${(i % 3) * 90}ms"` : ''}>
