@@ -411,6 +411,12 @@
       if (!res.ok && res.status !== 404) throw new Error(`HTTP ${res.status}`);
       if (!(res.headers.get('content-type') || '').includes('text/html')) throw new Error('not a page');
       doc = new DOMParser().parseFromString(await res.text(), 'text/html');
+      if (res.redirected && res.url) {
+        // e.g. a folder without its final slash: the address must be the page's real one
+        const hash = url.hash;
+        url = new URL(res.url);
+        url.hash = hash;
+      }
     } catch (error) {
       if (error.name !== 'AbortError') location.assign(url.href);
       return;
