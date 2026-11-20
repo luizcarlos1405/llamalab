@@ -107,6 +107,19 @@
     rest = new IntersectionObserver((entries) => entries.forEach((e) => e.target.classList.toggle('rest', !e.isIntersecting)), { rootMargin: '120px 0px' });
     $$('.hero,.phero,.nf404,.llama,.magnet').forEach((el) => rest.observe(el));
 
+    /* videos are their thumbnail until someone presses play: YouTube's player loads then */
+    $$('.video .yt[data-yt]').forEach((link) => link.addEventListener('click', (e) => {
+      const id = link.dataset.yt;
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.button || !/^[\w-]{11}$/.test(id)) return;
+      e.preventDefault();
+      const frame = d.createElement('iframe');
+      frame.src = `https://www.youtube-nocookie.com/embed/${id}?autoplay=1`;
+      frame.title = link.getAttribute('aria-label') || 'Vídeo';
+      frame.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+      frame.allowFullscreen = true;
+      link.replaceWith(frame);
+    }));
+
     /* spotlight follows the pointer on dark heroes */
     $$('.hero,.phero,.nf404').forEach((stage) => {
       const target = $('.hero-in', stage) || stage;
