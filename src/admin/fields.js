@@ -7,6 +7,7 @@ import { slugify } from '../util.js';
 import { renderMarkdown } from '../markdown.js';
 import { h, add, dialog, toast, formatBytes } from './dom.js';
 import { processImage, cropDialog, slotInfo, extFor, ACCEPT } from './images.js';
+import { IMAGE_SLOTS } from '../config.js';
 import * as store from './store.js';
 
 let uid = 0;
@@ -346,8 +347,10 @@ function imageField(field, get, set, ctx) {
       : `${v.w || '?'}×${v.h || '?'} px · publicada`;
     const alt = h('input', { type: 'text', value: v.alt || '', placeholder: 'Ex.: Banda tocando no palco do Galpão 7', oninput: () => set({ ...get(), alt: alt.value }) });
     const credit = slot === 'noticia' ? h('input', { type: 'text', value: v.credit || '', placeholder: 'Nome de quem fotografou', oninput: () => { const next = { ...get(), credit: credit.value }; if (!credit.value) delete next.credit; set(next); } }) : null;
+    const thumb = h('div', { class: 'img-thumb' }, h('img', { src: store.assetUrl(v.src) || '', alt: '', draggable: 'false' }));
+    const frame = framing(slot, thumb, get, set);
     box.append(h('div', { class: `img-card ${slot}` },
-      h('div', { class: 'img-thumb' }, h('img', { src: store.assetUrl(v.src) || '', alt: '' })),
+      thumb,
       h('div', { class: 'img-meta' },
         h('span', { class: 'img-info' }, info),
         h('div', { class: 'img-actions' },
@@ -355,10 +358,90 @@ function imageField(field, get, set, ctx) {
           originals.get(box) && slot !== 'flyer' ? h('button', { type: 'button', class: 'btn btn-ghost btn-sm', onclick: recrop }, 'Ajustar recorte') : null,
           h('button', { type: 'button', class: 'btn btn-ghost btn-sm danger', onclick: () => { set(null); render(); } }, 'Remover')),
         h('label', { class: 'mini' }, h('span', null, 'Descrição da imagem (para quem usa leitor de tela)'), alt),
-        credit ? h('label', { class: 'mini' }, h('span', null, 'Crédito da foto'), credit) : null)));
+        credit ? h('label', { class: 'mini' }, h('span', null, 'Crédito da foto'), credit) : null)), frame);
   }
   render();
   return box;
+}
+
+/* ---------- framing in the site's cards ---------- */
+
+const clampPct = (n) => Math.max(0, Math.min(100, Math.round(n)));
+const parseFocus = (f) => {
+  const m = /^(\d+(?:\.\d+)?)% (\d+(?:\.\d+)?)%$/.exec(String(f || ''));
+  return m ? [+m[1], +m[2]] : null;
+};
+
+// Cards on the site show some photos in other shapes (IMAGE_SLOTS[slot].cards), cropped
+// around the photo's `focus` point. A tap or drag on the photo's thumbnail moves that
+// point, and previews show the cards as they'll be. Returns the previews, or null when
+// the slot has no cards.
+function framing(slot, thumb, get, set) {
+  const conf = IMAGE_SLOTS[slot];
+  if (!conf || !conf.cards) return null;
+  const fallback = parseFocus(conf.focus) || [50, 50];
+  let point = parseFocus(get().focus) || fallback;
+  const src = store.assetUrl(get().src) || '';
+  const dot = h('span', { class: 'fr-dot', 'aria-hidden': 'true' });
+  const previews = conf.cards.map((c) => h('figure', { class: 'fr-card' },
+    h('div', { class: 'fr-box', style: { aspectRatio: String(c.ratio) } }, h('img', { src, alt: '' })),
+    h('figcaption', null, c.label)));
+  const reset = h('button', { type: 'button', class: 'btn btn-ghost btn-sm', hidden: !get().focus }, 'Voltar ao padrão');
+  const paint = () => {
+    dot.style.left = `${point[0]}%`;
+    dot.style.top = `${point[1]}%`;
+    previews.forEach((f) => { f.querySelector('img').style.objectPosition = `${point[0]}% ${point[1]}%`; });
+    thumb.setAttribute('aria-label', `Ponto que os cards sempre mostram: ${point[0]}% da esquerda, ${point[1]}% do alto. Toque na foto ou use as setas para mudar.`);
+  };
+  const commit = () => {
+    set({ ...get(), focus: `${point[0]}% ${point[1]}%` });
+    reset.hidden = false;
+  };
+  const moveTo = (e) => {
+    const r = thumb.getBoundingClientRect();
+    point = [clampPct(((e.clientX - r.left) / r.width) * 100), clampPct(((e.clientY - r.top) / r.height) * 100)];
+    paint();
+  };
+  thumb.classList.add('fr-pick');
+  thumb.tabIndex = 0;
+  thumb.setAttribute('role', 'button');
+  thumb.append(dot);
+  thumb.addEventListener('pointerdown', (e) => {
+    thumb.setPointerCapture(e.pointerId);
+    thumb.classList.add('on');
+    moveTo(e);
+  });
+  thumb.addEventListener('pointermove', (e) => {
+    if (thumb.hasPointerCapture(e.pointerId)) moveTo(e);
+  });
+  const release = () => {
+    if (!thumb.classList.contains('on')) return;
+    thumb.classList.remove('on');
+    commit();
+  };
+  thumb.addEventListener('pointerup', release);
+  thumb.addEventListener('pointercancel', release);
+  thumb.addEventListener('keydown', (e) => {
+    const step = e.shiftKey ? 1 : 5;
+    const d = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] }[e.key];
+    if (!d) return;
+    e.preventDefault();
+    point = [clampPct(point[0] + d[0]), clampPct(point[1] + d[1])];
+    paint();
+    commit();
+  });
+  reset.addEventListener('click', () => {
+    const next = { ...get() };
+    delete next.focus;
+    set(next);
+    point = fallback;
+    reset.hidden = true;
+    paint();
+  });
+  paint();
+  return h('div', { class: 'framing' },
+    h('p', { class: 'fr-head' }, h('b', null, 'Nos cards'), ' Os cards da capa e da lista cortam a foto. Toque na foto acima, no rosto ou no que importa: esse ponto sempre aparece.'),
+    h('div', { class: 'fr-previews' }, previews, reset));
 }
 
 /* ---------- lists ---------- */

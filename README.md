@@ -23,7 +23,9 @@ data/*.json, images/  ──>  scripts/build.mjs  ──>  _site/  ──>  GitH
   validation and the build. Long texts use the small Markdown subset in [`src/markdown.js`](src/markdown.js).
 - **Images** live in `images/<type>/` as WebP. The admin resizes every upload to the largest box it's shown in on
   the site, times 2 for sharp phone screens, before committing it (`IMAGE_SLOTS` in [`src/config.js`](src/config.js)).
-  Interview portraits and news photos are cropped to their shape; flyers are kept whole.
+  Interview portraits and news photos are cropped to their shape; flyers are kept whole. The interview cards
+  show portraits in wider boxes, cropped around a point the editor taps on the photo in the form, with previews
+  of the cards (the image's `focus`; the upper part when there's none).
 - **Pages** are rendered by [`src/render/`](src/render/) at build time, so every event, news item and interview has
   its own URL, link preview (Open Graph) and structured data. The same render code runs in the admin for the live
   preview. The build also writes `sitemap.xml`, `feed.xml` (RSS), an `.ics` file per event and `version.json`.

@@ -25,7 +25,13 @@ export const WEBP_QUALITY = 0.8;
 export const IMAGE_SLOTS = {
   flyer: { w: 560, h: 700, fit: 'contain', label: 'flyer' },
   noticia: { w: 880, h: 587, fit: 'cover', label: 'foto da notícia (3:2)' },
-  retrato: { w: 480, h: 600, fit: 'cover', label: 'retrato (4:5)' },
+  // Interview cards show the portrait in wider boxes, cropped around its `focus` point
+  // (chosen in the admin; `focus` here when there's none: the upper part, where faces
+  // usually are). `cards` are the boxes the admin previews, as width / height.
+  retrato: {
+    w: 480, h: 600, fit: 'cover', label: 'retrato (4:5)', focus: '50% 25%',
+    cards: [{ label: 'Card na capa', ratio: 16 / 9 }, { label: 'Lista de entrevistas', ratio: 4 / 4.2 }],
+  },
   pagina: { w: 880, h: 587, fit: 'cover', label: 'foto da página (3:2)' },
   inline: { w: 720, h: 960, fit: 'contain', label: 'imagem no texto' },
 };

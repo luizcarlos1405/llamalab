@@ -4,6 +4,7 @@
 
 import { esc, fmtShort, fmtHours, WEEKDAYS_SHORT, weekday, parseDate, monthLabel, MONTHS_SHORT, excerpt, stripMarkdown, splitList, waLink, formatPhone, slugify, eventEnd, hash, spotifyPlaylistId } from '../util.js';
 import { symbols, lockup, wordmark, llama, llamaUse, ring } from './svg.js';
+import { IMAGE_SLOTS } from '../config.js';
 
 export const NAV = [
   { href: 'agenda/', label: 'Agenda', key: 'agenda' },
@@ -165,10 +166,13 @@ export function footer(P, { withCta = true } = {}) {
 
 /* ---------- images ---------- */
 
-export function img(P, image, { cls = '', eager = false, alt } = {}) {
+// `focus`: where to crop when the box is another shape than the image, unless the image
+// has its own (a CSS object-position, chosen in the admin).
+export function img(P, image, { cls = '', eager = false, alt, focus: fallback = '' } = {}) {
   if (!image || !image.src) return '';
   const dims = image.w && image.h ? ` width="${image.w}" height="${image.h}"` : '';
-  const focus = image.focus ? ` style="object-position:${esc(image.focus)}"` : '';
+  const pos = image.focus || fallback;
+  const focus = pos ? ` style="object-position:${esc(pos)}"` : '';
   return `<img${cls ? ` class="${cls}"` : ''} src="${esc(P.src(image.src))}" alt="${esc(alt ?? image.alt ?? '')}"${dims}${focus} loading="${eager ? 'eager' : 'lazy'}" decoding="async">`;
 }
 
@@ -268,7 +272,7 @@ export function interviewNo(P, it) {
 }
 
 export function card(P, it, { feat = false, tag = 'h3', reveal = false, i = 0 } = {}) {
-  const photo = it.photo && it.photo.src ? img(P, it.photo, { alt: '' }) : llamaFallback();
+  const photo = it.photo && it.photo.src ? img(P, it.photo, { alt: '', focus: IMAGE_SLOTS.retrato.focus }) : llamaFallback();
   const text = it.quote ? `<q>${esc(excerpt(it.quote, 140))}</q>` : `<p class="sum">${esc(excerpt(it.summary || stripMarkdown(it.body), 150))}</p>`;
   const role = [it.area, it.role && excerpt(it.role, 60)].filter(Boolean).join(' · ');
   return `<a class="card${feat ? ' feat' : ''}" href="${interviewUrl(P, it)}" data-cat="${esc(slugify(it.area || 'papo'))}"${reveal ? ` data-r style="--d:${(i % 3) * 90}ms"` : ''}>
