@@ -475,9 +475,9 @@ main{padding-bottom:var(--radio-space,0px)}
 [data-player=playing] .som-btn .ic-play,[data-player=loading] .som-btn .ic-play{display:none}
 [data-player=playing] .som-btn .ic-pause,[data-player=loading] .som-btn .ic-pause{display:block}
 [data-player=invite] .som-btn{background:var(--r);color:var(--w)}
-/* the invitation to press play: a red ring grows out from behind the button and fades
-   (transform and opacity only); the pill and the radio's panel isolate it above their backgrounds */
-[data-player=invite] .som-btn::after{content:"";position:absolute;inset:0;z-index:-1;border-radius:50%;background:var(--r);animation:ring-s 1.6s infinite}
+/* the invitation to press play: a red ring grows out from behind the button and fades,
+   six times (transform and opacity only); the pill and the radio's panel isolate it above their backgrounds */
+[data-player=invite] .som-btn::after{content:"";position:absolute;inset:0;z-index:-1;border-radius:50%;background:var(--r);animation:ring-s 1.6s 6}
 @keyframes ring-s{0%{transform:scale(1);opacity:.65}70%,100%{transform:scale(1.63);opacity:0}}
 .som-tip{position:absolute;right:0;top:calc(100% + 12px);display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:999px;background:var(--w);color:var(--k);font:600 13px/1 var(--sans);white-space:nowrap;opacity:0;transform:translateY(-6px);pointer-events:none;transition:opacity .3s,transform .4s var(--spring)}
 .som-tip::before{content:"";position:absolute;right:28px;top:-5px;width:12px;height:12px;background:inherit;transform:rotate(45deg);border-radius:2px}
@@ -540,7 +540,7 @@ main{padding-bottom:var(--radio-space,0px)}
 .radio .play-big{position:relative;width:58px;height:58px;flex:0 0 auto;border-radius:50%;display:grid;place-items:center;background:var(--r);color:var(--w);transition:transform .5s var(--spring)}
 .radio .play-big:hover{transform:scale(1.07)}
 .radio .play-big svg{width:24px;height:24px;margin-left:3px}
-.radio .play-big::after{content:"";position:absolute;inset:0;z-index:-1;border-radius:50%;background:var(--r);animation:ring-l 1.6s infinite}
+.radio .play-big::after{content:"";position:absolute;inset:0;z-index:-1;border-radius:50%;background:var(--r);animation:ring-l 1.6s 6}
 @keyframes ring-l{0%{transform:scale(1);opacity:.65}70%,100%{transform:scale(1.41);opacity:0}}
 .radio .inv p{display:flex;flex-direction:column;gap:5px;min-width:0;font:400 13.5px/1.3 var(--sans);color:#b5b5b5}
 .radio .inv p > b{font:400 30px/.9 var(--disp);text-transform:uppercase;color:var(--w)}
@@ -585,6 +585,12 @@ main{padding-bottom:var(--radio-space,0px)}
   .som-tip{display:none}
 }
 @media (prefers-reduced-motion:reduce){.eqv i{transition:none}}
+
+/* REST: animations stop where nobody sees them, so phones can idle. site.js marks the
+   stages, every llama and the footer's badge .rest while they're off screen; the home
+   stage is .off once the page covers it. The stage's scroll-driven shrink keeps going. */
+.rest :not(.hero-in):not(.hero-llama),.rest ::before,.rest ::after,
+.hero.off .hero-in *,.hero.off .hero-in ::before,.hero.off .hero-in ::after{animation-play-state:paused!important}
 
 /* LITE: devices that can't keep up with the stage get fewer, cheaper effects. site.js
    switches to it after watching the frame rate (or ?fx=lite in the address). */

@@ -20,6 +20,7 @@
   // What the animation loop and the global handlers need from the current page.
   let page = {};
   let io = null;
+  let rest = null;
 
   requestAnimationFrame(() => setTimeout(() => html.classList.add('ready'), 60));
 
@@ -99,6 +100,12 @@
     }), { threshold: 0.12 });
     io = observer;
     $$('[data-r],[data-split],[data-io]').forEach((el) => observer.observe(el));
+
+    /* animations rest where nobody sees them, so phones can idle: site.css pauses what's
+       inside a .rest (the stages, every llama, the footer's round badge) */
+    if (rest) rest.disconnect();
+    rest = new IntersectionObserver((entries) => entries.forEach((e) => e.target.classList.toggle('rest', !e.isIntersecting)), { rootMargin: '120px 0px' });
+    $$('.hero,.phero,.nf404,.llama,.magnet').forEach((el) => rest.observe(el));
 
     /* spotlight follows the pointer on dark heroes */
     $$('.hero,.phero,.nf404').forEach((stage) => {
@@ -397,18 +404,30 @@
   };
 
   /* one animation loop. It only writes to the page when a value changed: rewriting the
-     same style or attribute every frame still costs phones a redraw. */
-  let lastY = scrollY;
+     same style or attribute every frame still costs phones a redraw. And it sleeps when
+     nothing moves, woken by scrolling, the pointer and resizing, so a still page costs
+     the phone nothing. */
+  let lastY = -1; // read in the first frame: reading it while the page loads forces a layout
   let vel = 0;
   let rot = 0;
   let lastT = 0;
   let drift = 0; // seconds the ribbons have flowed; they stand still in lite mode
+  let raf = 0;
+  let odd = false;
+  const TOUCH = matchMedia('(pointer: coarse)').matches;
+  const wake = () => {
+    if (!raf) raf = requestAnimationFrame(frame);
+  };
   const frame = (t) => {
+    raf = 0;
     const { nav, hero, hin, hl, bs, track, bar, rings, tps, unit, followers } = page;
     const y = scrollY;
+    if (lastY < 0) lastY = y;
     const dy = y - lastY;
     lastY = y;
-    if (lastT && !lite()) drift += Math.min(0.1, (t - lastT) / 1000);
+    // the ribbons flow while the home stage shows, except in lite mode or with reduced motion
+    const flowing = Boolean(hero && tps.length && !RM && !lite() && y < innerHeight);
+    if (lastT && flowing) drift += Math.min(0.1, (t - lastT) / 1000);
     lastT = t;
     vel += (dy - vel) * 0.12;
     if (Math.abs(dy) > 3) bang();
@@ -430,8 +449,9 @@
       }
       // The ribbons flow by themselves and with the scroll; in lite mode only with the
       // scroll, so nothing is redrawn while the page is still.
+      // Phones redraw them every other frame: they move slowly, and it halves the cost.
       const key = `${drift.toFixed(3)}|${y}`;
-      if (hp < 1 && !RM && key !== page.ribbonKey) {
+      if (hp < 1 && !RM && key !== page.ribbonKey && (!TOUCH || (odd = !odd))) {
         page.ribbonKey = key;
         tps.forEach((tp, i) => {
           const u = unit[i] || 900;
@@ -458,15 +478,21 @@
         });
       }
     }
+    let following = false;
     for (const f of followers) {
       if (!f.poster.classList.contains('on')) continue;
       f.px += (f.tx - f.px) * 0.14;
       f.py += (f.ty - f.py) * 0.14;
       f.poster.style.transform = `translate(${(f.px + 30).toFixed(1)}px,${(f.py - 165).toFixed(1)}px) rotate(${((f.tx - f.px) * 0.06).toFixed(2)}deg)`;
+      if (Math.abs(f.tx - f.px) > 0.3 || Math.abs(f.ty - f.py) > 0.3) following = true;
     }
-    requestAnimationFrame(frame);
+    const turning = rings.length && !RM && rings.some((r) => r.inView !== false) && (!lite() || Math.abs(vel) > 0.05);
+    if (flowing || dy || Math.abs(vel) > 0.05 || following || turning) wake();
   };
-  requestAnimationFrame(frame);
+  addEventListener('scroll', wake, { passive: true });
+  addEventListener('resize', wake);
+  d.addEventListener('pointermove', wake, { passive: true });
+  wake();
 
   /* From page to page without reloading, once the radio is on (radio.js adds radio-on
      to <html> when Spotify's player exists), so the music keeps going. The new page's
@@ -551,6 +577,7 @@
     $('#menu').replaceWith(d.importNode(doc.getElementById('menu'), true));
     $('#pagina').replaceWith(d.importNode(next, true));
     mount();
+    wake();
 
     const target = url.hash && d.getElementById(decodeURIComponent(url.hash.slice(1)));
     if (target) target.scrollIntoView();
