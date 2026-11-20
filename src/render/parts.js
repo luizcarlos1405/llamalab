@@ -30,6 +30,11 @@ export function split(text, d = 0) {
   return words.map((w, i) => `<span class="sw"><span class="si" style="--i:${i}${d ? `;--d:${d}ms` : ''}">${esc(w)}</span></span>`).join(' ');
 }
 
+// "Instalar o app": hidden until site.js finds the browser can install the site (or it's an
+// iPhone, where the button shows the way through Compartilhar).
+const ICON_INSTALL = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg>';
+const installButton = (attrs = '') => `<button class="btn btn-ghost btn-sm install" type="button"${attrs}>${ICON_INSTALL} Instalar o app</button>`;
+
 export function nav(P, current = '') {
   const links = NAV.map((n) => `<a href="${P.href(n.href)}"${n.key === current ? ' aria-current="page"' : ''}>${n.label}</a>`).join('');
   return `<header class="nav" id="nav">
@@ -41,6 +46,7 @@ export function nav(P, current = '') {
   <div class="menu-top"><a href="${P.href('')}" aria-label="LlamaLab — capa">${lockup}</a><button class="close" type="button" aria-label="Fechar menu">×</button></div>
   <nav aria-label="Menu">${links}</nav>
   <a class="btn btn-red" href="${esc(rolêLink(P))}" target="_blank" rel="noopener">${esc((P.site.cta || {}).eventLabel || 'Divulgue seu evento')} <span class="arr">→</span></a>
+  <div class="menu-app" data-install hidden><p><b>Leve o LlamaLab no celular.</b>A agenda abre direto da tela inicial, até sem internet.</p>${installButton()}</div>
 </div>`;
 }
 
@@ -154,7 +160,7 @@ export function footer(P, { withCta = true } = {}) {
   return `<section class="panel dark foot" id="contato">
   ${ctaHtml}
   <div class="fgrid">
-    <div><h2>LlamaLab</h2><p>Laboratório criativo de divulgação cultural. Agenda, entrevistas e notícias de quem faz a cultura acontecer em Dourados — MS.</p>${c.whatsapp ? `<a class="btn btn-red btn-sm" href="${esc(waLink(c.whatsapp))}" target="_blank" rel="noopener">Chama no WhatsApp <span class="arr">→</span></a>` : ''}</div>
+    <div><h2>LlamaLab</h2><p>Laboratório criativo de divulgação cultural. Agenda, entrevistas e notícias de quem faz a cultura acontecer em Dourados — MS.</p><div class="btns">${c.whatsapp ? `<a class="btn btn-red btn-sm" href="${esc(waLink(c.whatsapp))}" target="_blank" rel="noopener">Chama no WhatsApp <span class="arr">→</span></a>` : ''}${installButton(' data-install hidden')}</div></div>
     <div><h2>Navegue</h2>${NAV.map((n) => `<a href="${P.href(n.href)}">${n.label}</a>`).join('')}</div>
     ${social.length ? `<div><h2>Redes</h2>${social.map(([name, url]) => `<a href="${esc(url)}" target="_blank" rel="noopener">${name}</a>`).join('')}</div>` : ''}
     <div><h2>Contato</h2>${c.email ? `<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>` : ''}${c.whatsapp ? `<a href="${esc(waLink(c.whatsapp))}" target="_blank" rel="noopener">${esc(formatPhone(c.whatsapp))}</a>` : ''}<a href="${P.href('sobre/')}">Dourados — MS</a></div>

@@ -363,6 +363,7 @@ function dashboard() {
   const view = clear(app.view);
   const name = (ls.get(EDITOR_KEY) || '').split(' ')[0];
   const pending = h('div', { class: 'card dark pending' });
+  const install = h('div', { hidden: true });
   const status = h('div', { class: 'card status' }, h('h2', null, 'Site no ar'), h('p', { class: 'muted' }, 'Carregando…'));
   const quick = h('div', { class: 'card quick' }, h('h2', null, 'Criar'),
     h('a', { class: 'btn btn-k', href: '#/agenda/novo' }, '+ Evento'),
@@ -377,7 +378,8 @@ function dashboard() {
     upcoming.length ? h('a', { class: 'btn btn-ghost btn-sm', href: '#/instagram' }, 'Montar o post da agenda') : null);
   add(view, h('section', { class: 'dash' },
     h('div', { class: 'page-head' }, h('p', { class: 'eyebrow' }, 'Painel'), h('h1', null, name ? `Oi, ${name}.` : 'Oi!')),
-    h('div', { class: 'dash-grid' }, pending, h('div', { class: 'dash-side' }, status, quick, next))));
+    h('div', { class: 'dash-grid' }, pending, h('div', { class: 'dash-side' }, install, status, quick, next))));
+  installCard(install);
   renderPending(pending);
   loadStatus(status);
   const unsubNet = onNet(() => {
@@ -386,6 +388,58 @@ function dashboard() {
       return;
     }
     loadStatus(status);
+  });
+}
+
+// Installing the admin as an app of its own: where the browser offers to, or on iPhone (the
+// way through Compartilhar). "Agora não" hides the card on this device.
+const INSTALL_KEY = 'llamalab:install-card';
+const IOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const standalone = () => matchMedia('(display-mode: standalone), (display-mode: fullscreen), (display-mode: minimal-ui)').matches || navigator.standalone === true;
+
+function installCard(slot) {
+  const draw = () => {
+    clear(slot);
+    slot.hidden = standalone() || ls.get(INSTALL_KEY) === 'no' || !(net.installPrompt || IOS);
+    if (slot.hidden) return;
+    add(slot, h('div', { class: 'card app' },
+      h('img', { src: 'assets/icons/admin-192.png', alt: '', width: '72', height: '72' }),
+      h('div', null,
+        h('h2', null, matchMedia('(pointer: coarse)').matches ? 'Admin no celular' : 'Admin como app'),
+        h('p', { class: 'muted' }, 'Instale o admin: ele abre direto aqui, com o próprio ícone, e funciona sem internet.'),
+        h('div', { class: 'btns' },
+          h('button', { class: 'btn btn-k btn-sm', type: 'button', onclick: () => installAdmin(draw) }, 'Instalar o admin'),
+          h('button', { class: 'btn btn-ghost btn-sm', type: 'button', onclick: () => { ls.set(INSTALL_KEY, 'no'); draw(); } }, 'Agora não')))));
+  };
+  draw();
+  const unsub = onNet(() => {
+    if (!slot.isConnected) {
+      unsub();
+      return;
+    }
+    draw();
+  });
+}
+
+async function installAdmin(done) {
+  if (net.installPrompt) {
+    const ask = net.installPrompt;
+    net.installPrompt = null;
+    ask.prompt();
+    await ask.userChoice.catch(() => null);
+    done();
+    return;
+  }
+  dialog({
+    title: 'Instale no iPhone',
+    body: h('div', { class: 'ios-steps' },
+      h('p', null, 'O admin vira um app na tela inicial e funciona até sem internet.'),
+      h('ol', null,
+        h('li', null, 'Toque em ', h('b', null, 'Compartilhar'), ' (o quadrado com a seta), na barra do navegador.'),
+        h('li', null, 'Escolha ', h('b', null, 'Adicionar à Tela de Início'), '.'),
+        h('li', null, 'Toque em ', h('b', null, 'Adicionar'), '.')),
+      h('p', { class: 'muted' }, 'O app guarda os dados separado do navegador: entre nele de novo com seu nome e o token, e publique antes o que estiver esperando aqui.')),
+    actions: (close) => [h('button', { class: 'btn btn-k', type: 'button', onclick: () => close() }, 'Entendi')],
   });
 }
 

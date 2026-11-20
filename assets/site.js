@@ -129,6 +129,63 @@
   // the site opened as an installed app (from the home screen), not in a browser tab
   const installed = () => matchMedia('(display-mode: standalone), (display-mode: fullscreen), (display-mode: minimal-ui), (display-mode: window-controls-overlay)').matches || navigator.standalone === true;
 
+  /* Installing: where the browser can install the site (Chrome, Edge, Samsung Internet), a
+     quiet "Instalar o app" at the end of the phone menu and in the footer. iPhones have no
+     install button for sites, so there the same button shows the way through Compartilhar. */
+  let installPrompt = null;
+  const IOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const showInstall = () => {
+    const can = !installed() && !html.hasAttribute('data-preview') && Boolean(installPrompt || IOS);
+    $$('[data-install]').forEach((el) => {
+      el.hidden = !can;
+    });
+  };
+  addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    installPrompt = e;
+    showInstall();
+  });
+  addEventListener('appinstalled', () => {
+    installPrompt = null;
+    showInstall();
+  });
+  const SHARE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3M8 7l4-4 4 4M6 11H5v10h14V11h-1"/></svg>';
+  function iosTip() {
+    const dim = d.createElement('div');
+    dim.className = 'ios-dim';
+    const tip = d.createElement('div');
+    tip.className = 'ios-tip';
+    tip.setAttribute('role', 'dialog');
+    tip.setAttribute('aria-modal', 'true');
+    tip.setAttribute('aria-label', 'Como instalar no iPhone');
+    tip.innerHTML = `<h2>Instale no iPhone</h2><p>O LlamaLab vira um app na tela inicial e funciona até sem internet.</p><ol><li><span>Toque em <span class="sh">${SHARE}</span> <b>Compartilhar</b>, na barra do navegador.</span></li><li><span>Escolha <b>Adicionar à Tela de Início</b>.</span></li><li><span>Toque em <b>Adicionar</b>.</span></li></ol><button class="btn btn-k" type="button">Entendi</button>`;
+    const close = () => {
+      dim.remove();
+      tip.remove();
+      d.removeEventListener('keydown', onKey);
+    };
+    const onKey = (e) => {
+      if (e.key === 'Escape') close();
+    };
+    dim.addEventListener('click', close);
+    $('button', tip).addEventListener('click', close);
+    d.addEventListener('keydown', onKey);
+    d.body.append(dim, tip);
+    $('button', tip).focus();
+  }
+  d.addEventListener('click', async (e) => {
+    if (!e.target.closest('.install')) return;
+    if (installPrompt) {
+      const ask = installPrompt;
+      installPrompt = null;
+      ask.prompt();
+      await ask.userChoice.catch(() => null);
+      showInstall();
+    } else if (IOS) {
+      iosTip();
+    }
+  });
+
   function mount() {
     /* events that already ended (the daily rebuild also moves them) */
     $$('[data-until]').forEach((el) => {
@@ -140,6 +197,7 @@
     $$('[data-app-note]').forEach((el) => {
       el.hidden = installed();
     });
+    showInstall();
 
     /* reveal on scroll */
     if (io) io.disconnect();
