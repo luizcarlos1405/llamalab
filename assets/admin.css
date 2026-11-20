@@ -65,6 +65,19 @@ svg{display:block}
 .menu-pop a,.menu-pop button{display:block;text-align:left;padding:10px 12px;border-radius:12px;font:500 15px/1.2 var(--sans);text-decoration:none}
 .menu-pop a:hover,.menu-pop button:hover{background:var(--p)}
 .banner{width:min(1480px,calc(100% - 24px));margin:12px auto 0;padding:12px 18px;border-radius:16px;background:#3a1d17;color:#ffd9d1;font-size:14px}
+/* the connection (src/admin/net.js): offline, back online with changes waiting, a new admin */
+.banner.net,.banner.back{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.banner > span{display:flex}
+.banner svg{width:18px;height:18px;flex:0 0 auto;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.banner p{flex:1;min-width:200px}
+.banner b{font-weight:600}
+.banner.net{background:#262626;color:#e9e9e9}
+.banner.back{background:#14361f;color:#c9f3d5}
+.banner .btn{min-height:38px;padding:0 16px;font-size:13.5px}
+.banner.back .btn{background:#c9f3d5;color:#0b2414}
+.banner.net .btn{background:var(--w);color:var(--k)}
+.net-chip{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:999px;background:#2a2a2a;color:#bbb;font:600 10.5px/1 var(--sans);letter-spacing:.16em;text-transform:uppercase}
+.net-chip i{width:7px;height:7px;border-radius:50%;background:#8a8a8a}
 
 /* main panel */
 .view{width:min(1480px,calc(100% - 24px));margin:14px auto 30px;background:var(--w);color:var(--k);border-radius:36px;padding:clamp(22px,3vw,44px);min-height:calc(100vh - 110px)}
@@ -395,6 +408,6 @@ input:focus,textarea:focus{outline:0;border-color:var(--k);box-shadow:0 0 0 4px 
   .ed-bar .btns{justify-content:flex-end}
   .ch{grid-template-columns:34px 1fr}
   .ch .undo{grid-column:2;justify-self:start}
-  .brand .tag{display:none}
+  .brand .tag,.brand .net-chip{display:none}
 }
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}

@@ -1,4 +1,7 @@
 import { start } from './app.js';
+import { startNet } from './net.js';
+
+startNet();
 
 start().catch((error) => {
   console.error(error);

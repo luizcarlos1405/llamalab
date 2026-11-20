@@ -6,8 +6,9 @@ import { REPO } from '../config.js';
 import { todayISO, parseDate, MONTHS_SHORT, fmtHours, fmtShort, isUpcoming } from '../util.js';
 import { lockup, symbols } from '../render/svg.js';
 import { h, add, $, clear, toast, dialog, confirm, formatBytes, timeAgo } from './dom.js';
-import { createClient, describeError } from './github.js';
+import { createClient, describeError, ApiError } from './github.js';
 import { isPersistent } from './idb.js';
+import { net, onNet, setOnline, keepData } from './net.js';
 import { buildForm } from './fields.js';
 import { previewPane, siteUrl } from './preview.js';
 import { postView } from './post.js';
@@ -18,6 +19,8 @@ const TOKEN_KEY = 'llamalab:token';
 // localStorage.setItem('llamalab:branch', 'some-test-branch')
 const BRANCH_KEY = 'llamalab:branch';
 const EDITOR_KEY = 'llamalab:editor';
+// The editor's GitHub account (id, login, name), for the commit author when the admin starts offline.
+const USER_KEY = 'llamalab:user';
 const ls = {
   get: (k) => { try { return localStorage.getItem(k); } catch { return null; } },
   set: (k, v) => { try { localStorage.setItem(k, v); } catch { /* ignore */ } },
@@ -31,6 +34,16 @@ const app = { gh: null, user: null, root: null, view: null, guard: null, lastHas
 const clone = (v) => JSON.parse(JSON.stringify(v));
 const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 const TYPE_ICON = { agenda: '✺', noticias: '✎', entrevistas: '❝', site: '⌂', sobre: 'i', contrate: '$' };
+const WIFI_OFF = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 2l20 20M8.5 16.4a5 5 0 0 1 7 0M5 12.9a10 10 0 0 1 5.2-2.8M19 12.9a10 10 0 0 0-2.3-1.6M2 9.4a15 15 0 0 1 4.4-2.8M22 9.4a15 15 0 0 0-11.7-3.8M12 20h.01"/></svg>';
+// A request that hasn't come back after this long counts as no internet (a weak signal).
+const withTimeout = (promise, ms) => Promise.race([promise, new Promise((resolve, reject) => setTimeout(() => reject(new ApiError('network', 0)), ms))]);
+const savedUser = () => {
+  try {
+    return JSON.parse(ls.get(USER_KEY)) || null;
+  } catch {
+    return null;
+  }
+};
 
 /* ================= boot ================= */
 
@@ -50,18 +63,27 @@ async function connect(token) {
   loadingView('Carregando o conteúdo do site…');
   app.gh = createClient(token, { branch: ls.get(BRANCH_KEY) || REPO.branch });
   try {
-    app.user = await app.gh.user();
+    if (!net.online) throw new ApiError('network', 0);
+    app.user = await withTimeout(app.gh.user(), 10000);
+    ls.set(USER_KEY, JSON.stringify({ id: app.user.id, login: app.user.login, name: app.user.name }));
     await store.init(app.gh);
+    setOnline(true);
   } catch (error) {
     if (error.status === 401) {
       ls.del(TOKEN_KEY);
       loginView(describeError(error));
       return;
     }
-    errorView(error);
-    return;
+    // No internet (or none that answers): start from what this device saved, publish later.
+    if (error.status !== 0 || !await store.initOffline()) {
+      errorView(error);
+      return;
+    }
+    app.user = savedUser();
+    setOnline(false);
   }
   shell();
+  keepData();
   window.addEventListener('hashchange', onHash);
   window.addEventListener('beforeunload', (e) => {
     if (app.guard && app.guard()) {
@@ -111,6 +133,10 @@ function loginView(error = '') {
   h('label', { class: 'field', for: 'tk' }, h('span', { class: 'lbl' }, 'Token de acesso'), token, h('span', { class: 'hint' }, 'Fica salvo só neste navegador. Guarde-o como uma senha.')),
   msg,
   submit);
+  if (!error && !net.online) {
+    msg.textContent = 'Sem internet. Para entrar pela primeira vez neste aparelho, conecte-se à internet: o token precisa ser conferido.';
+    msg.hidden = false;
+  }
   clear(app.root).append(h('div', { class: 'login' },
     h('div', { class: 'stage-bg', 'aria-hidden': 'true' }, h('i'), h('i'), h('i')),
     h('div', { class: 'login-card' },
@@ -127,8 +153,9 @@ function loadingView(text) {
 }
 
 function errorView(error) {
+  const text = error.status === 0 ? 'Sem internet. Para abrir o admin pela primeira vez neste aparelho, conecte-se à internet.' : describeError(error);
   clear(app.root).append(h('div', { class: 'loading' },
-    h('p', { class: 'err' }, describeError(error)),
+    h('p', { class: 'err' }, text),
     h('div', { class: 'btns' }, h('button', { class: 'btn btn-red', onclick: () => location.reload() }, 'Tentar de novo'), h('button', { class: 'btn btn-ghost', onclick: logout }, 'Sair'))));
 }
 
@@ -139,6 +166,7 @@ async function logout() {
     ok: 'Sair mesmo assim',
   })) return;
   ls.del(TOKEN_KEY);
+  ls.del(USER_KEY);
   location.hash = '';
   location.reload();
 }
@@ -164,8 +192,9 @@ function shell() {
     h('button', { type: 'button', onclick: logout }, 'Sair'));
   const me = h('button', { class: 'me', type: 'button', 'aria-haspopup': 'true', onclick: (e) => { e.stopPropagation(); menu.hidden = !menu.hidden; } }, avatar);
   document.addEventListener('click', () => { menu.hidden = true; });
+  const chip = h('span', { class: 'net-chip', hidden: true }, h('i'), 'Offline');
   const top = h('header', { class: 'top' },
-    h('a', { class: 'brand', href: '#/', 'aria-label': 'Painel' }, h('span', { html: lockup }), h('span', { class: 'tag' }, 'Admin')),
+    h('a', { class: 'brand', href: '#/', 'aria-label': 'Painel' }, h('span', { html: lockup }), h('span', { class: 'tag' }, 'Admin'), chip),
     tabs,
     h('div', { class: 'top-r' },
       h('a', { class: 'btn btn-red pub', href: '#/' }, 'Publicar ', pubCount),
@@ -173,7 +202,18 @@ function shell() {
   app.view = h('main', { class: 'view', id: 'view' });
   const warn = isPersistent() ? null : h('div', { class: 'banner' }, 'Este navegador não deixa guardar rascunhos (janela anônima?). Publique antes de fechar a aba para não perder nada.');
   const test = app.gh.branch !== REPO.branch ? h('div', { class: 'banner' }, `Modo de teste: publicando no branch "${app.gh.branch}", não no site.`) : null;
-  add(clear(app.root), top, warn, test, app.view);
+  const offline = h('div', { class: 'banner net', role: 'status', hidden: true }, h('span', { html: WIFI_OFF }), h('p', null, h('b', null, 'Sem internet.'), ' Pode editar à vontade: as alterações ficam guardadas neste aparelho e você publica quando a conexão voltar.'));
+  add(clear(app.root), top, warn, test, offline, app.view);
+  // offline: the chip, the banner, and the dashboard (its status and publish button)
+  const showNet = () => {
+    chip.hidden = net.online;
+    offline.hidden = net.online;
+  };
+  onNet(() => {
+    showNet();
+    if (!parseHash().parts.length && !(app.guard && app.guard())) route();
+  });
+  showNet();
   const refresh = () => {
     const n = store.changes().length + store.imageChanges().added.length;
     pubCount.textContent = n ? String(n) : '';
@@ -333,6 +373,14 @@ function renderPending(box) {
 }
 
 async function loadStatus(box) {
+  const offline = () => {
+    clear(box);
+    add(box, h('h2', null, 'Site no ar'), h('p', { class: 'muted' }, 'Sem internet: não dá para conferir agora.'));
+  };
+  if (!net.online) {
+    offline();
+    return;
+  }
   try {
     const [commits, deployed] = await Promise.all([app.gh.commits(1), fetchVersion()]);
     const last = commits[0];
@@ -345,7 +393,11 @@ async function loadStatus(box) {
       h('p', { class: 'muted' }, `Última publicação ${timeAgo(last.commit.author.date)}, por ${last.commit.author.name}.`),
       h('div', { class: 'btns' }, h('a', { class: 'btn btn-ghost btn-sm', href: siteUrl(), target: '_blank', rel: 'noopener' }, 'Ver o site ↗')));
     if (!live && age < 10) setTimeout(() => box.isConnected && loadStatus(box), 8000);
-  } catch {
+  } catch (error) {
+    if (error.status === 0) {
+      setOnline(false);
+      return;
+    }
     clear(box);
     add(box, h('h2', null, 'Site no ar'), h('p', { class: 'muted' }, 'Não consegui conferir agora.'), h('a', { class: 'btn btn-ghost btn-sm', href: siteUrl(), target: '_blank', rel: 'noopener' }, 'Ver o site ↗'));
   }

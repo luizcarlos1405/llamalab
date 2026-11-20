@@ -137,14 +137,32 @@ export async function init(gh) {
     state.working = result;
     state.conflicts = conflicts;
   }
+  await loadStaged();
+  await persist(false);
+  emit();
+}
+
+// Without internet: starts from what this device saved the last time it loaded the site, the
+// published version and the drafts on top of it. False when nothing was saved yet.
+export async function initOffline() {
+  const draft = await kv.get('draft');
+  if (!draft || !draft.base || !draft.working || !Array.isArray(draft.paths)) return false;
+  adopt({ headSha: draft.headSha, treeSha: draft.treeSha, data: normalizeData(draft.base), texts: {}, paths: new Set(draft.paths) });
+  state.loadedAt = draft.loadedAt || draft.savedAt || null;
+  state.working = normalizeData(draft.working);
+  state.conflicts = [];
+  await loadStaged();
+  emit();
+  return true;
+}
+
+async function loadStaged() {
   for (const url of [...state.staged.values()].map((s) => s.url)) URL.revokeObjectURL(url);
   state.staged.clear();
   for (const path of await imageStore.keys()) {
     const rec = await imageStore.get(path);
     if (rec && rec.blob) state.staged.set(path, { ...rec, url: URL.createObjectURL(rec.blob) });
   }
-  await persist(false);
-  emit();
 }
 
 // Re-reads the drafts another tab saved.
@@ -163,7 +181,16 @@ export async function reloadDrafts() {
 let persistTimer = null;
 export async function persist(broadcast = true) {
   clearTimeout(persistTimer);
-  await kv.set('draft', { headSha: state.headSha, base: state.base, working: state.working, savedAt: new Date().toISOString() });
+  // with what the admin needs to start offline: the published tree and its files
+  await kv.set('draft', {
+    headSha: state.headSha,
+    treeSha: state.treeSha,
+    paths: [...state.remotePaths],
+    loadedAt: state.loadedAt,
+    base: state.base,
+    working: state.working,
+    savedAt: new Date().toISOString(),
+  });
   if (broadcast && channel) channel.postMessage('drafts');
 }
 

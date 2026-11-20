@@ -72,8 +72,13 @@ self.addEventListener('message', (event) => {
     event.waitUntil(Promise.all(msg.urls.slice(0, 60).map((u) => remember(u).catch(() => {}))));
   } else if (msg.type === 'saved') {
     event.waitUntil(savedAt(msg.url).then(reply, () => reply(null)));
+  } else if (msg.type === 'version') {
+    reply({ version: BUILD.version, admin: ADMIN });
   }
 });
+
+// The admin's files in this build: a new worker with other ones means a new admin.
+const ADMIN = FILES.filter((f) => f.p === 'admin').map((f) => f.r).join('');
 
 // Keeps a page or image the browser already has (it was just shown), without downloading it again.
 async function remember(u) {
