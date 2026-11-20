@@ -107,7 +107,7 @@ export async function loadRemote(gh) {
     try {
       raw[name] = JSON.parse(text);
     } catch {
-      throw new Error(`O arquivo ${t.file} no GitHub não é um JSON válido. Alguém precisa corrigi-lo antes de editar por aqui.`);
+      throw new Error(`Não consegui ler o conteúdo de "${t.label}". Avise quem cuida do site.`);
     }
   }));
   return { headSha, treeSha: commit.tree.sha, data: normalizeData(raw), texts, paths: new Set(files.keys()) };

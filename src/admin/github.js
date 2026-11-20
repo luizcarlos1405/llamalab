@@ -15,16 +15,18 @@ export class ApiError extends Error {
   }
 }
 
+// Messages for the editors, who don't need to know how the site is hosted.
 export function describeError(error) {
   const status = error && error.status;
   const message = (error && error.message) || '';
-  if (status === 0) return 'Sem conexão com o GitHub. Confira a internet e tente de novo.';
-  if (status === 401) return 'O GitHub não aceitou o token (pode ter expirado ou sido apagado). Saia e entre com um token novo.';
-  if (status === 403 && /rate limit/i.test(message)) return 'O GitHub limitou as requisições por alguns minutos. Espere um pouco e tente de novo.';
-  if (status === 403) return 'Esse token não tem permissão para alterar o site. Ele precisa de acesso de escrita (Contents: Read and write) ao repositório.';
-  if (status === 404) return `Não encontrei o repositório ${REPO.owner}/${REPO.name} com esse token. Confira se o token dá acesso a ele.`;
+  if (status !== undefined) console.warn('API error', status, message);
+  if (status === 0) return 'Sem conexão. Confira a internet e tente de novo.';
+  if (status === 401) return 'Esse token não funciona mais (pode ter expirado). Peça um novo a quem cuida do site.';
+  if (status === 403 && /rate limit/i.test(message)) return 'Muitas tentativas em pouco tempo. Espere alguns minutos e tente de novo.';
+  if (status === 403 || status === 404) return 'Esse token não dá acesso para alterar o site. Confira se você colou o token inteiro ou peça um novo a quem cuida do site.';
   if (status === 409 || status === 422) return 'O site mudou enquanto você publicava. Tente publicar de novo.';
-  return message || 'Algo deu errado ao falar com o GitHub.';
+  if (status === undefined && message) return message;
+  return 'Algo deu errado. Tente de novo em instantes e, se continuar, avise quem cuida do site.';
 }
 
 // `branch` is REPO.branch unless a developer overrides it for testing.
@@ -91,13 +93,3 @@ export async function blobToBase64(blob) {
   return btoa(binary);
 }
 
-// Link to create a fine-grained token with the right permission, pre-filled.
-export function tokenLink() {
-  const url = new URL('https://github.com/settings/personal-access-tokens/new');
-  url.searchParams.set('name', 'Admin do site LlamaLab');
-  url.searchParams.set('description', `Publicar alterações no site pelo admin (${REPO.owner}/${REPO.name})`);
-  url.searchParams.set('target_name', REPO.owner);
-  url.searchParams.set('expires_in', '366');
-  url.searchParams.set('contents', 'write');
-  return url.toString();
-}

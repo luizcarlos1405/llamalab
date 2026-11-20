@@ -42,7 +42,7 @@ npm run build          # just build into _site/
 
 ## The admin (`/admin`)
 
-Each editor signs in once with their name and a GitHub token. Both stay in that browser's `localStorage`.
+Each editor signs in once with their name and the token you sent them. Both stay in that browser's `localStorage`.
 While a token is saved, the public pages show an **Admin** button, plus **Editar esta página** on pages
 that can be edited.
 
@@ -61,16 +61,18 @@ that can be edited.
 
 ### Tokens
 
-The admin talks to `api.github.com` with a personal access token. To make one:
+The admin talks to `api.github.com` with a personal access token, which you create and send to each editor.
+The admin never mentions GitHub: the sign-in screen asks for a "token de acesso", and when one expires or
+stops working it tells the editor to ask whoever looks after the site for a new one.
 
-1. Open the link under "Como consigo um token?" on the admin's sign-in screen. It pre-fills a fine-grained
-   token with **Contents: Read and write**.
+1. Open this pre-filled link: [new fine-grained token](https://github.com/settings/personal-access-tokens/new?name=Admin+do+site+LlamaLab&description=Publicar+altera%C3%A7%C3%B5es+no+site+pelo+admin+%28luizcarlos1405%2Fllamalab%29&target_name=luizcarlos1405&expires_in=366&contents=write).
+   It sets **Contents: Read and write** and a one-year expiration; pick a shorter one if you prefer.
 2. Under **Repository access**, choose **Only select repositories** and pick `llamalab`.
+3. Name it after the editor, so you can revoke one person's access without touching the others.
 
-GitHub only lets the owner of a personal account's repository create fine-grained tokens for it. So the owner
-creates the token(s) and hands them to the team, or the repository moves to an organization the editors belong to.
-Anyone with a token can change the site, so treat it like a password and revoke it in GitHub's settings when
-someone leaves.
+Only the owner of a personal account's repository can create fine-grained tokens for it, which is why the
+tokens come from you. Anyone with a token can change the site: revoke it under GitHub's
+**Settings → Developer settings → Personal access tokens** when someone leaves.
 
 ### Testing the admin without touching the site
 

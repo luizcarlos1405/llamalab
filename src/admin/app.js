@@ -6,7 +6,7 @@ import { REPO } from '../config.js';
 import { todayISO, parseDate, MONTHS_SHORT, fmtTime, fmtShort, isUpcoming } from '../util.js';
 import { lockup, symbols } from '../render/svg.js';
 import { h, add, $, clear, toast, dialog, confirm, formatBytes, timeAgo } from './dom.js';
-import { createClient, describeError, tokenLink } from './github.js';
+import { createClient, describeError } from './github.js';
 import { isPersistent } from './idb.js';
 import { buildForm } from './fields.js';
 import { previewPane, siteUrl } from './preview.js';
@@ -22,6 +22,9 @@ const ls = {
   set: (k, v) => { try { localStorage.setItem(k, v); } catch { /* ignore */ } },
   del: (k) => { try { localStorage.removeItem(k); } catch { /* ignore */ } },
 };
+
+const editorName = () => ls.get(EDITOR_KEY) || 'você';
+const initial = () => ((ls.get(EDITOR_KEY) || '').trim().charAt(0) || '✺').toUpperCase();
 
 const app = { gh: null, user: null, root: null, view: null, guard: null, lastHash: '' };
 const clone = (v) => JSON.parse(JSON.stringify(v));
@@ -78,7 +81,7 @@ async function connect(token) {
 
 function loginView(error = '') {
   const name = h('input', { id: 'nm', type: 'text', autocomplete: 'name', value: ls.get(EDITOR_KEY) || '', placeholder: 'Seu nome', required: true });
-  const token = h('input', { id: 'tk', type: 'password', autocomplete: 'off', placeholder: 'github_pat_…', required: true, spellcheck: 'false' });
+  const token = h('input', { id: 'tk', type: 'password', autocomplete: 'off', placeholder: 'Cole aqui o token que você recebeu', required: true, spellcheck: 'false' });
   const msg = h('p', { class: 'err', hidden: !error }, error);
   const submit = h('button', { class: 'btn btn-red', type: 'submit' }, 'Entrar ', h('span', { class: 'arr' }, '→'));
   const form = h('form', {
@@ -104,7 +107,7 @@ function loginView(error = '') {
     },
   },
   h('label', { class: 'field', for: 'nm' }, h('span', { class: 'lbl' }, 'Seu nome'), name, h('span', { class: 'hint' }, 'Aparece no histórico de cada publicação.')),
-  h('label', { class: 'field', for: 'tk' }, h('span', { class: 'lbl' }, 'Token do GitHub'), token, h('span', { class: 'hint' }, 'Fica salvo só neste navegador.')),
+  h('label', { class: 'field', for: 'tk' }, h('span', { class: 'lbl' }, 'Token de acesso'), token, h('span', { class: 'hint' }, 'Fica salvo só neste navegador. Guarde-o como uma senha.')),
   msg,
   submit);
   clear(app.root).append(h('div', { class: 'login' },
@@ -114,12 +117,7 @@ function loginView(error = '') {
       h('p', { class: 'eyebrow' }, h('i', { class: 'live' }), 'Admin do site'),
       h('h1', null, 'Bora atualizar ', h('span', { class: 'red' }, 'o site?')),
       form,
-      h('details', { class: 'help' },
-        h('summary', null, 'Como consigo um token?'),
-        h('ol', null,
-          h('li', null, 'Peça o token a quem cuida do site, ou, se você tem acesso à conta dona do repositório, crie um em ', h('a', { href: tokenLink(), target: '_blank', rel: 'noopener' }, 'github.com/settings/personal-access-tokens'), '.'),
-          h('li', null, `Em "Repository access", escolha "Only select repositories" e marque ${REPO.name}. A permissão "Contents: Read and write" já vem marcada pelo link.`),
-          h('li', null, 'Gere o token, copie e cole aqui. Guarde-o como uma senha: quem tem o token consegue alterar o site.'))))));
+      h('p', { class: 'ask' }, 'Não tem um token ou o seu expirou? Peça a quem cuida do site.'))));
   (name.value ? token : name).focus();
 }
 
@@ -157,12 +155,11 @@ const TABS = [
 function shell() {
   const pubCount = h('b', { class: 'count' });
   const tabs = h('nav', { class: 'tabs', 'aria-label': 'Seções do admin' }, TABS.map(([key, label]) => h('a', { href: `#/${key}`, dataset: { tab: key } }, label)));
-  const avatar = app.user && app.user.avatar_url ? h('img', { src: `${app.user.avatar_url}&s=64`, alt: '' }) : h('span', { class: 'av' }, (ls.get(EDITOR_KEY) || 'L').charAt(0));
+  const avatar = h('span', { class: 'av', id: 'me-initial' }, initial());
   const menu = h('div', { class: 'menu-pop', hidden: true },
-    h('p', { class: 'muted' }, 'Publicando como ', h('b', null, ls.get(EDITOR_KEY) || app.user.login)),
+    h('p', { class: 'muted' }, 'Publicando como ', h('b', { id: 'me-name' }, editorName())),
     h('button', { type: 'button', onclick: renameEditor }, 'Mudar meu nome'),
     h('a', { href: siteUrl(), target: '_blank', rel: 'noopener' }, 'Ver o site ↗'),
-    h('a', { href: `https://github.com/${REPO.owner}/${REPO.name}/commits/${REPO.branch}`, target: '_blank', rel: 'noopener' }, 'Histórico no GitHub ↗'),
     h('button', { type: 'button', onclick: logout }, 'Sair'));
   const me = h('button', { class: 'me', type: 'button', 'aria-haspopup': 'true', onclick: (e) => { e.stopPropagation(); menu.hidden = !menu.hidden; } }, avatar);
   document.addEventListener('click', () => { menu.hidden = true; });
@@ -197,7 +194,17 @@ async function renameEditor() {
     body: h('label', { class: 'field' }, h('span', { class: 'lbl' }, 'Nome'), input),
     actions: (close) => [
       h('button', { class: 'btn btn-ghost', type: 'button', onclick: () => close() }, 'Cancelar'),
-      h('button', { class: 'btn btn-k', type: 'button', onclick: () => { ls.set(EDITOR_KEY, input.value.trim()); close(); toast('Nome atualizado.'); } }, 'Salvar'),
+      h('button', {
+        class: 'btn btn-k',
+        type: 'button',
+        onclick: () => {
+          ls.set(EDITOR_KEY, input.value.trim());
+          $('#me-initial').textContent = initial();
+          $('#me-name').textContent = editorName();
+          close();
+          toast('Nome atualizado.');
+        },
+      }, 'Salvar'),
     ],
   });
 }
@@ -244,7 +251,7 @@ function route() {
 function dashboard() {
   setTab('');
   const view = clear(app.view);
-  const name = (ls.get(EDITOR_KEY) || (app.user && (app.user.name || app.user.login)) || '').split(' ')[0];
+  const name = (ls.get(EDITOR_KEY) || '').split(' ')[0];
   const pending = h('div', { class: 'card dark pending' });
   const status = h('div', { class: 'card status' }, h('h2', null, 'Site no ar'), h('p', { class: 'muted' }, 'Carregando…'));
   const quick = h('div', { class: 'card quick' }, h('h2', null, 'Criar'),
@@ -331,12 +338,9 @@ async function loadStatus(box) {
     clear(box);
     add(box,
       h('h2', null, 'Site no ar'),
-      h('p', { class: `deploy ${live ? 'ok' : age < 10 ? 'busy' : 'warn'}` }, live ? '● Atualizado' : age < 10 ? '● Publicando… leva cerca de 1 minuto' : '● A última publicação ainda não está no ar'),
-      h('p', null, h('b', null, last.commit.message.split('\n')[0])),
-      h('p', { class: 'muted' }, `${last.commit.author.name} · ${timeAgo(last.commit.author.date)}`),
-      h('div', { class: 'btns' },
-        h('a', { class: 'btn btn-ghost btn-sm', href: siteUrl(), target: '_blank', rel: 'noopener' }, 'Ver o site ↗'),
-        !live && age >= 10 ? h('a', { class: 'btn btn-ghost btn-sm', href: `https://github.com/${REPO.owner}/${REPO.name}/actions`, target: '_blank', rel: 'noopener' }, 'Ver no GitHub ↗') : null));
+      h('p', { class: `deploy ${live ? 'ok' : age < 10 ? 'busy' : 'warn'}` }, live ? '● Atualizado' : age < 10 ? '● Publicando… leva cerca de 1 minuto' : '● A última publicação ainda não apareceu no site. Se continuar assim, avise quem cuida do site.'),
+      h('p', { class: 'muted' }, `Última publicação ${timeAgo(last.commit.author.date)}, por ${last.commit.author.name}.`),
+      h('div', { class: 'btns' }, h('a', { class: 'btn btn-ghost btn-sm', href: siteUrl(), target: '_blank', rel: 'noopener' }, 'Ver o site ↗')));
     if (!live && age < 10) setTimeout(() => box.isConnected && loadStatus(box), 8000);
   } catch {
     clear(box);
@@ -416,7 +420,7 @@ function publishedDialog(commit) {
     }
     if (Date.now() - started > 5 * 60000) {
       status.className = 'deploy warn';
-      status.replaceChildren('● Está demorando mais que o normal. ', h('a', { href: `https://github.com/${REPO.owner}/${REPO.name}/actions`, target: '_blank', rel: 'noopener' }, 'Ver no GitHub ↗'));
+      status.textContent = '● Está demorando mais que o normal. Se não aparecer em alguns minutos, avise quem cuida do site.';
       return;
     }
     setTimeout(poll, 5000);
@@ -430,7 +434,6 @@ function publishedDialog(commit) {
       h('p', { class: 'muted' }, 'Se uma página ainda aparecer antiga, recarregue: o navegador pode guardar a versão anterior por alguns minutos.')),
     onClose: () => { stop = true; route(); },
     actions: (close) => [
-      h('a', { class: 'btn btn-ghost', href: commit.html_url, target: '_blank', rel: 'noopener' }, 'Ver no GitHub ↗'),
       h('a', { class: 'btn btn-ghost', href: siteUrl(), target: '_blank', rel: 'noopener' }, 'Abrir o site ↗'),
       h('button', { class: 'btn btn-k', type: 'button', onclick: () => close() }, 'Fechar'),
     ],
