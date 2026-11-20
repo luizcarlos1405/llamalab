@@ -109,6 +109,13 @@ export function fmtTime(time) {
   return m[2] === '00' ? `${+m[1]}h` : `${+m[1]}h${m[2]}`;
 }
 
+// An event's hours: "21h", or "16h às 23h30" when it says when it ends.
+export function fmtHours(event) {
+  const start = fmtTime(event.time);
+  const end = start ? fmtTime(event.endTime) : '';
+  return end ? `${start} às ${end}` : start;
+}
+
 export function monthLabel(y, m) {
   return `${capitalize(MONTHS[m - 1])} ${y}`;
 }
@@ -125,6 +132,19 @@ export function eventEnd(event) {
 
 export function isUpcoming(event, today) {
   return eventEnd(event) >= today;
+}
+
+// When an event with a start time ends, for calendars: its end time on its last
+// day (the next day when that's earlier than the start: it goes past midnight);
+// without one, three hours after the start, or 23:59 on a multi-day event's last day.
+export function eventStop(event) {
+  const last = eventEnd(event);
+  if (/^\d{2}:\d{2}$/.test(event.endTime || '')) {
+    return { date: event.endTime <= event.time ? addDays(last, 1) : last, time: event.endTime };
+  }
+  const [h, m] = String(event.time).split(':').map(Number);
+  if (last !== event.date || h + 3 > 23) return { date: last, time: '23:59' };
+  return { date: last, time: `${pad(h + 3)}:${pad(m)}` };
 }
 
 // Replaces {mes} and {ano} in editable texts.

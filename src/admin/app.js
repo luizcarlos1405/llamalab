@@ -3,7 +3,7 @@
 
 import { COLLECTIONS, SINGLETONS, emptyItem, normalize, validate } from '../schema.js';
 import { REPO } from '../config.js';
-import { todayISO, parseDate, MONTHS_SHORT, fmtTime, fmtShort, isUpcoming } from '../util.js';
+import { todayISO, parseDate, MONTHS_SHORT, fmtHours, fmtShort, isUpcoming } from '../util.js';
 import { lockup, symbols } from '../render/svg.js';
 import { h, add, $, clear, toast, dialog, confirm, formatBytes, timeAgo } from './dom.js';
 import { createClient, describeError } from './github.js';
@@ -485,7 +485,7 @@ function statusBadges(type, item, status) {
 }
 
 function itemLine(type, item) {
-  if (type === 'agenda') return [item.venue, fmtTime(item.time), item.category, item.price].filter(Boolean).join(' · ');
+  if (type === 'agenda') return [item.venue, fmtHours(item), item.category, item.price].filter(Boolean).join(' · ');
   if (type === 'noticias') return [item.kicker, fmtShort(item.date)].filter(Boolean).join(' · ');
   return [item.name !== item.title ? item.name : '', item.area, fmtShort(item.date)].filter(Boolean).join(' · ');
 }

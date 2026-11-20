@@ -2,7 +2,7 @@
 // interview cards, news items… Every function returns an HTML string. `P` is
 // the page context from context.js (links, image URLs, data).
 
-import { esc, fmtShort, fmtTime, WEEKDAYS_SHORT, weekday, parseDate, monthLabel, MONTHS_SHORT, excerpt, stripMarkdown, splitList, waLink, formatPhone, slugify, eventEnd, hash, spotifyPlaylistId } from '../util.js';
+import { esc, fmtShort, fmtHours, WEEKDAYS_SHORT, weekday, parseDate, monthLabel, MONTHS_SHORT, excerpt, stripMarkdown, splitList, waLink, formatPhone, slugify, eventEnd, hash, spotifyPlaylistId } from '../util.js';
 import { symbols, lockup, wordmark, llama, llamaUse, ring } from './svg.js';
 
 export const NAV = [
@@ -187,7 +187,7 @@ export function eventWhere(ev) {
 }
 
 export function eventInfo(ev) {
-  return [fmtTime(ev.time), ev.price].filter(Boolean).join(' · ');
+  return [fmtHours(ev), ev.price].filter(Boolean).join(' · ');
 }
 
 export function eventLine(ev) {

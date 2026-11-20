@@ -1,7 +1,7 @@
 // Every public page. Each function takes a page context (see context.js) and
 // returns a complete HTML document.
 
-import { esc, excerpt, stripMarkdown, fmtShort, fmtLong, fmtWeekdayLong, fmtTime, weekday, WEEKDAYS, parseDate, monthLabel, isUpcoming, splitList, youtubeId, addDays, capitalize, waLink, MONTHS } from '../util.js';
+import { esc, excerpt, stripMarkdown, fmtShort, fmtLong, fmtWeekdayLong, fmtTime, fmtHours, eventStop, weekday, WEEKDAYS, parseDate, monthLabel, isUpcoming, splitList, youtubeId, addDays, capitalize, waLink, MONTHS } from '../util.js';
 import { renderMarkdown } from '../markdown.js';
 import { SITE } from '../config.js';
 import { layout } from './layout.js';
@@ -164,10 +164,8 @@ function googleCalendarLink(ev) {
   const endDay = ev.endDate && ev.endDate > ev.date ? ev.endDate : ev.date;
   let dates;
   if (ev.time) {
-    const [h, m] = ev.time.split(':').map(Number);
-    const endH = endDay === ev.date ? Math.min(h + 3, 23) : 23;
-    const endM = endDay === ev.date && h + 3 <= 23 ? m : 59;
-    dates = `${compact(ev.date)}T${String(h).padStart(2, '0')}${String(m).padStart(2, '0')}00/${compact(endDay)}T${String(endH).padStart(2, '0')}${String(endM).padStart(2, '0')}00`;
+    const stop = eventStop(ev);
+    dates = `${compact(ev.date)}T${ev.time.replace(':', '')}00/${compact(stop.date)}T${stop.time.replace(':', '')}00`;
   } else {
     dates = `${compact(ev.date)}/${compact(addDays(endDay, 1))}`;
   }
@@ -193,7 +191,7 @@ export function eventPage(P, ev) {
   const mapQuery = [ev.venue, ev.address, ev.city || 'Dourados', 'MS'].filter(Boolean).join(', ');
   const acts = splitList(ev.lineup);
   const rows = [
-    ['Quando', `${esc(whenText)}${ev.time ? ` · ${esc(fmtTime(ev.time))}` : ''}`],
+    ['Quando', `${esc(whenText)}${ev.time ? ` · ${esc(fmtHours(ev))}` : ''}`],
     where && ['Onde', `${esc(where)}${ev.venue || ev.address ? ` · <a href="https://www.google.com/maps/search/?api=1&amp;query=${encodeURIComponent(mapQuery)}" target="_blank" rel="noopener">ver no mapa ↗</a>` : ''}`],
     ev.price && ['Entrada', esc(ev.price)],
     acts.length && ['Atrações', esc(acts.join(' · '))],
@@ -212,7 +210,7 @@ export function eventPage(P, ev) {
       ${breadcrumbs(P, [['Agenda', P.href('agenda/')], [ev.title]])}
       <div class="tags">${ev.category ? `<span class="tag">${esc(ev.category)}</span>` : ''}${ev.price ? `<span class="tag r">${esc(ev.price)}</span>` : ''}${past ? '<span class="stamp-past">Já rolou</span>' : ''}</div>
       <h1 class="h2 ${titleSize(ev.title, 20, 40)}" data-split>${split(ev.title)}</h1>
-      <div class="when" data-r style="--d:150ms"><b>${String(p.d).padStart(2, '0')}</b><span>${esc(MONTHS[p.m - 1])} · ${p.y}<small>${esc(WEEKDAYS[weekday(ev.date)])}${ev.time ? ` · ${esc(fmtTime(ev.time))}` : ''}${multi ? ` · até ${esc(fmtShort(ev.endDate, false))}` : ''}</small><small>${esc(ev.venue || ev.city || '')}</small></span></div>
+      <div class="when" data-r style="--d:150ms"><b>${String(p.d).padStart(2, '0')}</b><span>${esc(MONTHS[p.m - 1])} · ${p.y}<small>${esc(WEEKDAYS[weekday(ev.date)])}${ev.time ? ` · ${esc(fmtHours(ev))}` : ''}${multi ? ` · até ${esc(fmtShort(ev.endDate, false))}` : ''}</small><small>${esc(ev.venue || ev.city || '')}</small></span></div>
       <div class="btns" data-r style="--d:250ms;margin-top:30px">
         ${ev.link ? `<a class="btn btn-red" href="${esc(ev.link)}" target="_blank" rel="noopener">${esc(ev.linkLabel || 'Mais informações')} <span class="arr">→</span></a>` : ''}
         ${past ? '' : `<a class="btn btn-solid" href="${esc(googleCalendarLink(ev))}" target="_blank" rel="noopener">Salvar na agenda <span class="arr">→</span></a>`}
@@ -239,18 +237,18 @@ export function eventPage(P, ev) {
     '@type': 'Event',
     name: ev.title,
     startDate: ev.time ? `${ev.date}T${ev.time}:00-04:00` : ev.date,
-    ...(multi ? { endDate: ev.endDate } : {}),
+    ...(ev.time && ev.endTime ? { endDate: `${eventStop(ev).date}T${ev.endTime}:00-04:00` } : multi ? { endDate: ev.endDate } : {}),
     eventStatus: 'https://schema.org/EventScheduled',
     eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
     location: { '@type': 'Place', name: ev.venue || ev.city || 'Dourados', address: [ev.address, ev.city || 'Dourados', 'MS'].filter(Boolean).join(', ') },
     ...(ev.image && ev.image.src ? { image: [P.abs(ev.image.src)] } : {}),
-    description: excerpt(stripMarkdown(ev.description) || eventLine(ev) || ev.title, 300),
+    description: excerpt(ev.summary || stripMarkdown(ev.description) || eventLine(ev) || ev.title, 300),
     url,
     organizer: { '@type': 'Organization', name: 'LlamaLab', url: P.abs('') },
   };
   return layout(P, {
     title: `${ev.title} · ${String(p.d).padStart(2, '0')}/${String(p.m).padStart(2, '0')}`,
-    description: [`${whenText}${ev.time ? `, ${fmtTime(ev.time)}` : ''}`, where, acts.join(', '), stripMarkdown(ev.description)].filter(Boolean).join(' · '),
+    description: [`${whenText}${ev.time ? `, ${fmtHours(ev)}` : ''}`, where, acts.join(', '), ev.summary || stripMarkdown(ev.description)].filter(Boolean).join(' · '),
     image: ev.image,
     type: 'article',
     current: 'agenda',

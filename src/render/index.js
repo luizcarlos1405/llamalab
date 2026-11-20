@@ -1,6 +1,6 @@
 // Renders the whole site (build) or a single page (admin preview).
 
-import { esc, excerpt, stripMarkdown, isUpcoming, eventEnd } from '../util.js';
+import { esc, excerpt, stripMarkdown, isUpcoming, eventEnd, eventStop } from '../util.js';
 import { SITE } from '../config.js';
 import { createContext, pageContext } from './context.js';
 import {
@@ -136,9 +136,8 @@ function ics(ctx, ev) {
   let start; let finish;
   if (ev.time) {
     start = `DTSTART:${icsDate(ev.date, ev.time)}`;
-    const [h, m] = ev.time.split(':').map(Number);
-    const endTime = end === ev.date ? `${String(Math.min(h + 3, 23)).padStart(2, '0')}:${h + 3 <= 23 ? String(m).padStart(2, '0') : '59'}` : '23:59';
-    finish = `DTEND:${icsDate(end, endTime)}`;
+    const stop = eventStop(ev);
+    finish = `DTEND:${icsDate(stop.date, stop.time)}`;
   } else {
     const next = new Date(`${end}T12:00:00Z`);
     next.setUTCDate(next.getUTCDate() + 1);
