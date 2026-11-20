@@ -18,7 +18,7 @@ data/*.json, images/  ──>  scripts/build.mjs  ──>  _site/  ──>  GitH
 ```
 
 - **Content** is one JSON file per type in `data/`: `agenda.json`, `noticias.json` and `entrevistas.json`
-  (arrays of items), plus `site.json` (home page, ribbons, footer call to action, contacts), `sobre.json` and
+  (arrays of items), plus `site.json` (home page, ribbons, footer call to action, contacts, the radio's stations), `sobre.json` and
   `contrate.json`. Fields are defined once in [`src/schema.js`](src/schema.js), which drives the admin forms, the
   validation and the build. Long texts use the small Markdown subset in [`src/markdown.js`](src/markdown.js).
 - **Images** live in `images/<type>/` as WebP. The admin resizes every upload to the largest box it's shown in on
@@ -29,6 +29,36 @@ data/*.json, images/  ──>  scripts/build.mjs  ──>  _site/  ──>  GitH
   preview. The build also writes `sitemap.xml`, `feed.xml` (RSS), an `.ics` file per event and `version.json`.
 - **Daily rebuild:** the Actions workflow also runs every night, so events that already happened leave the home
   page and the agenda without anyone publishing.
+
+## The radio
+
+The team's Spotify playlists play from a radio docked at the bottom of every page ([`assets/radio.js`](assets/radio.js)):
+each playlist is a station on a dial, and play/pause sits next to the bars in the nav.
+
+- **Stations** are edited in the admin, under **Páginas → Capa e contatos → Rádio**: a short name for the dial and
+  the playlist's link (in Spotify: ⋯ → Compartilhar → Copiar link da playlist). Up to 12, in the order given; the
+  playlists must be public. With no stations, the radio leaves the site.
+- **First visit:** a random station, kept in the browser (`localStorage`), as is the last one chosen. Nothing plays
+  by itself: browsers don't allow it.
+- **Spotify loads only when the visitor presses play.** Until then, the pages don't contact Spotify at all. Its player
+  (the iFrame API) then takes the invite's place in the radio, which it must: it only starts playing while in sight.
+- **From page to page:** once the player exists, links within the site swap the page's content instead of reloading
+  it (the end of [`assets/site.js`](assets/site.js)), so the music doesn't stop. Each page sets itself up in `mount()`,
+  which runs on load and after every swap.
+- **Hiding:** the handle on top slides the radio below the screen and brings it back. The choice is remembered.
+
+Worth knowing:
+
+- Visitors who aren't logged into Spotify in that browser hear 30-second previews, and Spotify sometimes shows its
+  own "Use o Spotify" invitation inside the player.
+- If the music doesn't start after the visitor presses play (some browsers, Safari above all, only allow a click
+  inside Spotify's player), a note points at Spotify's own ▶ button.
+- The bars don't show the song's spectrum (Spotify's player gives out no audio data): they move on a beat while the
+  music plays.
+- Spotify's terms ask that its players aren't hidden or covered while they play. Hiding the radio does that, by
+  choice. If Spotify ever objects, hiding could pause the music instead (a small change in `hide()`, in radio.js).
+- Spotify publishes the iFrame API as a development build that runs its code through `eval()`, so the pages'
+  Content-Security-Policy allows `'unsafe-eval'` (in [`src/render/layout.js`](src/render/layout.js)).
 
 ## Working on it locally
 
@@ -50,7 +80,7 @@ that can be edited.
   as one commit with a generated message. The editor's name is the commit author.
 - **Agenda, Notícias, Entrevistas** list, search, filter, create, duplicate (events), edit and remove items.
   The editor shows a live preview of the real page, at desktop or phone width.
-- **Páginas** edits the home page settings, contacts, Sobre and Contrate.
+- **Páginas** edits the home page settings, the radio's stations, contacts, Sobre and Contrate.
 - **Drafts** survive reloads and closing the tab: data and staged images are kept in IndexedDB, and so is a
   form that wasn't saved yet.
 - **Publishing:**
@@ -103,7 +133,7 @@ before switching.
 
 ```
 admin.html            the CMS, served at /admin (loads src/admin/main.js)
-assets/               CSS, the public pages' JS, fonts (Anton, Outfit), logos, icons
+assets/               CSS, the public pages' JS (site.js; radio.js for the radio), fonts (Anton, Outfit), logos, icons
 data/                 the content, as JSON
 images/               the content's images, as WebP
 scripts/build.mjs     static build; scripts/dev.mjs is the local server
