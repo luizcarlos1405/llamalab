@@ -116,14 +116,25 @@
       l.addEventListener('pointerleave', () => l.classList.remove('bang'));
     });
 
-    /* ribbons: each repeats its phrase 4 times; loop by one phrase length */
+    /* ribbons: each repeats its phrase 4 times and loops by one phrase's length, measured
+       on a straight, hidden copy of the text: on the curve, Firefox only counts the letters
+       that fit, and its getSubStringLength() is off. */
     const tps = $$('.ribbons textPath');
     const measure = () => {
       page.unit = tps.map((tp) => {
+        const copy = d.createElementNS('http://www.w3.org/2000/svg', 'text');
+        copy.setAttribute('class', 'rb-text');
+        copy.setAttribute('visibility', 'hidden');
+        copy.append(...[...tp.childNodes].map((n) => n.cloneNode(true)));
+        tp.parentNode.after(copy);
         try {
-          return tp.getComputedTextLength() / 4 || 900;
+          // the second phrase's first letter (SVG drops the text's final space)
+          const second = (copy.getNumberOfChars() + 1) / 4;
+          return copy.getStartPositionOfChar(second).x - copy.getStartPositionOfChar(0).x || 900;
         } catch {
           return 900;
+        } finally {
+          copy.remove();
         }
       });
     };
@@ -364,6 +375,8 @@
     d.fonts.ready.then(() => page.tps.length && page.measure());
     d.fonts.addEventListener('loadingdone', () => page.tps.length && page.measure());
   }
+  // the ribbons' letters change size at the phone breakpoint (site.css), e.g. when a phone turns
+  matchMedia('(max-width: 760px)').addEventListener('change', () => page.tps.length && page.measure());
   d.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && page.menu && !page.menu.hidden) page.closeMenu();
   });
