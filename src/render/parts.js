@@ -173,7 +173,8 @@ export function img(P, image, { cls = '', eager = false, alt, focus: fallback = 
   const dims = image.w && image.h ? ` width="${image.w}" height="${image.h}"` : '';
   const pos = image.focus || fallback;
   const focus = pos ? ` style="object-position:${esc(pos)}"` : '';
-  return `<img${cls ? ` class="${cls}"` : ''} src="${esc(P.src(image.src))}" alt="${esc(alt ?? image.alt ?? '')}"${dims}${focus} loading="${eager ? 'eager' : 'lazy'}" decoding="async">`;
+  // eager: the page's main picture, at the top; the browser fetches it before the rest
+  return `<img${cls ? ` class="${cls}"` : ''} src="${esc(P.src(image.src))}" alt="${esc(alt ?? image.alt ?? '')}"${dims}${focus} loading="${eager ? 'eager' : 'lazy'}"${eager ? ' fetchpriority="high"' : ''} decoding="async">`;
 }
 
 export function llamaFallback() {
