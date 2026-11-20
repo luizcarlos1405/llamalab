@@ -81,6 +81,8 @@ that can be edited.
 - **Agenda, Notícias, Entrevistas** list, search, filter, create, duplicate (events), edit and remove items.
   The editor shows a live preview of the real page, at desktop or phone width.
 - **Páginas** edits the home page settings, the radio's stations, contacts, Sobre and Contrate.
+- **Post da agenda** (Agenda → Post para o Instagram) turns the events of a date range into the "Agenda
+  cultural" carousel the team posts on Instagram (see below).
 - **Drafts** survive reloads and closing the tab: data and staged images are kept in IndexedDB, and so is a
   form that wasn't saved yet.
 - **Publishing:**
@@ -88,6 +90,23 @@ that can be edited.
     Only an item both people changed counts as a conflict, and the editor picks which version stays.
   - Images that nothing points to any more are deleted in the same commit, which keeps the published site small.
   - After a publish, the admin polls `version.json` until the new version is live (usually under a minute).
+
+### The Instagram post
+
+The editor picks a date range and gets the carousel, drawn in the browser
+([`src/admin/post-draw.js`](src/admin/post-draw.js), the screen in [`src/admin/post.js`](src/admin/post.js)):
+a cover with the first day, then the events, three per image on paper cards that change colour from image to
+image, as 1080 × 1350 JPEGs. Nothing is saved or published.
+
+- Each event is its date and weekday, "name - venue", and its **Chamada** (a field of the event, also used in
+  link previews) followed by its hours. Without a Chamada, the first sentence of the description goes in.
+  Events can be left out with their checkbox; the cover's line is editable.
+- On phones, **Compartilhar** hands the images to Instagram or to the photo gallery. Elsewhere they download as
+  one .zip, or one by one. The caption (the team's usual line and the list of events) is ready to copy.
+- Two pieces are stand-ins until the team sends the originals: the display font (their lettering is custom;
+  [Bagel Fat One](https://fonts.google.com/specimen/Bagel+Fat+One), OFL, for now) and the crumpled paper, drawn
+  by `crumple()`. To use their font, put the .woff2 in `assets/fonts/` and point `BRAND.display` at it. The
+  colours are in `BRAND` too.
 
 ### Tokens
 
@@ -133,12 +152,13 @@ before switching.
 
 ```
 admin.html            the CMS, served at /admin (loads src/admin/main.js)
-assets/               CSS, the public pages' JS (site.js; radio.js for the radio), fonts (Anton, Outfit), logos, icons
+assets/               CSS, the public pages' JS (site.js; radio.js for the radio), fonts (Anton, Outfit; Bagel Fat One
+                      for the Instagram post), logos, icons
 data/                 the content, as JSON
 images/               the content's images, as WebP
 scripts/build.mjs     static build; scripts/dev.mjs is the local server
 src/schema.js         content model; src/config.js holds the site settings and image sizes
 src/render/           page templates, shared by the build and the admin preview
-src/admin/            the CMS: GitHub client, drafts store, forms, image processing
+src/admin/            the CMS: GitHub client, drafts store, forms, image processing, the Instagram post
 .github/workflows/    build and deploy to Pages
 ```
