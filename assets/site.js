@@ -400,8 +400,14 @@
     return url;
   }
 
+  // The head's own links (icon, feed…) are relative, and browsers read some of them again
+  // as soon as the address changes, before the new page arrives: make them absolute.
+  const HEAD_LINKS = 'link[rel="icon"],link[rel="apple-touch-icon"],link[rel="alternate"],link[rel="canonical"]';
+  const pinHead = () => $$(HEAD_LINKS).forEach((link) => link.setAttribute('href', link.href));
+
   let loading = null;
   async function go(url, { push = true, y = 0 } = {}) {
+    pinHead();
     if (loading) loading.abort();
     const ctrl = new AbortController();
     loading = ctrl;
@@ -433,14 +439,15 @@
       history.pushState({ ll: true, y: 0 }, '', url.href);
     }
 
-    // the head's own links are relative to the page, so they come from the new page too
-    // (the stylesheets and scripts stay: they're already loaded and the same everywhere)
+    // the description, canonical and head links come from the new page (the stylesheets
+    // and scripts stay: they're already loaded and the same everywhere)
     d.title = doc.title;
-    for (const sel of ['meta[name="description"]', 'link[rel="canonical"]', 'link[rel="icon"]', 'link[rel="apple-touch-icon"]', 'link[rel="alternate"]']) {
+    for (const sel of ['meta[name="description"]', ...HEAD_LINKS.split(',')]) {
       const mine = $(sel);
       const theirs = doc.querySelector(sel);
       if (mine && theirs) mine.replaceWith(d.importNode(theirs, true));
     }
+    pinHead();
     for (const attr of ['data-root', 'data-edit']) {
       const v = doc.documentElement.getAttribute(attr);
       if (v === null) html.removeAttribute(attr);
