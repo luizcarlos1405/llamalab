@@ -191,6 +191,7 @@ export function eventInfo(ev) {
 }
 
 export function eventLine(ev) {
+  if (ev.summary) return ev.summary;
   const acts = splitList(ev.lineup);
   if (acts.length) return acts.join(' + ');
   return excerpt(stripMarkdown(ev.description), 110);

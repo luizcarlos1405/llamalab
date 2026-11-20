@@ -174,7 +174,7 @@ function googleCalendarLink(ev) {
     text: ev.title,
     dates,
     ctz: SITE.timezone,
-    details: excerpt(stripMarkdown(ev.description) || ev.lineup || '', 400),
+    details: excerpt(stripMarkdown(ev.description) || ev.summary || ev.lineup || '', 400),
     location: [ev.venue, ev.address, ev.city].filter(Boolean).join(', '),
   });
   return `https://calendar.google.com/calendar/render?${params}`;
@@ -226,7 +226,7 @@ export function eventPage(P, ev) {
   <div class="detail">
     <div>
       <dl class="ficha">${rows.map(([dt, dd]) => `<div><dt>${dt}</dt><dd>${dd}</dd></div>`).join('')}</dl>
-      ${ev.description ? `<div class="prose" style="margin-top:clamp(36px,4vw,56px)">${md(P, ev.description)}</div>` : ''}
+      ${ev.description || ev.summary ? `<div class="prose" style="margin-top:clamp(36px,4vw,56px)">${ev.description ? md(P, ev.description) : `<p>${esc(ev.summary)}</p>`}</div>` : ''}
     </div>
     <aside class="aside">${shareBox(P, ev.title, url)}${past ? '' : `<div class="box"><b>Salvar</b><a href="${esc(googleCalendarLink(ev))}" target="_blank" rel="noopener">Google Agenda ↗</a><a href="${P.href(`agenda/${ev.id}/evento.ics`)}" download>Apple, Outlook (.ics)</a></div>`}<div class="box k"><b>Agenda</b><a href="${P.href('agenda/')}">Todos os rolês →</a></div></aside>
   </div>

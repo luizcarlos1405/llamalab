@@ -153,7 +153,7 @@ function ics(ctx, ev) {
     start, finish,
     `SUMMARY:${icsText(ev.title)}`,
     `LOCATION:${icsText([ev.venue, ev.address, ev.city].filter(Boolean).join(', '))}`,
-    `DESCRIPTION:${icsText(excerpt(stripMarkdown(ev.description) || ev.lineup || '', 600))}`,
+    `DESCRIPTION:${icsText(excerpt(stripMarkdown(ev.description) || ev.summary || ev.lineup || '', 600))}`,
     `URL:${ctx.siteUrl}/agenda/${ev.id}/`,
     'END:VEVENT', 'END:VCALENDAR', '',
   ].join('\r\n');
