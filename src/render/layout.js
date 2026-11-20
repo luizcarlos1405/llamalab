@@ -70,7 +70,6 @@ ${image.alt ? `<meta property="og:image:alt" content="${esc(image.alt)}">` : ''}
 <link rel="alternate" type="application/rss+xml" title="LlamaLab" href="${P.href('feed.xml')}">
 <link rel="preload" href="${P.href('assets/fonts/anton-400.woff2')}" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="${P.href('assets/fonts/outfit-300-800.woff2')}" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="${P.href('assets/fonts.css')}${v}">
 <link rel="stylesheet" href="${P.href('assets/site.css')}${v}">
 ${P.preview ? '' : `<script>${JS_FLAG}</script>`}
 <script src="${P.href('assets/site.js')}${v}" defer></script>
