@@ -78,11 +78,13 @@ ${opts.head || ''}
 <a class="skip" href="#conteudo">Pular para o conteúdo</a>
 ${symbols}
 ${nav(P, opts.current)}
+<div id="pagina">
 ${opts.before || ''}
 <main id="conteudo">
 ${opts.main}
 ${footer(P, { withCta: opts.cta !== false })}
 </main>
+</div>
 ${radioHtml}
 </body>
 </html>
