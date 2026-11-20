@@ -1,0 +1,94 @@
+[
+  {
+    "id": "conect-2026-06-20",
+    "title": "CØNECT",
+    "category": "Festa",
+    "date": "2026-06-20",
+    "time": "",
+    "endDate": "",
+    "venue": "Casulo",
+    "address": "",
+    "city": "Dourados",
+    "price": "",
+    "lineup": "",
+    "description": "Uma noite com batidas pesadas e aquela vibe underground que só o funk eletrônico tem",
+    "image": {
+      "src": "images/agenda/conect-2026-06-20.webp",
+      "alt": "Flyer de CØNECT no Casulo",
+      "w": 720,
+      "h": 960
+    },
+    "link": "",
+    "linkLabel": "",
+    "featured": false
+  },
+  {
+    "id": "feijoada-de-ogum-2026-2026-06-27",
+    "title": "Feijoada de Ogum 2026",
+    "category": "Festa",
+    "date": "2026-06-27",
+    "time": "12:00",
+    "endDate": "",
+    "venue": "Ilê Axé Megemulebaonã",
+    "address": "",
+    "city": "Dourados",
+    "price": "",
+    "lineup": "",
+    "description": "Celebração da cultura afro-brasileira com feijoada, música ao vivo + atração cultural\n\nInfos: (67) 98466-7221",
+    "image": {
+      "src": "images/agenda/feijoada-de-ogum-2026-2026-06-27.webp",
+      "alt": "Flyer da Feijoada de Ogum 2026",
+      "w": 900,
+      "h": 900
+    },
+    "link": "",
+    "linkLabel": "",
+    "featured": false
+  },
+  {
+    "id": "4-parada-lgbtqiapn-2026-06-27",
+    "title": "4ª Parada LGBTQIAPN+",
+    "category": "Festival",
+    "date": "2026-06-27",
+    "time": "18:00",
+    "endDate": "",
+    "venue": "Sucata Cultural",
+    "address": "",
+    "city": "Dourados",
+    "price": "",
+    "lineup": "",
+    "description": "Música ao vivo, DJs e apresentações artísticas",
+    "image": {
+      "src": "images/agenda/4-parada-lgbtqiapn-2026-06-27.webp",
+      "alt": "Flyer da 4ª Parada LGBTQIAPN+",
+      "w": 1080,
+      "h": 1350
+    },
+    "link": "",
+    "linkLabel": "",
+    "featured": false
+  },
+  {
+    "id": "1-ano-da-fissura-2026-06-27",
+    "title": "1º Ano da Fissura",
+    "category": "Show",
+    "date": "2026-06-27",
+    "time": "21:00",
+    "endDate": "",
+    "venue": "Vibes",
+    "address": "",
+    "city": "Dourados",
+    "price": "",
+    "lineup": "",
+    "description": "A banda Fissura comemora um ano com a presença de Mi Vieira, do Glória",
+    "image": {
+      "src": "images/agenda/1-ano-da-fissura-2026-06-27.webp",
+      "alt": "Flyer do 1º Ano da Fissura",
+      "w": 640,
+      "h": 853
+    },
+    "link": "",
+    "linkLabel": "",
+    "featured": false
+  }
+]

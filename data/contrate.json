@@ -1,0 +1,22 @@
+{
+  "title": "Contrate a Llama",
+  "lead": "Divulgação cultural feita por quem vive a cena. A gente ajuda teu evento, teu projeto ou tua arte a chegar em quem precisa ver.",
+  "services": [
+    {
+      "title": "Divulgação de eventos",
+      "text": "Planejamento e execução da divulgação do teu show, festa, peça ou feira: agenda, redes sociais e imprensa."
+    },
+    {
+      "title": "Conteúdo e entrevistas",
+      "text": "Perfis, entrevistas e textos sobre artistas e projetos, para o site, as redes e materiais de imprensa."
+    },
+    {
+      "title": "Redes sociais",
+      "text": "Posts, vídeos curtos e calendário de publicações para artistas, coletivos e espaços culturais."
+    }
+  ],
+  "body": "",
+  "ctaText": "Conta pra gente o que você precisa e a gente monta uma proposta.",
+  "ctaLabel": "Chamar no WhatsApp",
+  "ctaMessage": "Oi, Llama! Quero saber mais sobre os serviços de divulgação: "
+}

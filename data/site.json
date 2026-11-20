@@ -1,0 +1,47 @@
+{
+  "hero": {
+    "eyebrow": "Agenda cultural · Dourados–MS",
+    "title": "Cultura que faz",
+    "highlight": "barulho.",
+    "text": "Agenda, entrevistas e notícias de quem faz a cena acontecer — do rock ao sarau, da feira ao festival."
+  },
+  "ribbons": {
+    "top": [
+      "Agenda cultural",
+      "Entrevistas",
+      "Notícias",
+      "Dourados–MS"
+    ],
+    "bottom": [
+      "Shows",
+      "Teatro",
+      "Arte",
+      "Feiras",
+      "Saraus",
+      "Festivais"
+    ]
+  },
+  "cta": {
+    "line1": "Tem um rolê",
+    "line2": "rolando?",
+    "highlight": "A gente espalha.",
+    "text": "Somos um laboratório criativo de divulgação cultural. Entrevistas, cobertura, agenda e redes — pra sua arte ser ouvida em Dourados e além.",
+    "eventLabel": "Divulgue seu evento",
+    "eventMessage": "Oi, Llama! Quero divulgar um evento: ",
+    "interviewLabel": "Quero dar entrevista",
+    "interviewMessage": "Oi, Llama! Quero contar minha história numa entrevista: "
+  },
+  "contact": {
+    "whatsapp": "5567992475409",
+    "email": "contato@llamalab.com",
+    "instagram": "llama.etc",
+    "tiktok": "llama.etc",
+    "youtube": "",
+    "spotify": "",
+    "cnpj": "20.270.026/0001-67"
+  },
+  "seo": {
+    "title": "LlamaLab — cultura que faz barulho em Dourados",
+    "description": "Agenda cultural, entrevistas e notícias de quem faz a cultura acontecer em Dourados (MS): shows, teatro, saraus, feiras e festivais."
+  }
+}
