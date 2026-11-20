@@ -444,6 +444,129 @@ a:hover .uw{background-size:100% 3px}
 .admin-fab+.admin-fab span{color:var(--w)}
 .admin-fab+.admin-fab:hover{background:var(--w);color:var(--k)}
 
+/* RADIO: playlists on a dial, docked at the bottom (radio.js). --radio-space is the room it
+   takes at the bottom of the screen, kept free at the end of the page. */
+main{padding-bottom:var(--radio-space,0px)}
+.toast{bottom:calc(24px + var(--radio-space,0px))}
+.admin-fab{bottom:calc(16px + var(--radio-space,0px))}
+
+/* nav: play/pause next to the bars */
+.som{position:relative;display:none;align-items:center;gap:11px;height:46px;padding:4px 15px 4px 4px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.05)}
+.js .som{display:flex}
+.som-btn{position:relative;width:38px;height:38px;flex:0 0 auto;border-radius:50%;display:grid;place-items:center;background:var(--w);color:var(--k);transition:transform .45s var(--spring),background .3s,color .3s}
+.som-btn:hover{transform:scale(1.08)}
+.som-btn svg,.radio .play-big svg{width:17px;height:17px;fill:currentColor}
+.som-btn .ic-pause{display:none}
+[data-player=playing] .som-btn .ic-play,[data-player=loading] .som-btn .ic-play{display:none}
+[data-player=playing] .som-btn .ic-pause,[data-player=loading] .som-btn .ic-pause{display:block}
+[data-player=invite] .som-btn{background:var(--r);color:var(--w)}
+[data-player=invite] .som-btn::after{content:"";position:absolute;inset:0;border-radius:50%;animation:live 1.6s infinite}
+.som-tip{position:absolute;right:0;top:calc(100% + 12px);display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:999px;background:var(--w);color:var(--k);font:600 13px/1 var(--sans);white-space:nowrap;opacity:0;transform:translateY(-6px);pointer-events:none;transition:opacity .3s,transform .4s var(--spring)}
+.som-tip::before{content:"";position:absolute;right:28px;top:-5px;width:12px;height:12px;background:inherit;transform:rotate(45deg);border-radius:2px}
+.som-tip b{font:400 15px/1 var(--disp);letter-spacing:.02em;text-transform:uppercase}
+.som-tip small{font:600 10px/1 var(--sans);letter-spacing:.2em;text-transform:uppercase;color:var(--r)}
+.som:hover .som-tip{opacity:1;transform:none}
+
+/* equalizer bars: heights come from radio.js, on a beat while the music plays */
+.eqv{display:flex;align-items:flex-end;gap:3px;height:18px;flex:0 0 auto}
+.eqv i{display:block;width:3px;height:100%;border-radius:2px;background:#6f6f6f;transform-origin:50% 100%;transform:scaleY(.14);transition:background .4s}
+[data-player=playing] .eqv i{background:var(--r)}
+.eqv.sm{height:12px;gap:2px}.eqv.sm i{width:2px}
+
+/* the radio */
+.radio{--down:22px;position:fixed;z-index:70;left:50%;bottom:var(--down);transform:translateX(-50%);width:min(1210px,calc(100% - 28px));display:grid;grid-template-columns:auto minmax(0,1fr) 440px;align-items:center;gap:12px;padding:10px;border-radius:26px;background:rgba(12,12,12,.93);border:1px solid var(--line);color:var(--w);-webkit-backdrop-filter:blur(18px) saturate(1.4);backdrop-filter:blur(18px) saturate(1.4);box-shadow:0 34px 70px -26px rgba(0,0,0,.95);transition:transform .6s var(--ease),box-shadow .4s}
+.radio[hidden]{display:none}
+.radio button{color:inherit}
+/* hidden below the screen: only the handle peeks out at the bottom edge */
+.radio[data-hidden=true]{transform:translate(-50%,calc(100% + var(--down)));box-shadow:none}
+.radio[data-hidden=true] > :not(.alca){opacity:0;transition:opacity .3s}
+.radio .alca{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);display:flex;align-items:center;gap:9px;height:30px;padding:0 16px;border-radius:15px 15px 0 0;background:rgba(12,12,12,.93);border:1px solid var(--line);border-bottom:0;color:#bdbdbd;-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);transition:color .25s,padding .4s var(--spring)}
+.radio .alca::after{content:"";position:absolute;inset:-12px -10px 0}
+.radio .alca:hover,.radio .alca:focus-visible{color:var(--w)}
+.radio .alca svg,.radio .nudge svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;transition:transform .45s var(--spring)}
+.radio .alca .eqv{display:none}
+.radio .alca-l{display:none;max-width:0;overflow:hidden;white-space:nowrap;font:600 11px/1 var(--sans);letter-spacing:.18em;text-transform:uppercase;transition:max-width .45s var(--ease)}
+.radio[data-hidden=true] .alca{height:34px;padding:0 15px;color:var(--w);box-shadow:0 -10px 30px -10px rgba(0,0,0,.8)}
+.radio[data-hidden=true] .alca svg{transform:rotate(180deg)}
+.radio[data-hidden=true] .alca .eqv{display:flex}
+.radio[data-hidden=true] .alca-l{display:block}
+.radio[data-hidden=true] .alca:hover .alca-l,.radio[data-hidden=true] .alca:focus-visible .alca-l{max-width:220px}
+/* the knob tunes the next station */
+.radio .knob-w{display:flex;flex-direction:column;align-items:center;gap:7px;padding:0 6px 0 8px}
+.radio .knob{position:relative;width:58px;height:58px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#3a3a3a,#141414 62%);box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 6px 14px rgba(0,0,0,.6),0 0 0 4px #0b0b0b,0 0 0 5px rgba(255,255,255,.1);transform:rotate(calc(var(--c,0) * 360deg / var(--n,10) - 150deg));transition:transform .7s var(--spring)}
+.radio .knob::before{content:"";position:absolute;inset:8px;border-radius:50%;background:repeating-conic-gradient(rgba(255,255,255,.07) 0 4deg,transparent 4deg 12deg)}
+.radio .knob::after{content:"";position:absolute;left:50%;top:7px;width:4px;height:15px;margin-left:-2px;border-radius:2px;background:var(--r);box-shadow:0 0 8px rgba(238,60,35,.8)}
+.radio .knob-w small{font:600 9.5px/1 var(--sans);letter-spacing:.22em;text-transform:uppercase;color:var(--g)}
+/* the dial */
+.radio .dial{position:relative;height:80px;border-radius:14px;overflow:hidden;background:linear-gradient(180deg,#040404,#0d0d0d);box-shadow:inset 0 2px 10px rgba(0,0,0,.9),inset 0 0 0 1px rgba(255,255,255,.07)}
+.radio .dial::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(255,255,255,.06),transparent 40%)}
+.radio .scale{position:absolute;left:4%;right:4%;top:0;bottom:0}
+.radio .mhz{position:absolute;top:8px;left:0;right:0;display:flex;justify-content:space-between;font:600 8.5px/1 var(--sans);letter-spacing:.08em;color:#5b5b5b}
+.radio .mhz span{width:0;display:flex;justify-content:center}
+.radio .ticks{position:absolute;left:0;right:0;top:22px;height:13px;background:repeating-linear-gradient(90deg,rgba(255,255,255,.28) 0 1px,transparent 1px 7px);-webkit-mask:linear-gradient(180deg,#000 55%,transparent 55%);mask:linear-gradient(180deg,#000 55%,transparent 55%)}
+.radio .ticks::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,rgba(255,255,255,.5) 0 1.5px,transparent 1.5px 10%)}
+.radio .st{position:absolute;top:43px;left:var(--x);transform:translateX(-50%);padding:3px 4px;font:400 14px/1 var(--disp);letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;color:#777;transition:color .25s}
+.radio .st.lo{top:60px}
+.radio .st:hover,.radio .st[aria-pressed=true]{color:var(--w)}
+.radio .needle{position:absolute;top:0;bottom:0;left:var(--cx,50%);width:2px;margin-left:-1px;background:var(--r);box-shadow:0 0 10px 1px rgba(238,60,35,.85);transition:left .8s var(--spring)}
+.radio .needle::before{content:"";position:absolute;left:-4px;top:0;width:10px;height:7px;border-radius:0 0 4px 4px;background:var(--r)}
+.radio .halo{position:absolute;top:-30%;bottom:-30%;left:var(--cx,50%);width:180px;margin-left:-90px;background:radial-gradient(closest-side,rgba(238,60,35,.24),transparent);pointer-events:none;transition:left .8s var(--spring)}
+[data-player=paused] .radio .needle{opacity:.7;box-shadow:none}
+[data-player=paused] .radio .halo{opacity:.35}
+.radio .nudge{display:none;position:absolute;z-index:2;top:0;bottom:0;width:40px;place-items:center}
+.radio .nudge.l{left:0;background:linear-gradient(90deg,#050505 35%,transparent)}
+.radio .nudge.r{right:0;background:linear-gradient(-90deg,#050505 35%,transparent)}
+/* the invite, then Spotify's own player (kept in sight while it plays, never covered) */
+.radio .slot{position:relative;height:80px;min-width:0}
+.radio .inv{position:absolute;inset:0;display:flex;align-items:center;gap:14px;padding:0 16px 0 10px;border-radius:12px;background:#171717;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
+.radio .play-big{position:relative;width:58px;height:58px;flex:0 0 auto;border-radius:50%;display:grid;place-items:center;background:var(--r);color:var(--w);transition:transform .5s var(--spring)}
+.radio .play-big:hover{transform:scale(1.07)}
+.radio .play-big svg{width:24px;height:24px;margin-left:3px}
+.radio .play-big::after{content:"";position:absolute;inset:0;border-radius:50%;animation:live 1.6s infinite}
+.radio .inv p{display:flex;flex-direction:column;gap:5px;min-width:0;font:400 13.5px/1.3 var(--sans);color:#b5b5b5}
+.radio .inv p > b{font:400 30px/.9 var(--disp);text-transform:uppercase;color:var(--w)}
+.radio .inv p span b{color:var(--w)}
+/* Spotify's player must be in sight to start playing, so it takes the invite's place as
+   soon as the visitor presses play, over a placeholder while it loads */
+.radio .sp{display:none;position:relative;height:80px;border-radius:12px;background:#282828}
+.radio .sp::before{content:"Sintonizando…";position:absolute;inset:0;display:grid;place-items:center;font:600 11px/1 var(--sans);letter-spacing:.22em;text-transform:uppercase;color:#8a8a8a}
+.radio .sp iframe{position:relative;display:block;width:100%;height:80px;border:0;border-radius:12px;background:transparent}
+[data-player=loading] .radio .inv,[data-player=playing] .radio .inv,[data-player=paused] .radio .inv{display:none}
+[data-player=loading] .radio .sp,[data-player=playing] .radio .sp,[data-player=paused] .radio .sp{display:block}
+.radio .sp-hint{position:absolute;right:10px;bottom:calc(100% + 8px);padding:7px 12px;border-radius:999px;background:var(--r);color:var(--w);font:600 12px/1 var(--sans);white-space:nowrap;box-shadow:0 8px 20px rgba(0,0,0,.4)}
+.radio .sp-hint::after{content:"";position:absolute;right:22px;bottom:-5px;width:10px;height:10px;background:inherit;transform:rotate(45deg);border-radius:2px}
+.radio .sp-hint[hidden]{display:none}
+
+/* when the dial is too narrow for every station (the radio is capped at 1210px), the
+   scale slides under a needle that stays in the middle, like a real tuner */
+@media (max-width:1240px){
+  .radio .dial{container-type:inline-size}
+  .radio .mhz{left:20px;right:20px}
+  .radio .scale{left:0;right:auto;width:calc(140px + (var(--n,10) - 1) * 128px);transform:translateX(calc(50cqw - 70px - var(--c,0) * 128px));transition:transform .8s var(--spring)}
+  .radio .st,.radio .st.lo{top:48px;left:calc(70px + var(--i) * 128px);font-size:15px}
+  .radio .needle,.radio .halo{left:calc(70px + var(--c,0) * 128px)}
+  .radio .nudge{display:grid}
+}
+/* phones and tablets: the dial on top, the player below */
+@media (max-width:900px){
+  .radio{--down:8px;left:8px;right:8px;width:auto;max-width:560px;margin:0 auto;transform:none;grid-template-columns:minmax(0,1fr);gap:8px;padding:8px;border-radius:22px}
+  .radio[data-hidden=true]{transform:translateY(calc(100% + var(--down)))}
+  .radio .alca{height:28px;padding:0 18px}
+  .radio[data-hidden=true] .alca{height:36px;padding:0 16px}
+  .radio .knob-w{display:none}
+  .radio .dial{height:56px}
+  .radio .mhz{top:7px}
+  .radio .ticks{top:19px;height:11px}
+  .radio .st,.radio .st.lo{top:34px}
+  .radio .inv p > b{font-size:27px}
+  .radio .inv p{font-size:12.5px}
+}
+@media (max-width:760px){
+  .som{padding:4px 13px 4px 4px;gap:9px}
+  .som-tip{display:none}
+}
+@media (prefers-reduced-motion:reduce){.eqv i{transition:none}}
+
 /* RESPONSIVE */
 @media (max-width:1100px){
   .nav-links{display:none}

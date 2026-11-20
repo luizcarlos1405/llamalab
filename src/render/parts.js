@@ -2,7 +2,7 @@
 // interview cards, news items… Every function returns an HTML string. `P` is
 // the page context from context.js (links, image URLs, data).
 
-import { esc, fmtShort, fmtTime, WEEKDAYS_SHORT, weekday, parseDate, monthLabel, MONTHS_SHORT, excerpt, stripMarkdown, splitList, waLink, formatPhone, slugify, eventEnd, hash } from '../util.js';
+import { esc, fmtShort, fmtTime, WEEKDAYS_SHORT, weekday, parseDate, monthLabel, MONTHS_SHORT, excerpt, stripMarkdown, splitList, waLink, formatPhone, slugify, eventEnd, hash, spotifyPlaylistId } from '../util.js';
 import { symbols, lockup, wordmark, llama, llamaUse, ring } from './svg.js';
 
 export const NAV = [
@@ -34,12 +34,56 @@ export function nav(P, current = '') {
   return `<header class="nav" id="nav">
   <a class="brand" href="${P.href('')}" aria-label="LlamaLab — capa">${lockup}</a>
   <nav class="nav-links" aria-label="Seções">${links}</nav>
-  <div class="nav-cta"><span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span><a class="btn btn-solid" href="${esc(rolêLink(P))}" target="_blank" rel="noopener">${esc((P.site.cta || {}).eventLabel || 'Divulgue seu evento')} <span class="arr">→</span></a><button class="burger" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="menu"><i></i><i></i></button></div>
+  <div class="nav-cta">${radioStations(P).length ? somControl : '<span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>'}<a class="btn btn-solid" href="${esc(rolêLink(P))}" target="_blank" rel="noopener">${esc((P.site.cta || {}).eventLabel || 'Divulgue seu evento')} <span class="arr">→</span></a><button class="burger" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="menu"><i></i><i></i></button></div>
 </header>
 <div class="menu" id="menu" hidden>
   <div class="menu-top"><a href="${P.href('')}" aria-label="LlamaLab — capa">${lockup}</a><button class="close" type="button" aria-label="Fechar menu">×</button></div>
   <nav aria-label="Menu">${links}</nav>
   <a class="btn btn-red" href="${esc(rolêLink(P))}" target="_blank" rel="noopener">${esc((P.site.cta || {}).eventLabel || 'Divulgue seu evento')} <span class="arr">→</span></a>
+</div>`;
+}
+
+/* ---------- the radio ---------- */
+
+// Stations with a name and a valid playlist link. The admin preview has no radio:
+// it would load Spotify into every preview.
+export function radioStations(P) {
+  if (P.preview) return [];
+  return ((P.site.radio || {}).stations || [])
+    .map((s) => ({ name: String(s.name || '').trim(), id: spotifyPlaylistId(s.url) }))
+    .filter((s) => s.name && s.id);
+}
+
+const ICON_PLAY = '<svg class="ic-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.2v13.6L19 12z"/></svg>';
+const ICON_PAUSE = '<svg class="ic-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 5h4v14h-4zM13.5 5h4v14h-4z"/></svg>';
+const chevron = (d) => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${d}"/></svg>`;
+
+// Play/pause next to the equalizer bars in the nav (radio.js makes it work).
+const somControl = `<div class="som"><button class="som-btn" type="button" aria-pressed="false" aria-label="Tocar o rádio">${ICON_PLAY}${ICON_PAUSE}</button><span class="eqv" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span><span class="som-tip" aria-hidden="true"><small>Bota um som?</small><b data-radio-name></b></span></div>`;
+
+// The radio docked at the bottom of every page: a knob, a dial with the stations and,
+// once the visitor presses play, Spotify's own player. It stays hidden until radio.js
+// sets it up, so pages without JavaScript don't show a radio that can't play.
+export function radio(P) {
+  const stations = radioStations(P);
+  if (!stations.length) return '';
+  const n = stations.length;
+  const x = (i) => (n > 1 ? 5 + (i * 90) / (n - 1) : 50).toFixed(2);
+  const mhz = [88, 90, 92, 94, 96, 98, 100, 102, 104, 106, 108].map((f) => `<span>${f}</span>`).join('');
+  const dial = stations.map((s, i) => `<button class="st${i % 2 ? ' lo' : ''}" type="button" data-id="${s.id}" style="--i:${i};--x:${x(i)}%" aria-pressed="false">${esc(s.name)}</button>`).join('');
+  return `<div class="radio" id="radio" data-hidden="false" style="--n:${n}" hidden>
+  <button class="alca" type="button" aria-expanded="true" aria-label="Esconder o rádio"><span class="eqv sm" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="alca-l">Rádio · <span data-radio-name></span></span>${chevron('M6 9l6 6 6-6')}</button>
+  <div class="knob-w"><button class="knob" type="button" data-radio="next" aria-label="Próxima estação"></button><small aria-hidden="true">Sintonia</small></div>
+  <div class="dial" role="group" aria-label="Estações do rádio">
+    <div class="scale"><div class="mhz" aria-hidden="true">${mhz}</div><div class="ticks" aria-hidden="true"></div><span class="halo" aria-hidden="true"></span><span class="needle" aria-hidden="true"></span>${dial}</div>
+    <button class="nudge l" type="button" data-radio="prev" aria-label="Estação anterior">${chevron('M15 6l-6 6 6 6')}</button>
+    <button class="nudge r" type="button" data-radio="next" aria-label="Próxima estação">${chevron('M9 6l6 6-6 6')}</button>
+  </div>
+  <div class="slot">
+    <div class="inv"><button class="play-big" type="button" data-radio="play" aria-label="Tocar o rádio">${ICON_PLAY}</button><p><b>Bota um som?</b><span>A LLama sintonizou <b data-radio-name></b>.</span></p></div>
+    <div class="sp"></div>
+    <p class="sp-hint" role="status" hidden>Aperta o ▶ do Spotify</p>
+  </div>
 </div>`;
 }
 

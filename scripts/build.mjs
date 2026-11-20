@@ -161,7 +161,7 @@ export function readImageSize(buf) {
 // Short hash of the CSS/JS so browsers fetch new versions after a deploy.
 async function assetVersion() {
   const hash = crypto.createHash('sha1');
-  for (const rel of ['assets/site.css', 'assets/site.js', 'assets/fonts.css', 'assets/admin.css']) {
+  for (const rel of ['assets/site.css', 'assets/site.js', 'assets/radio.js', 'assets/fonts.css', 'assets/admin.css']) {
     hash.update(await fs.readFile(path.join(ROOT, rel)).catch(() => ''));
   }
   return hash.digest('hex').slice(0, 8);
