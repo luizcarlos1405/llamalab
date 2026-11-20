@@ -11,12 +11,13 @@ img{max-width:100%}
 :focus-visible{outline:3px solid var(--r);outline-offset:3px;border-radius:6px}
 .skip{position:absolute;left:12px;top:-60px;z-index:200;background:var(--w);color:var(--k);padding:10px 16px;border-radius:999px;font:600 14px/1 var(--sans)}
 .skip:focus{top:12px}
-.noise{position:absolute;inset:-60%;pointer-events:none;opacity:.10;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");animation:grain .9s steps(3) infinite}
+.noise{position:absolute;inset:-12%;pointer-events:none;opacity:.10;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");animation:grain .9s steps(3) infinite}
 @keyframes grain{0%{transform:translate(0,0)}33%{transform:translate(-4%,3%)}66%{transform:translate(3%,-2%)}100%{transform:translate(0,0)}}
 .eyebrow{display:flex;align-items:center;gap:10px;font:600 12px/1.2 var(--sans);letter-spacing:.24em;text-transform:uppercase;color:var(--g)}
 .light .eyebrow{color:#666}
-.live{flex:0 0 auto;width:9px;height:9px;border-radius:50%;background:var(--r);animation:live 1.5s infinite}
-@keyframes live{0%{box-shadow:0 0 0 0 rgba(238,60,35,.65)}70%,100%{box-shadow:0 0 0 12px rgba(238,60,35,0)}}
+.live{position:relative;flex:0 0 auto;width:9px;height:9px;border-radius:50%;background:var(--r)}
+.live::after{content:"";position:absolute;inset:0;border-radius:50%;background:var(--r);animation:live 1.5s infinite}
+@keyframes live{0%{transform:scale(1);opacity:.65}70%,100%{transform:scale(3.6);opacity:0}}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:50px;padding:0 24px;border-radius:999px;font:600 15px/1.1 var(--sans);white-space:nowrap;text-align:center;transition:transform .5s var(--spring),background .3s,color .3s,border-color .3s}
 .btn:hover{transform:translateY(-3px)}
 .btn .arr{display:inline-block;transition:transform .45s var(--spring)}.btn:hover .arr{transform:translateX(3px) rotate(-45deg)}
@@ -69,11 +70,14 @@ img{max-width:100%}
 .hero.off .hero-in{visibility:hidden}
 .spot{position:absolute;inset:0;z-index:0;background:radial-gradient(560px circle at var(--mx,50%) var(--my,46%),rgba(255,255,255,.10),transparent 68%)}
 .floor{position:absolute;left:50%;bottom:-38vh;width:150vw;height:60vh;transform:translateX(-50%);border-radius:50%;background:radial-gradient(closest-side,rgba(255,255,255,.10),transparent);z-index:0}
+/* The beams are pictures of soft light cones (an SVG with the blur inside), so swaying
+   them only turns pictures. A live blur, clip or blend on moving layers is what makes
+   phones stutter. */
 .beams{position:absolute;inset:0;z-index:0;pointer-events:none}
-.beams i{position:absolute;top:-10%;width:52vw;height:125%;background:linear-gradient(180deg,rgba(255,255,255,.30),rgba(255,255,255,0) 78%);clip-path:polygon(47% 0,53% 0,100% 100%,0 100%);transform-origin:50% 0;filter:blur(12px);mix-blend-mode:screen;opacity:.5}
+.beams i{position:absolute;top:-10%;width:52vw;height:125%;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='g' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23fff' stop-opacity='.3'/%3E%3Cstop offset='.78' stop-color='%23fff' stop-opacity='0'/%3E%3C/linearGradient%3E%3Cfilter id='b' x='-.2' y='-.05' width='1.4' height='1.1'%3E%3CfeGaussianBlur stdDeviation='2.5 1'/%3E%3C/filter%3E%3C/defs%3E%3Cpath d='M47 0H53L100 100H0Z' fill='url(%23g)' filter='url(%23b)'/%3E%3C/svg%3E") 0 0/100% 100% no-repeat;transform-origin:50% 0;opacity:.5}
 .beams i:nth-child(1){left:-18vw;animation:swL 8s ease-in-out infinite alternate}
 .beams i:nth-child(2){right:-18vw;animation:swR 10s ease-in-out infinite alternate}
-.beams i:nth-child(3){left:24vw;width:52vw;opacity:.22;background:linear-gradient(180deg,rgba(238,60,35,.9),rgba(238,60,35,0) 70%);animation:swC 6s ease-in-out infinite alternate}
+.beams i:nth-child(3){left:24vw;width:52vw;opacity:.22;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='g' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23ee3c23' stop-opacity='.9'/%3E%3Cstop offset='.7' stop-color='%23ee3c23' stop-opacity='0'/%3E%3C/linearGradient%3E%3Cfilter id='b' x='-.2' y='-.05' width='1.4' height='1.1'%3E%3CfeGaussianBlur stdDeviation='2.5 1'/%3E%3C/filter%3E%3C/defs%3E%3Cpath d='M47 0H53L100 100H0Z' fill='url(%23g)' filter='url(%23b)'/%3E%3C/svg%3E");animation:swC 6s ease-in-out infinite alternate}
 @keyframes swL{from{transform:rotate(-30deg)}to{transform:rotate(-8deg)}}
 @keyframes swR{from{transform:rotate(30deg)}to{transform:rotate(6deg)}}
 @keyframes swC{from{transform:rotate(-14deg)}to{transform:rotate(14deg)}}
@@ -91,6 +95,9 @@ img{max-width:100%}
 .hero .llama{cursor:default;transition:transform .6s var(--spring)}
 .hero .llama:hover{transform:translateY(-3%)}
 .llama .ll-head{transform-box:view-box;transform-origin:50% 96%;animation:groove 1.84s ease-in-out infinite}
+/* the big llama sways as one picture; turning the head inside the SVG redraws it every frame */
+.hero .sway{width:100%;height:100%;transform-origin:50% 96%;animation:groove 1.84s ease-in-out infinite}
+.hero .llama .ll-head{animation:none}
 @keyframes groove{0%,100%{transform:rotate(-2.2deg)}50%{transform:rotate(2.2deg) translateY(.8%)}}
 .llama.bang .ll-head{animation:bang .46s cubic-bezier(.35,0,.25,1) infinite}
 @keyframes bang{0%,100%{transform:translateY(0) rotate(0) scaleY(1)}38%{transform:translateY(7%) rotate(-5deg) scaleY(.93)}70%{transform:translateY(-1.5%) rotate(2.5deg) scaleY(1.01)}}
@@ -473,13 +480,13 @@ main{padding-bottom:var(--radio-space,0px)}
 .eqv.sm{height:12px;gap:2px}.eqv.sm i{width:2px}
 
 /* the radio */
-.radio{--down:22px;position:fixed;z-index:70;left:50%;bottom:var(--down);transform:translateX(-50%);width:min(1210px,calc(100% - 28px));display:grid;grid-template-columns:auto minmax(0,1fr) 440px;align-items:center;gap:12px;padding:10px;border-radius:26px;background:rgba(12,12,12,.93);border:1px solid var(--line);color:var(--w);-webkit-backdrop-filter:blur(18px) saturate(1.4);backdrop-filter:blur(18px) saturate(1.4);box-shadow:0 34px 70px -26px rgba(0,0,0,.95);transition:transform .6s var(--ease),box-shadow .4s}
+.radio{--down:22px;position:fixed;z-index:70;left:50%;bottom:var(--down);transform:translateX(-50%);width:min(1210px,calc(100% - 28px));display:grid;grid-template-columns:auto minmax(0,1fr) 440px;align-items:center;gap:12px;padding:10px;border-radius:26px;background:rgba(12,12,12,.93);border:1px solid var(--line);color:var(--w);box-shadow:0 34px 70px -26px rgba(0,0,0,.95);transition:transform .6s var(--ease),box-shadow .4s}
 .radio[hidden]{display:none}
 .radio button{color:inherit}
 /* hidden below the screen: only the handle peeks out at the bottom edge */
 .radio[data-hidden=true]{transform:translate(-50%,calc(100% + var(--down)));box-shadow:none}
 .radio[data-hidden=true] > :not(.alca){opacity:0;transition:opacity .3s}
-.radio .alca{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);display:flex;align-items:center;gap:9px;height:30px;padding:0 16px;border-radius:15px 15px 0 0;background:rgba(12,12,12,.93);border:1px solid var(--line);border-bottom:0;color:#bdbdbd;-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);transition:color .25s,padding .4s var(--spring)}
+.radio .alca{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);display:flex;align-items:center;gap:9px;height:30px;padding:0 16px;border-radius:15px 15px 0 0;background:rgba(12,12,12,.93);border:1px solid var(--line);border-bottom:0;color:#bdbdbd;transition:color .25s,padding .4s var(--spring)}
 .radio .alca::after{content:"";position:absolute;inset:-12px -10px 0}
 .radio .alca:hover,.radio .alca:focus-visible{color:var(--w)}
 .radio .alca svg,.radio .nudge svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;transition:transform .45s var(--spring)}
@@ -565,6 +572,13 @@ main{padding-bottom:var(--radio-space,0px)}
   .som-tip{display:none}
 }
 @media (prefers-reduced-motion:reduce){.eqv i{transition:none}}
+
+/* LITE: devices that can't keep up with the stage get fewer, cheaper effects. site.js
+   switches to it after watching the frame rate (or ?fx=lite in the address). */
+.lite .noise{display:none}
+.lite .llama .ll-head,.lite .llama .ll-tuft,.lite .llama .ll-eye,.lite .llama .ll-ring{animation:none}
+.lite .nav.scrolled{background:rgba(14,14,14,.95);-webkit-backdrop-filter:none;backdrop-filter:none}
+.lite .next{background:rgba(24,24,24,.92);-webkit-backdrop-filter:none;backdrop-filter:none}
 
 /* RESPONSIVE */
 @media (max-width:1100px){

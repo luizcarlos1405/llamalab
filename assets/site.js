@@ -21,6 +21,50 @@
 
   requestAnimationFrame(() => setTimeout(() => html.classList.add('ready'), 60));
 
+  /* Lighter effects where the device can't keep up. For a few seconds after the page
+     opens, watch how often frames come; if they come slowly, switch to html.lite (no
+     grain, blur or llama details, ribbons that move only with the scroll: site.css) and
+     remember it, so the next pages start light. The inline script in <head> applies the
+     remembered choice before the first paint, and takes ?fx=lite, ?fx=full or ?fx=auto
+     (forget) in the address, to compare. */
+  const FX = 'llamalab:fx';
+  const lite = () => html.classList.contains('lite');
+  (() => {
+    let chosen = null;
+    try {
+      chosen = localStorage.getItem(FX);
+    } catch { /* not available: decide for this page only */ }
+    if (RM || chosen || lite()) return;
+    const gaps = [];
+    let prev = 0;
+    let begin = 0;
+    const watch = (t) => {
+      if (d.hidden) {
+        prev = 0;
+        requestAnimationFrame(watch);
+        return;
+      }
+      if (!begin) begin = t;
+      if (prev && t - begin > 1200) gaps.push(t - prev); // after the first second of loading
+      prev = t;
+      if (gaps.length < 150 && t - begin < 5000) {
+        requestAnimationFrame(watch);
+        return;
+      }
+      if (gaps.length < 40) return;
+      gaps.sort((a, b) => a - b);
+      const median = gaps[gaps.length >> 1];
+      const hitches = gaps.filter((g) => g > 40).length / gaps.length;
+      if (median > 22 || hitches > 0.15) {
+        html.classList.add('lite');
+        try {
+          localStorage.setItem(FX, 'lite');
+        } catch { /* not remembered */ }
+      }
+    };
+    requestAnimationFrame(watch);
+  })();
+
   /* toast */
   let toastEl;
   let toastTimer;
@@ -290,6 +334,12 @@
     }
 
     const hero = $('.hero');
+    // the seal badges turn only while they're on screen
+    const rings = $$('.badge .ring');
+    if (rings.length && 'IntersectionObserver' in window) {
+      const seen = new IntersectionObserver((entries) => entries.forEach((e) => { e.target.inView = e.isIntersecting; }));
+      rings.forEach((ring) => seen.observe(ring));
+    }
     page = {
       nav: $('#nav'),
       hero,
@@ -297,7 +347,7 @@
       bs: $('#backstage'),
       track: $('#track'),
       bar: $('#bar'),
-      rings: $$('.badge .ring'),
+      rings,
       llama: llamas[0],
       tps,
       unit: tps.map(() => 900),
@@ -330,29 +380,40 @@
     }, 650);
   };
 
-  /* one animation loop */
+  /* one animation loop. It only writes to the page when a value changed: rewriting the
+     same style or attribute every frame still costs phones a redraw. */
   let lastY = scrollY;
   let vel = 0;
   let rot = 0;
-  const t0 = performance.now();
+  let lastT = 0;
+  let drift = 0; // seconds the ribbons have flowed; they stand still in lite mode
   const frame = (t) => {
     const { nav, hero, hin, bs, track, bar, rings, tps, unit, followers } = page;
     const y = scrollY;
     const dy = y - lastY;
     lastY = y;
+    if (lastT && !lite()) drift += Math.min(0.1, (t - lastT) / 1000);
+    lastT = t;
     vel += (dy - vel) * 0.12;
     if (Math.abs(dy) > 3) bang();
     if (nav) nav.classList.toggle('scrolled', y > 30);
     const vh = innerHeight;
     if (hero) {
       const hp = Math.min(1, y / vh);
-      hin.style.setProperty('--hp', hp.toFixed(4));
-      hero.classList.toggle('off', hp >= 1);
-      if (hp < 1 && !RM) {
-        const tt = (t - t0) / 1000;
+      const value = hp.toFixed(4);
+      if (value !== page.hp) {
+        page.hp = value;
+        hin.style.setProperty('--hp', value);
+        hero.classList.toggle('off', hp >= 1);
+      }
+      // The ribbons flow by themselves and with the scroll; in lite mode only with the
+      // scroll, so nothing is redrawn while the page is still.
+      const key = `${drift.toFixed(3)}|${y}`;
+      if (hp < 1 && !RM && key !== page.ribbonKey) {
+        page.ribbonKey = key;
         tps.forEach((tp, i) => {
           const u = unit[i] || 900;
-          const off = ((tt * (i ? 38 : 55)) + y * 0.5) % u;
+          const off = ((drift * (i ? 38 : 55)) + y * 0.5) % u;
           tp.setAttribute('startOffset', i ? (off - u).toFixed(1) : (-off).toFixed(1));
         });
       }
@@ -366,10 +427,14 @@
       if (bar) bar.style.transform = `scaleX(${p.toFixed(4)})`;
     }
     if (rings.length && !RM) {
-      rot += 0.25 + Math.min(6, Math.abs(vel) * 0.25);
-      rings.forEach((ring) => {
-        ring.style.transform = `rotate(${rot.toFixed(2)}deg)`;
-      });
+      // a slow turn, faster while scrolling; in lite mode only while scrolling
+      const step = (lite() ? 0 : 0.25) + Math.min(6, Math.abs(vel) * 0.25);
+      if (step > 0.01) {
+        rot += step;
+        rings.forEach((ring) => {
+          if (ring.inView !== false) ring.style.transform = `rotate(${rot.toFixed(2)}deg)`;
+        });
+      }
     }
     for (const f of followers) {
       if (!f.poster.classList.contains('on')) continue;

@@ -16,6 +16,7 @@ import { renderSite } from '../src/render/index.js';
 import { COLLECTIONS, SINGLETONS, normalize, validate } from '../src/schema.js';
 import { SITE } from '../src/config.js';
 import { todayISO, imageRefs } from '../src/util.js';
+import { JS_FLAG, JS_FLAG_HASH } from '../src/render/layout.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = path.join(ROOT, '_site');
@@ -23,6 +24,9 @@ const COPY = ['assets', 'images', 'data', 'src', 'admin.html'];
 
 export async function build({ siteUrl = process.env.SITE_URL || SITE.defaultUrl, today = process.env.BUILD_DATE || todayISO(), quiet = false } = {}) {
   const started = Date.now();
+  // The pages' inline script only runs if the Content-Security-Policy lists its hash.
+  const flagHash = `'sha256-${crypto.createHash('sha256').update(JS_FLAG).digest('base64')}'`;
+  if (flagHash !== JS_FLAG_HASH) throw new Error(`The inline script in src/render/layout.js changed: set JS_FLAG_HASH to ${flagHash}`);
   const warnings = [];
   const data = await loadData(warnings);
   const sizes = await imageSizes(warnings);

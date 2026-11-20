@@ -3,9 +3,12 @@
 import { esc, excerpt } from '../util.js';
 import { nav, footer, symbols, radio } from './parts.js';
 
-// Hash of the one inline script below, for the Content-Security-Policy.
-const JS_FLAG = "document.documentElement.classList.add('js')";
-const JS_FLAG_HASH = "'sha256-Du+OJKJSbdUgz5nrHeWWINvez6XKDDU/tyj/5c2uvwo='";
+// The one inline script, before the first paint: marks that JS runs, and applies the
+// lighter effects a slow device was found to need (site.js decides and remembers it;
+// ?fx=lite, ?fx=full or ?fx=auto in the address force or forget it). Its hash goes in
+// the Content-Security-Policy: change one, change the other (the build checks).
+export const JS_FLAG = "(function(h){h.classList.add('js');try{var k='llamalab:fx',m=/[?&]fx=(lite|full|auto)/.exec(location.search);if(m){if(m[1]=='auto')localStorage.removeItem(k);else localStorage.setItem(k,m[1])}if(localStorage.getItem(k)=='lite')h.classList.add('lite')}catch(e){}})(document.documentElement)";
+export const JS_FLAG_HASH = "'sha256-3CmV8y6zk5rlu+XrVwqjcbhj1yNox0+EZYAPeTzDLfE='";
 
 // Spotify, for the radio: radio.js loads the iFrame API from open.spotify.com, which
 // loads the rest of itself from embed-cdn.spotifycdn.com and puts Spotify's player in

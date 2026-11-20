@@ -41,7 +41,7 @@ export function homePage(P) {
       ${h.text ? `<p class="lead">${esc(h.text)}</p>` : ''}
       <div class="btns"><a class="btn btn-solid" href="${P.href('agenda/')}">Ver agenda <span class="arr">→</span></a><a class="btn btn-ghost" href="${P.href('entrevistas/')}">Entrevistas</a></div>
     </div>
-    <div class="hero-llama"><div class="rise"><div class="glow"></div>${llama('')}</div></div>
+    <div class="hero-llama"><div class="rise"><div class="glow"></div><div class="sway">${llama('')}</div></div></div>
     ${ribbons(r.top, r.bottom)}
     <div class="noise"></div>
   </div>
