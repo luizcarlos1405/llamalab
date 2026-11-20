@@ -36,8 +36,9 @@
     });
   });
 
-  /* headbang: on hover, and the main llama while scrolling */
-  const llamas = $$('.llama');
+  /* headbang: on hover, and the main llama while scrolling. The big llama on the home
+     page stays out of it: it only lifts a little on hover (site.css). */
+  const llamas = $$('.llama').filter((l) => !l.closest('.hero'));
   let bangTimer;
   const bang = () => {
     const main = llamas[0];
