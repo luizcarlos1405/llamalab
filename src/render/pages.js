@@ -285,7 +285,7 @@ export function newsPage(P, n) {
     lead: showLede ? n.summary : '',
   })}
 <section class="panel light sec">
-  ${n.image && n.image.src ? `<figure class="wrap" style="max-width:1040px;margin:0 auto clamp(40px,5vw,70px)"><div class="media wide">${img(P, n.image, { eager: true })}</div>${n.image.credit || n.image.alt ? `<figcaption style="margin-top:14px;font-size:14px;color:#777">${esc([n.image.alt, n.image.credit && `Foto: ${n.image.credit}`].filter(Boolean).join(' · '))}</figcaption>` : ''}</figure>` : ''}
+  ${n.image && n.image.src ? `<figure class="wrap" style="max-width:1040px;margin:0 auto clamp(40px,5vw,70px)"><div class="media wide">${img(P, n.image, { eager: true })}</div>${n.image.credit || n.image.alt ? `<figcaption style="margin-top:14px;font-size:14px;color:#6b6b6b">${esc([n.image.alt, n.image.credit && `Foto: ${n.image.credit}`].filter(Boolean).join(' · '))}</figcaption>` : ''}</figure>` : ''}
   <div class="detail">
     <div class="prose dropcap">${md(P, n.body)}</div>
     <aside class="aside">${shareBox(P, n.title, P.canonical)}<div class="box k"><b>Notícias</b><a href="${P.href('noticias/')}">Todas as notícias →</a></div></aside>
@@ -312,16 +312,16 @@ export function interviewsPage(P) {
   const featHtml = feat ? `<div class="phero-grid" style="margin-bottom:clamp(60px,7vw,100px)">
     <div>
       <p class="eyebrow">${esc([interviewNo(P, feat), feat.area].filter(Boolean).join(' · '))} · Em destaque</p>
-      ${feat.quote ? `<p class="quote-big" data-r style="margin-top:18px">“${quoteHtml(feat.quote, feat.highlight)}”</p><p class="byline" style="color:#777">${esc(feat.name)} — ${esc(feat.title)}</p>` : `<h2 class="h2 s" data-r>${esc(feat.title)}</h2>`}
+      ${feat.quote ? `<p class="quote-big" data-r style="margin-top:18px">“${quoteHtml(feat.quote, feat.highlight)}”</p><p class="byline" style="color:#6b6b6b">${esc(feat.name)} — ${esc(feat.title)}</p>` : `<h2 class="h2 s" data-r>${esc(feat.title)}</h2>`}
       ${feat.summary ? `<p class="lead" style="margin-top:22px;max-width:620px">${esc(excerpt(feat.summary, 260))}</p>` : ''}
       <div class="btns" style="margin-top:28px"><a class="btn btn-k" href="${interviewUrl(P, feat)}">Ler a entrevista <span class="arr">→</span></a></div>
     </div>
-    <a href="${interviewUrl(P, feat)}" class="media-glow" aria-label="${esc(feat.title)}"><div class="media cover">${feat.photo ? img(P, feat.photo) : ''}<span class="num">${esc(interviewNo(P, feat))}</span></div></a>
+    <a href="${interviewUrl(P, feat)}" class="media-glow" aria-label="${esc(`${interviewNo(P, feat)} · ${feat.title}`)}"><div class="media cover">${feat.photo ? img(P, feat.photo) : ''}<span class="num">${esc(interviewNo(P, feat))}</span></div></a>
   </div>` : `<div class="empty"><p class="h3">Nenhuma entrevista por enquanto.</p><a class="btn btn-k" href="${esc(rolêLink(P, 'interview'))}" target="_blank" rel="noopener">Quero dar entrevista <span class="arr">→</span></a></div>`;
   const main = `${pageHero(P, { crumbs: [['Entrevistas']], eyebrow: 'Entrevistas', title: 'Backstage', titleClass: 'outline', lead: 'Papo reto com quem faz a cultura de Dourados acontecer: música, rap, teatro, circo, artes visuais e o que mais vier.' })}
 <section class="panel light sec"><div class="wrap">
   ${featHtml}
-  ${rest.length ? `<div class="more-head"><h2 class="h2 xs">Arquivo <span style="color:#999">· ${rest.length + 1}</span></h2></div>${chips(categoriesOf(rest, 'area'), 'Filtrar por área')}<div class="cards">${rest.map((it, i) => card(P, it, { reveal: true, i })).join('')}</div>` : ''}
+  ${rest.length ? `<div class="more-head"><h2 class="h2 xs">Arquivo <span style="color:#888">· ${rest.length + 1}</span></h2></div>${chips(categoriesOf(rest, 'area'), 'Filtrar por área')}<div class="cards">${rest.map((it, i) => card(P, it, { reveal: true, i })).join('')}</div>` : ''}
 </div></section>`;
   return layout(P, { title: 'Entrevistas', description: 'Entrevistas e perfis de artistas, bandas e produtores da cena cultural de Dourados.', current: 'entrevistas', main, edit: 'entrevistas' });
 }

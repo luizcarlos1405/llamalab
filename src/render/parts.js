@@ -146,7 +146,7 @@ export function footer(P, { withCta = true } = {}) {
     <div class="cta-row">
       <p data-r>${esc(cta.text || '')}</p>
       <div class="side">
-        <a class="magnet" href="${esc(rolêLink(P))}" target="_blank" rel="noopener" aria-label="${esc(label)}"><svg class="mt" viewBox="0 0 200 200" aria-hidden="true"><defs><path id="mc" d="M100 100m-84 0a84 84 0 1 1 168 0a84 84 0 1 1-168 0"/></defs><text><textPath href="#mc">${esc(label)} • ${esc(label)} • </textPath></text></svg><span class="ma" aria-hidden="true">→</span></a>
+        <a class="magnet" href="${esc(rolêLink(P))}" target="_blank" rel="noopener"><span class="sr">${esc(label)}</span><svg class="mt" viewBox="0 0 200 200" aria-hidden="true"><defs><path id="mc" d="M100 100m-84 0a84 84 0 1 1 168 0a84 84 0 1 1-168 0"/></defs><text><textPath href="#mc">${esc(label)} • ${esc(label)} • </textPath></text></svg><span class="ma" aria-hidden="true">→</span></a>
         ${cta.interviewLabel ? `<a class="link" href="${esc(rolêLink(P, 'interview'))}" target="_blank" rel="noopener">${esc(cta.interviewLabel)} →</a>` : ''}
       </div>
     </div>
