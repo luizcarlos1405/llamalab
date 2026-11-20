@@ -31,6 +31,8 @@ data/*.json, images/  ──>  scripts/build.mjs  ──>  _site/  ──>  GitH
   preview. The build also writes `sitemap.xml`, `feed.xml` (RSS), an `.ics` file per event and `version.json`.
 - **Daily rebuild:** the Actions workflow also runs every night, so events that already happened leave the home
   page and the agenda without anyone publishing.
+- **Offline and installable:** a service worker keeps the site readable without internet, and the site and the
+  admin can be installed as apps (see [Offline and installing](#offline-and-installing)).
 
 ## Motion on slower phones
 
@@ -76,6 +78,71 @@ Worth knowing:
 - Spotify publishes the iFrame API as a development build that runs its code through `eval()`, so the pages'
   Content-Security-Policy allows `'unsafe-eval'` (in [`src/render/layout.js`](src/render/layout.js)).
 
+## Offline and installing
+
+The site and the admin are two installable apps (PWAs): **LlamaLab**, with the dark llama icon, and **Llama Admin**,
+with a red one, opening straight into the admin. Each has its manifest, written by the build (`manifest.webmanifest`,
+`admin.webmanifest`). One service worker, [`src/sw.js`](src/sw.js), serves both; the build writes it to `_site/sw.js`
+with the list of files it may keep and a hash of each one.
+
+What it keeps without internet:
+
+- **In a browser tab:** the CSS, scripts and fonts, the home page and the agenda, and every page and image the visitor
+  opens (the last 60 pages and 120 images), the page they arrived on included. That costs nothing extra: they're what the
+  visitor already downloaded.
+- **In the installed app:** the whole site, every page, image and `.ics` file (about 4 MB, once). Each deploy then
+  downloads only the files that changed: usually one page; on a day an event ends, about 20 pages and the `.ics` files
+  (~0.2 MB), as every event page lists the next ones. When the app hasn't been opened for 30 days (removed from the phone,
+  say), it goes back to keeping only the essentials.
+- **The admin:** its page, modules, styles and fonts, once it has been opened on that device (~130 KB).
+
+How it behaves:
+
+- **Pages come from the network first**, so whoever is online always gets the fresh agenda; the saved copy shows when
+  there's no connection, or when the network takes more than 3.5 s. A page never saved gets an offline page ("Sem sinal
+  por aqui"). Old saved pages don't show events that already happened ([`assets/site.js`](assets/site.js) removes them,
+  as it always did).
+- **Offline**, a note under the nav says the page is the saved copy and from when, and a toast says when the connection
+  is back. The radio says it needs internet. Images never saved show a placeholder.
+- **Updates** take over at once and never reload an open page (the radio keeps playing). A deploy that changes the
+  admin's own code shows a banner in the admin offering to reload.
+- **Installing:** where the browser can install the site (Chrome, Edge, Samsung Internet), a quiet "Instalar o app" shows
+  at the end of the phone menu and in the footer, and the admin's dashboard has a card for it. iPhones have no install
+  button for sites, so there the same buttons explain the way: Compartilhar → Adicionar à Tela de Início.
+
+The admin without internet:
+
+- It opens from what the device saved the last time it loaded the site: the published content and the drafts on it. It
+  needs internet the first time on each device, to check the token.
+- Everything that happens in the browser works: editing, image resizing, the live preview, the Instagram post.
+- **Publishing waits for the connection** ("Publicar quando a conexão voltar"). Nothing publishes by itself. When the
+  connection is back (the admin also tries every 30 s), it checks the token, loads what was published meanwhile and
+  replays the drafts on it: an item someone else changed too counts as a conflict, as always. Then a banner invites to
+  review and publish.
+- The admin asks the browser to keep its data even when the device runs low on space.
+- **On iPhone**, an app on the home screen keeps its own data, apart from Safari: editors sign in again inside the app,
+  and drafts made in Safari stay in Safari. Install first, then use only the app.
+
+For developers:
+
+- `?sw=off` in the address removes the worker and what it saved, in that browser, until `?sw=on`.
+- With `npm run dev`, every rebuild is a new version of the worker: a page may need a second reload to show a change,
+  and the admin offers to reload. `?sw=off` avoids that while working on the site.
+- The icons are drawn from the llama in `assets/favicon.svg` by `node scripts/icons.mjs` (needs `rsvg-convert`), into
+  `assets/icons/`. Run it again when the llama changes.
+- If the worker ever misbehaves on visitors' devices, publish a `src/sw.js` that removes itself (keep the `BUILD` line,
+  the build fills it in), and devices drop it on their next visit:
+
+  ```js
+  const BUILD = {};
+  self.addEventListener('install', () => self.skipWaiting());
+  self.addEventListener('activate', (event) => event.waitUntil((async () => {
+    for (const name of await caches.keys()) if (name.startsWith('llamalab-')) await caches.delete(name);
+    await self.registration.unregister();
+    for (const client of await self.clients.matchAll()) client.navigate(client.url);
+  })()));
+  ```
+
 ## Working on it locally
 
 Needs Node 20 or newer, no `npm install`.
@@ -100,7 +167,8 @@ that can be edited.
 - **Post da agenda** (Agenda → Post para o Instagram) turns the events of a date range into the "Agenda
   cultural" carousel the team posts on Instagram (see below).
 - **Drafts** survive reloads and closing the tab: data and staged images are kept in IndexedDB, and so is a
-  form that wasn't saved yet.
+  form that wasn't saved yet. Without internet the admin still opens and edits, and publishing waits for the
+  connection (see [Offline and installing](#offline-and-installing)).
 - **Publishing:**
   - If someone else published in the meantime, the edits are replayed on top of their version, item by item.
     Only an item both people changed counts as a conflict, and the editor picks which version stays.
@@ -161,20 +229,24 @@ The site is ready to move to `llamalab.com.br`; all internal links are relative.
    certificate is ready.
 3. Update `defaultUrl` in [`src/config.js`](src/config.js).
 
-Browsers keep tokens and drafts per address, so editors sign in again on the new domain. Publish everything
-before switching.
+Browsers keep tokens, drafts, installed apps and offline copies per address, so editors sign in again on the new
+domain, and whoever installed the site or the admin installs it again from there. Publish everything before switching.
+The old address keeps working for them: its service worker fetches pages from the network first, so it follows
+GitHub's redirect to the new domain.
 
 ## Layout
 
 ```
 admin.html            the CMS, served at /admin (loads src/admin/main.js)
 assets/               CSS, the public pages' JS (site.js; radio.js for the radio), fonts (Anton, Outfit; Bagel Fat One
-                      for the Instagram post), logos, icons
+                      for the Instagram post), logos, icons (icons/: the apps', drawn by scripts/icons.mjs)
 data/                 the content, as JSON
 images/               the content's images, as WebP
-scripts/build.mjs     static build; scripts/dev.mjs is the local server
+scripts/build.mjs     static build; scripts/dev.mjs is the local server; scripts/icons.mjs draws the app icons
 src/schema.js         content model; src/config.js holds the site settings and image sizes
 src/render/           page templates, shared by the build and the admin preview
-src/admin/            the CMS: GitHub client, drafts store, forms, image processing, the Instagram post
+src/sw.js             the service worker (offline copies), completed by the build
+src/admin/            the CMS: GitHub client, drafts store, forms, image processing, the Instagram post, the
+                      connection (net.js)
 .github/workflows/    build and deploy to Pages
 ```
