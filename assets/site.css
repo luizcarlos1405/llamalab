@@ -460,7 +460,7 @@ a:hover .uw{background-size:100% 3px}
   .hero{min-height:680px}
   .hero-wm{top:96px}
   .hero-llama{height:min(44vh,380px);bottom:118px}
-  .hero-l{top:178px;width:auto;right:var(--pad)}.hero-l .h1{font-size:46px}
+  .hero-l{top:calc(96px + (100vw - 2*var(--pad))*.2 + 14px);width:auto;right:var(--pad)}.hero-l .h1{font-size:46px}
   .hero-r{display:none}
   .ribbons svg{width:250%;margin-left:-75%}
   .rb-band{stroke-width:70}.rb-text{font-size:38px}
