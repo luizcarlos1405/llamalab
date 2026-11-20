@@ -35,6 +35,8 @@ const clone = (v) => JSON.parse(JSON.stringify(v));
 const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 const TYPE_ICON = { agenda: '✺', noticias: '✎', entrevistas: '❝', site: '⌂', sobre: 'i', contrate: '$' };
 const WIFI_OFF = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 2l20 20M8.5 16.4a5 5 0 0 1 7 0M5 12.9a10 10 0 0 1 5.2-2.8M19 12.9a10 10 0 0 0-2.3-1.6M2 9.4a15 15 0 0 1 4.4-2.8M22 9.4a15 15 0 0 0-11.7-3.8M12 20h.01"/></svg>';
+const WIFI = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.6a10 10 0 0 1 14 0M8.5 16.1a5 5 0 0 1 7 0M2 9a15 15 0 0 1 20 0M12 20h.01"/></svg>';
+const CLOCK = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
 // A request that hasn't come back after this long counts as no internet (a weak signal).
 const withTimeout = (promise, ms) => Promise.race([promise, new Promise((resolve, reject) => setTimeout(() => reject(new ApiError('network', 0)), ms))]);
 const savedUser = () => {
@@ -84,6 +86,10 @@ async function connect(token) {
   }
   shell();
   keepData();
+  // while offline, try again now and then: a weak signal doesn't always tell the browser
+  setInterval(() => {
+    if (!net.online) reconnect();
+  }, 30000);
   window.addEventListener('hashchange', onHash);
   window.addEventListener('beforeunload', (e) => {
     if (app.guard && app.guard()) {
@@ -98,6 +104,48 @@ async function connect(token) {
   });
   route();
   if (store.state.conflicts.length) conflictsDialog();
+}
+
+// The connection came back (or might have): check the token, load what was published
+// meanwhile and replay the drafts on it. A form with unsaved changes keeps its data until
+// it's left (route() refreshes then); publishing always checks again anyway.
+let reconnecting = null;
+function reconnect() {
+  if (!reconnecting) {
+    reconnecting = (async () => {
+      try {
+        const user = await withTimeout(app.gh.user(), 10000);
+        app.user = user;
+        ls.set(USER_KEY, JSON.stringify({ id: user.id, login: user.login, name: user.name }));
+        if (app.guard && app.guard()) app.stale = true;
+        else await refreshDrafts();
+        app.backOnline = true;
+        setOnline(true);
+        app.showNet();
+      } catch (error) {
+        if (error.status === 401) {
+          ls.del(TOKEN_KEY);
+          loginView(describeError(error));
+        } else if (error.status === 0 || error.status === undefined) {
+          setOnline(false);
+        }
+      } finally {
+        reconnecting = null;
+      }
+    })();
+  }
+  return reconnecting;
+}
+
+async function refreshDrafts() {
+  const conflicts = await store.refresh(app.gh);
+  if (conflicts.length) conflictsDialog();
+}
+
+async function reloadAdmin() {
+  if (app.guard && app.guard() && !await confirm({ title: 'Recarregar o admin?', text: 'Você fez alterações que ainda não foram salvas nos rascunhos.', ok: 'Recarregar mesmo assim', danger: true })) return;
+  app.guard = null;
+  location.reload();
 }
 
 /* ================= login ================= */
@@ -202,17 +250,33 @@ function shell() {
   app.view = h('main', { class: 'view', id: 'view' });
   const warn = isPersistent() ? null : h('div', { class: 'banner' }, 'Este navegador não deixa guardar rascunhos (janela anônima?). Publique antes de fechar a aba para não perder nada.');
   const test = app.gh.branch !== REPO.branch ? h('div', { class: 'banner' }, `Modo de teste: publicando no branch "${app.gh.branch}", não no site.`) : null;
-  const offline = h('div', { class: 'banner net', role: 'status', hidden: true }, h('span', { html: WIFI_OFF }), h('p', null, h('b', null, 'Sem internet.'), ' Pode editar à vontade: as alterações ficam guardadas neste aparelho e você publica quando a conexão voltar.'));
-  add(clear(app.root), top, warn, test, offline, app.view);
-  // offline: the chip, the banner, and the dashboard (its status and publish button)
+  const offline = h('div', { class: 'banner net offline', role: 'status', hidden: true }, h('span', { html: WIFI_OFF }), h('p', null, h('b', null, 'Sem internet.'), ' Pode editar à vontade: as alterações ficam guardadas neste aparelho e você publica quando a conexão voltar.'));
+  const back = h('div', { class: 'banner back', role: 'status', hidden: true });
+  const update = h('div', { class: 'banner net update', role: 'status', hidden: true },
+    h('p', null, h('b', null, 'O admin foi atualizado.'), ' Recarregue para usar a versão nova: seus rascunhos continuam aqui.'),
+    h('button', { class: 'btn', type: 'button', onclick: reloadAdmin }, 'Recarregar'));
+  add(clear(app.root), top, warn, test, update, offline, back, app.view);
+  // the connection: offline, back with changes waiting to be published, a new admin
   const showNet = () => {
     chip.hidden = net.online;
     offline.hidden = net.online;
+    update.hidden = !net.updated;
+    const waiting = net.online && app.backOnline ? store.changes().length + store.imageChanges().added.length : 0;
+    back.hidden = !waiting;
+    if (!waiting) return;
+    clear(back);
+    add(back, h('span', { html: WIFI }),
+      h('p', null, h('b', null, 'A conexão voltou.'), ` ${waiting} ${waiting > 1 ? 'alterações esperando' : 'alteração esperando'} para ir para o site.`),
+      h('a', { class: 'btn', href: '#/', onclick: () => setTimeout(() => { const box = $('.pending'); if (box) box.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 60) }, 'Revisar e publicar →'));
   };
+  let wasOnline = net.online;
   onNet(() => {
+    if (net.online && !wasOnline) reconnect();
+    wasOnline = net.online;
     showNet();
-    if (!parseHash().parts.length && !(app.guard && app.guard())) route();
   });
+  store.subscribe(showNet);
+  app.showNet = showNet;
   showNet();
   const refresh = () => {
     const n = store.changes().length + store.imageChanges().added.length;
@@ -274,6 +338,10 @@ async function onHash() {
 function route() {
   app.guard = null;
   app.lastHash = location.hash;
+  if (app.stale && net.online) {
+    app.stale = false;
+    refreshDrafts().catch(() => {});
+  }
   const { parts, query } = parseHash();
   const [type, id] = parts;
   window.scrollTo(0, 0);
@@ -312,6 +380,13 @@ function dashboard() {
     h('div', { class: 'dash-grid' }, pending, h('div', { class: 'dash-side' }, status, quick, next))));
   renderPending(pending);
   loadStatus(status);
+  const unsubNet = onNet(() => {
+    if (!status.isConnected) {
+      unsubNet();
+      return;
+    }
+    loadStatus(status);
+  });
 }
 
 function changeLink(c) {
@@ -320,9 +395,13 @@ function changeLink(c) {
 }
 
 function renderPending(box) {
+  let lastSummary = '';
   const draw = () => {
     const list = store.changes();
     const img = store.imageChanges();
+    // a summary the editor wrote stays when the box is drawn again
+    const prev = box.querySelector('.field.msg input');
+    const typed = prev && prev.value !== lastSummary ? prev.value : null;
     clear(box);
     if (store.state.conflicts.length) {
       box.append(h('div', { class: 'conflict-banner' }, h('b', null, `${store.state.conflicts.length} ${store.state.conflicts.length > 1 ? 'conflitos' : 'conflito'}`), ' com alterações publicadas por outra pessoa. ', h('button', { class: 'btn btn-solid btn-sm', type: 'button', onclick: conflictsDialog }, 'Resolver')));
@@ -333,10 +412,11 @@ function renderPending(box) {
     }
     const sign = { add: ['+', 'Novo'], edit: ['~', 'Editado'], remove: ['−', 'Removido'] };
     const summary = store.commitSummary();
-    const msg = h('input', { type: 'text', value: summary.title, maxlength: '120', 'aria-label': 'Resumo da publicação' });
+    lastSummary = summary.title;
+    const msg = h('input', { type: 'text', value: typed ?? summary.title, maxlength: '120', 'aria-label': 'Resumo da publicação' });
     add(box,
       h('h2', null, 'Para publicar ', h('span', { class: 'count' }, String(list.length + img.added.length + img.removed.length))),
-      h('p', { class: 'muted' }, 'Essas alterações estão guardadas só neste navegador. Publique para que elas vão para o site.'),
+      h('p', { class: 'muted' }, net.online ? 'Essas alterações estão guardadas só neste navegador. Publique para que elas vão para o site.' : 'Essas alterações estão guardadas neste aparelho. Assim que a internet voltar, publique para que elas vão para o site.'),
       h('ul', { class: 'changes' }, list.map((c) => h('li', { class: `ch ${c.kind}` },
         h('span', { class: 'sig', title: sign[c.kind][1] }, sign[c.kind][0]),
         h('a', { href: changeLink(c) }, h('small', null, `${COLLECTIONS[c.type] ? COLLECTIONS[c.type].singular : 'página'} · ${sign[c.kind][1].toLowerCase()}`), h('span', null, c.title), c.fields ? h('small', null, c.fields.join(', ')) : null),
@@ -353,7 +433,9 @@ function renderPending(box) {
       ].filter(Boolean).join(' · ')) : null,
       h('label', { class: 'field msg' }, h('span', { class: 'lbl' }, 'Resumo da publicação'), msg),
       h('div', { class: 'btns' },
-        h('button', { class: 'btn btn-red big', type: 'button', onclick: () => publishFlow(msg.value.trim() || summary.title) }, 'Publicar no site ', h('span', { class: 'arr' }, '→')),
+        net.online
+          ? h('button', { class: 'btn btn-red big', type: 'button', onclick: () => publishFlow(msg.value.trim() || summary.title) }, 'Publicar no site ', h('span', { class: 'arr' }, '→'))
+          : h('button', { class: 'btn big wait', type: 'button', disabled: true }, h('span', { html: CLOCK }), 'Publicar quando a conexão voltar'),
         h('button', { class: 'btn btn-ghost btn-sm', type: 'button', onclick: async () => {
           if (await confirm({ title: 'Descartar tudo?', text: 'Todas as alterações não publicadas serão apagadas deste navegador.', ok: 'Descartar tudo', danger: true })) {
             store.revertAll();
@@ -366,6 +448,13 @@ function renderPending(box) {
   const unsub = store.subscribe(() => {
     if (!box.isConnected) {
       unsub();
+      return;
+    }
+    draw();
+  });
+  const unsubNet = onNet(() => {
+    if (!box.isConnected) {
+      unsubNet();
       return;
     }
     draw();
@@ -415,6 +504,10 @@ async function fetchVersion() {
 /* ================= publishing ================= */
 
 async function publishFlow(title) {
+  if (!net.online) {
+    toast('Sem internet: publique quando a conexão voltar.');
+    return;
+  }
   const problems = store.validateAll();
   if (problems.length) {
     dialog({
@@ -430,8 +523,9 @@ async function publishFlow(title) {
   const bar = h('div', { class: 'progress' }, h('i'));
   const { close } = dialog({ title: 'Publicando', body: h('div', { class: 'publishing' }, h('div', { class: 'eq big', 'aria-hidden': 'true' }, h('i'), h('i'), h('i'), h('i')), step, bar) });
   const summary = store.commitSummary();
-  const editor = ls.get(EDITOR_KEY) || app.user.name || app.user.login;
   try {
+    if (!app.user) app.user = await app.gh.user();
+    const editor = ls.get(EDITOR_KEY) || app.user.name || app.user.login;
     const result = await store.publish(app.gh, {
       message: `${title}\n\n${summary.body}`,
       author: { name: editor, email: `${app.user.id}+${app.user.login}@users.noreply.github.com` },
@@ -450,8 +544,10 @@ async function publishFlow(title) {
       toast('Nada para publicar: o site já está assim.');
       return;
     }
+    app.backOnline = false;
     publishedDialog(result.commit);
   } catch (error) {
+    if (error.status === 0) setOnline(false);
     close();
     dialog({
       title: 'Não deu para publicar',

@@ -156,6 +156,25 @@ export async function initOffline() {
   return true;
 }
 
+// When the connection comes back: loads what's published now and replays the drafts on it,
+// like init(), but without reloading the staged images (the forms on screen show them).
+// Returns the conflicts found, if someone else changed the same items meanwhile.
+export async function refresh(gh) {
+  const remote = await loadRemote(gh);
+  if (remote.headSha === state.headSha) {
+    adopt(remote);
+    await persist(false);
+    return [];
+  }
+  const { result, conflicts } = merge(state.base, state.working, remote.data);
+  adopt(remote);
+  state.working = result;
+  const known = new Set(state.conflicts.map((c) => `${c.type}/${c.id || c.key}`));
+  state.conflicts = [...state.conflicts, ...conflicts.filter((c) => !known.has(`${c.type}/${c.id || c.key}`))];
+  changed();
+  return conflicts;
+}
+
 async function loadStaged() {
   for (const url of [...state.staged.values()].map((s) => s.url)) URL.revokeObjectURL(url);
   state.staged.clear();
