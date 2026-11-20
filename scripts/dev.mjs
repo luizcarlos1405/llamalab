@@ -65,6 +65,8 @@ http.createServer((req, res) => {
     res.writeHead(403).end();
     return;
   }
+  // Like GitHub Pages: /admin serves admin.html.
+  if (!fs.existsSync(file) && !path.extname(file) && fs.existsSync(`${file}.html`)) file = `${file}.html`;
   if (fs.existsSync(file) && fs.statSync(file).isDirectory()) {
     if (!url.pathname.endsWith('/')) {
       res.writeHead(301, { Location: `${url.pathname}/${url.search}` }).end();
@@ -82,4 +84,4 @@ http.createServer((req, res) => {
 }).on('error', (error) => {
   console.error(error.code === 'EADDRINUSE' ? `Port ${PORT} is busy. Try PORT=8081 npm run dev.` : error.message);
   process.exit(1);
-}).listen(PORT, () => console.log(`Serving ${SITE_URL}/ (admin: ${SITE_URL}/admin.html). Watching for changes.`));
+}).listen(PORT, () => console.log(`Serving ${SITE_URL}/ (admin: ${SITE_URL}/admin). Watching for changes.`));

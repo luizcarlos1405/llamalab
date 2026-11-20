@@ -5,7 +5,7 @@ scene of Dourados (MS). Live at <https://luizcarlos1405.github.io/llamalab/>.
 
 It's a static site with no server and no database. The content lives in this repository as JSON and
 WebP files, GitHub Actions renders it into HTML, and GitHub Pages serves it. The team edits the content
-through `/admin.html`, a small CMS that runs in the browser and publishes each batch of edits as one commit.
+through `/admin`, a small CMS that runs in the browser and publishes each batch of edits as one commit.
 
 ## How it fits together
 
@@ -13,7 +13,7 @@ through `/admin.html`, a small CMS that runs in the browser and publishes each b
 data/*.json, images/  ──>  scripts/build.mjs  ──>  _site/  ──>  GitHub Pages
         ^                  (GitHub Actions: every push to main, and daily at 00:07 in Dourados)
         │
-  admin.html: edits are kept in the browser (IndexedDB) until "Publicar",
+  /admin: edits are kept in the browser (IndexedDB) until "Publicar",
   which commits them through the GitHub API
 ```
 
@@ -40,7 +40,7 @@ PORT=3000 npm run dev  # another port
 npm run build          # just build into _site/
 ```
 
-## The admin (`/admin.html`)
+## The admin (`/admin`)
 
 Each editor signs in once with their name and a GitHub token. Both stay in that browser's `localStorage`.
 While a token is saved, the public pages show an **Admin** button, plus **Editar esta página** on pages
@@ -100,7 +100,7 @@ before switching.
 ## Layout
 
 ```
-admin.html            the CMS (loads src/admin/main.js)
+admin.html            the CMS, served at /admin (loads src/admin/main.js)
 assets/               CSS, the public pages' JS, fonts (Anton, Outfit), logos, icons
 data/                 the content, as JSON
 images/               the content's images, as WebP

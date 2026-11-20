@@ -339,14 +339,14 @@
   if (token && !html.hasAttribute('data-preview')) {
     const fab = d.createElement('a');
     fab.className = 'admin-fab';
-    fab.href = `${root}admin.html`;
+    fab.href = `${root}admin`;
     fab.innerHTML = '<span>✺</span> Admin';
     d.body.append(fab);
     const edit = html.dataset.edit;
     if (edit) {
       const e = d.createElement('a');
       e.className = 'admin-fab';
-      e.href = `${root}admin.html#/${edit}`;
+      e.href = `${root}admin#/${edit}`;
       e.innerHTML = '<span>✎</span> Editar esta página';
       d.body.append(e);
     }

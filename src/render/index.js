@@ -37,7 +37,7 @@ export function renderSite(data, opts) {
 
   files.push({ path: 'sitemap.xml', html: sitemap(ctx, files) });
   files.push({ path: 'feed.xml', html: feed(ctx) });
-  files.push({ path: 'robots.txt', html: `User-agent: *\nDisallow: /admin.html\nSitemap: ${ctx.siteUrl}/sitemap.xml\n` });
+  files.push({ path: 'robots.txt', html: `User-agent: *\nDisallow: /admin\nSitemap: ${ctx.siteUrl}/sitemap.xml\n` });
   return files;
 }
 
