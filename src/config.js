@@ -19,21 +19,23 @@ export const REPO = {
 
 // Images are resized to the largest box they're shown in on the site, times
 // IMAGE_DPR, and saved as WebP. `cover` slots are cropped to the box's aspect
-// ratio; `contain` slots keep the whole image and only shrink it.
+// ratio; `contain` slots keep the whole image and only shrink it. `kb` is each
+// slot's budget: a photo that comes out heavier (a painting, a noisy night shot)
+// is saved again at lower quality, then a little smaller (src/admin/images.js).
 export const IMAGE_DPR = 2;
 export const WEBP_QUALITY = 0.8;
 export const IMAGE_SLOTS = {
-  flyer: { w: 560, h: 700, fit: 'contain', label: 'flyer' },
-  noticia: { w: 880, h: 587, fit: 'cover', label: 'foto da notícia (3:2)' },
+  flyer: { w: 560, h: 700, fit: 'contain', label: 'flyer', kb: 350 },
+  noticia: { w: 880, h: 587, fit: 'cover', label: 'foto da notícia (3:2)', kb: 300 },
   // Interview cards show the portrait in wider boxes, cropped around its `focus` point
   // (chosen in the admin; `focus` here when there's none: the upper part, where faces
   // usually are). `cards` are the boxes the admin previews, as width / height.
   retrato: {
-    w: 480, h: 600, fit: 'cover', label: 'retrato (4:5)', focus: '50% 25%',
+    w: 480, h: 600, fit: 'cover', label: 'retrato (4:5)', kb: 250, focus: '50% 25%',
     cards: [{ label: 'Card na capa', ratio: 16 / 9 }, { label: 'Lista de entrevistas', ratio: 4 / 4.2 }],
   },
-  pagina: { w: 880, h: 587, fit: 'cover', label: 'foto da página (3:2)' },
-  inline: { w: 720, h: 960, fit: 'contain', label: 'imagem no texto' },
+  pagina: { w: 880, h: 587, fit: 'cover', label: 'foto da página (3:2)', kb: 300 },
+  inline: { w: 720, h: 960, fit: 'contain', label: 'imagem no texto', kb: 450 },
 };
 
 // Pixel size an image should be stored at for a slot, given its source size.

@@ -78,6 +78,11 @@ function draw(source, sx, sy, sw, sh, w, h2) {
 
 const toBlob = (canvas, type, quality) => new Promise((resolve) => canvas.toBlob(resolve, type, quality));
 
+// What to try, in order, until the file fits the slot's budget: [scale, WebP quality,
+// JPEG quality]. Lower quality first (barely visible), then 15% smaller at a time; the
+// last try is kept even if it's still over, so nothing is ever refused.
+const TRIES = [[1, WEBP_QUALITY, 0.82], [1, 0.72, 0.74], [1, 0.64, 0.66], [0.85, 0.7, 0.72], [0.72, 0.7, 0.72], [0.6, 0.7, 0.72]];
+
 // crop: { x, y, w, h } in source pixels (cover slots); null = automatic.
 export async function processImage(file, slotName, crop = null, source = null) {
   const slot = IMAGE_SLOTS[slotName];
@@ -86,14 +91,26 @@ export async function processImage(file, slotName, crop = null, source = null) {
   let region = { x: 0, y: 0, w: iw, h: ih };
   if (slot.fit === 'cover') region = crop || autoCrop(iw, ih, slot.w / slot.h);
   const size = targetSize(slot, region.w, region.h);
-  const canvas = draw(bmp, region.x, region.y, region.w, region.h, size.w, size.h);
-  let blob = await toBlob(canvas, 'image/webp', WEBP_QUALITY);
+  const budget = (slot.kb || 400) * 1024;
   let type = 'image/webp';
-  if (!blob || blob.type !== 'image/webp') {
-    blob = await toBlob(canvas, 'image/jpeg', 0.82);
-    type = 'image/jpeg';
+  let out = null;
+  let canvas = null;
+  let scale = 0;
+  for (const [k, webp, jpeg] of TRIES) {
+    if (k !== scale) {
+      scale = k;
+      canvas = draw(bmp, region.x, region.y, region.w, region.h, Math.max(1, Math.round(size.w * k)), Math.max(1, Math.round(size.h * k)));
+    }
+    let blob = type === 'image/webp' ? await toBlob(canvas, 'image/webp', webp) : null;
+    if (!blob || blob.type !== 'image/webp') {
+      // older Safari can't write WebP: JPEG instead
+      type = 'image/jpeg';
+      blob = await toBlob(canvas, 'image/jpeg', jpeg);
+    }
+    out = { blob, w: canvas.width, h: canvas.height };
+    if (blob.size <= budget) break;
   }
-  return { blob, type, w: size.w, h: size.h, bytes: blob.size, originalBytes: file.size, crop: region };
+  return { blob: out.blob, type, w: out.w, h: out.h, bytes: out.blob.size, originalBytes: file.size, crop: region };
 }
 
 // Default crop: centered across, and nearer the top on tall photos, where
