@@ -11,6 +11,8 @@
   const $$ = (s, c = d) => [...c.querySelectorAll(s)];
   const root = () => html.dataset.root || './';
   const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // CSS ties the stage's shrinking to the scroll where it can (site.css); the loop does it elsewhere
+  const SCROLL_FX = Boolean(window.CSS && CSS.supports && CSS.supports('animation-timeline: scroll()'));
   const pad = (n) => String(n).padStart(2, '0');
   const now = new Date();
   const today = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
@@ -355,6 +357,7 @@
       nav: $('#nav'),
       hero,
       hin: hero && $('.hero-in', hero),
+      hl: hero && $('.hero-llama', hero),
       bs: $('#backstage'),
       track: $('#track'),
       bar: $('#bar'),
@@ -401,7 +404,7 @@
   let lastT = 0;
   let drift = 0; // seconds the ribbons have flowed; they stand still in lite mode
   const frame = (t) => {
-    const { nav, hero, hin, bs, track, bar, rings, tps, unit, followers } = page;
+    const { nav, hero, hin, hl, bs, track, bar, rings, tps, unit, followers } = page;
     const y = scrollY;
     const dy = y - lastY;
     lastY = y;
@@ -416,7 +419,13 @@
       const value = hp.toFixed(4);
       if (value !== page.hp) {
         page.hp = value;
-        hin.style.setProperty('--hp', value);
+        // Without CSS scroll animations, shrink and dim the stage from here. Writing the
+        // two elements' own styles (not a variable the whole stage inherits) keeps it cheap.
+        if (!SCROLL_FX && !RM) {
+          hin.style.transform = `scale(${(1 - hp * 0.1).toFixed(4)}) translateY(${(-hp * 4).toFixed(2)}%)`;
+          hin.style.opacity = (1 - hp * 0.85).toFixed(3);
+          if (hl) hl.style.transform = `translateX(-50%) translateY(${(hp * 12).toFixed(2)}%)`;
+        }
         hero.classList.toggle('off', hp >= 1);
       }
       // The ribbons flow by themselves and with the scroll; in lite mode only with the

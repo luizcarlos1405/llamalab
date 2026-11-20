@@ -66,8 +66,17 @@ img{max-width:100%}
 
 /* HERO (home) */
 .hero{position:sticky;top:0;height:100vh;min-height:620px;overflow:hidden;isolation:isolate;background:var(--k)}
-.hero-in{position:absolute;inset:0;transform:scale(calc(1 - var(--hp,0)*.1)) translateY(calc(var(--hp,0)*-4%));transform-origin:50% 0;opacity:calc(1 - var(--hp,0)*.85);will-change:transform}
+.hero-in{position:absolute;inset:0;transform-origin:50% 0;will-change:transform,opacity}
 .hero.off .hero-in{visibility:hidden}
+/* Scrolling shrinks and dims the stage under the page. Where the browser can tie an
+   animation to the scroll itself, it does: it then keeps pace with the finger on phones,
+   with no script in between. Elsewhere site.js sets the same transform and opacity. */
+@supports (animation-timeline:scroll()){
+  .hero-in{animation:hero-out linear both;animation-timeline:scroll(root);animation-range:0 100vh}
+  .hero-llama{animation:llama-down linear both;animation-timeline:scroll(root);animation-range:0 100vh}
+}
+@keyframes hero-out{to{transform:scale(.9) translateY(-4%);opacity:.15}}
+@keyframes llama-down{from{transform:translateX(-50%)}to{transform:translateX(-50%) translateY(12%)}}
 .spot{position:absolute;inset:0;z-index:0;background:radial-gradient(560px circle at var(--mx,50%) var(--my,46%),rgba(255,255,255,.10),transparent 68%)}
 .floor{position:absolute;left:50%;bottom:-38vh;width:150vw;height:60vh;transform:translateX(-50%);border-radius:50%;background:radial-gradient(closest-side,rgba(255,255,255,.10),transparent);z-index:0}
 /* The beams are pictures of soft light cones (an SVG with the blur inside), so swaying
@@ -85,7 +94,7 @@ img{max-width:100%}
 .hero-wm svg{width:100%;height:auto;overflow:hidden}
 .js .hero-wm .ch{transform:translateY(112%);transition:transform 1.3s var(--ease);transition-delay:calc(var(--i)*80ms + 200ms)}
 .js.ready .hero-wm .ch{transform:none}
-.hero-llama{position:absolute;z-index:3;left:50%;bottom:3vh;height:min(70vh,660px);aspect-ratio:120/193;transform:translateX(-50%) translateY(calc(var(--hp,0)*12%))}
+.hero-llama{position:absolute;z-index:3;left:50%;bottom:3vh;height:min(70vh,660px);aspect-ratio:120/193;transform:translateX(-50%)}
 .hero-llama .rise{width:100%;height:100%}
 .js .hero-llama .rise{transform:translateY(55%) scale(.8);opacity:0;transition:transform 1.6s var(--spring) .75s,opacity .6s ease .75s}
 .js.ready .hero-llama .rise{transform:none;opacity:1}
@@ -593,6 +602,10 @@ main{padding-bottom:var(--radio-space,0px)}
   .ncards{grid-template-columns:repeat(2,1fr)}
 }
 @media (max-width:760px){
+  /* no blur behind the nav and the pill on phones: redoing it under a moving page is
+     what makes scrolling stutter there, and the darker backgrounds look the same */
+  .nav.scrolled{background:rgba(14,14,14,.94);-webkit-backdrop-filter:none;backdrop-filter:none}
+  .next{background:rgba(24,24,24,.9);-webkit-backdrop-filter:none;backdrop-filter:none}
   body{font-size:16px}
   .nav{padding:8px 8px 8px 16px}.nav .btn,.eq{display:none}.lockup{height:34px}
   .hero{min-height:680px}
