@@ -40,6 +40,50 @@
     "spotify": "",
     "cnpj": "20.270.026/0001-67"
   },
+  "radio": {
+    "stations": [
+      {
+        "name": "Indie",
+        "url": "https://open.spotify.com/playlist/2F5xW2phrlPwbe6ObNF9e9"
+      },
+      {
+        "name": "Hardcore",
+        "url": "https://open.spotify.com/playlist/0m8WMx1hkMQRT9uJ3W44ed"
+      },
+      {
+        "name": "Brasilidades",
+        "url": "https://open.spotify.com/playlist/5UlLYRfsdSnbrww37FabTN"
+      },
+      {
+        "name": "Funk & Soul",
+        "url": "https://open.spotify.com/playlist/2iOzZr1RueHGSd7SIbkwzx"
+      },
+      {
+        "name": "As mina",
+        "url": "https://open.spotify.com/playlist/238tAZgGxF7ckNcIVXAj3V"
+      },
+      {
+        "name": "Nostálgica",
+        "url": "https://open.spotify.com/playlist/74QL7rVeBh1wkQen2LoMeH"
+      },
+      {
+        "name": "Samba e Pagodinho",
+        "url": "https://open.spotify.com/playlist/1hjmKMdHgLgud1KP03fMyp"
+      },
+      {
+        "name": "Ambiente",
+        "url": "https://open.spotify.com/playlist/2MkA63C1NTVGFEfLvjmAsb"
+      },
+      {
+        "name": "Rolêzinhos",
+        "url": "https://open.spotify.com/playlist/31LeuPTJHhBNRwkJpOIuyC"
+      },
+      {
+        "name": "CSL 2025",
+        "url": "https://open.spotify.com/playlist/0WHunC777LQ1OmPM3l9Zt3"
+      }
+    ]
+  },
   "seo": {
     "title": "LlamaLab — cultura que faz barulho em Dourados",
     "description": "Agenda cultural, entrevistas e notícias de quem faz a cultura acontecer em Dourados (MS): shows, teatro, saraus, feiras e festivais."

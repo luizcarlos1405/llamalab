@@ -185,6 +185,15 @@ export function youtubeId(url) {
   return m ? m[1] : null;
 }
 
+// A Spotify playlist link, as the app's "Copiar link da playlist" gives it:
+// open.spotify.com/playlist/<id>, maybe with intl-xx/ or embed/ and a query string.
+export const SPOTIFY_PLAYLIST = /^https:\/\/open\.spotify\.com\/(?:intl-[a-z-]+\/)?(?:embed\/)?playlist\/([A-Za-z0-9]{22})(?:[/?#]|$)/i;
+
+export function spotifyPlaylistId(url) {
+  const m = SPOTIFY_PLAYLIST.exec(String(url || '').trim());
+  return m ? m[1] : null;
+}
+
 export function isSafeUrl(url) {
   const u = String(url || '').trim();
   if (!u) return false;

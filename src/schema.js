@@ -8,13 +8,17 @@
 // Field types:
 //   text, textarea, markdown, date (YYYY-MM-DD), time (HH:MM), url, email,
 //   boolean, image, strings (array of short texts), group (object with
-//   `fields`), repeater (array of objects with `fields`).
+//   `fields`), repeater (array of objects with `fields`, at most `max`).
+// Text and url fields can also require a `pattern` (a RegExp), explained to the
+// editor by `patternMessage`.
 //
 // Image fields hold null or { src, alt, w, h, credit?, focus? }, where `src` is
 // a repository path such as "images/agenda/noite-do-rock.webp", w/h are the
 // stored pixel size and `focus` is a CSS object-position such as "50% 30%".
 // Markdown fields use the subset in src/markdown.js and may embed images as
 // ![texto alternativo](images/noticias/foo.webp "legenda").
+
+import { SPOTIFY_PLAYLIST } from './util.js';
 
 const EVENT_TYPES = ['Show', 'Festa', 'Festival', 'Teatro', 'Sarau', 'Exposição', 'Feira', 'Oficina', 'Cinema', 'Dança', 'Circo', 'Literatura', 'Encontro'];
 const NEWS_KICKERS = ['Cena', 'Editais', 'Festivais', 'Formação', 'Música', 'Teatro', 'Artes visuais', 'Literatura', 'Cinema', 'Políticas culturais'];
@@ -168,6 +172,23 @@ export const SINGLETONS = {
         ],
       },
       {
+        key: 'radio', label: 'Rádio', type: 'group',
+        hint: 'O rádio fica embaixo de todas as páginas: cada playlist do Spotify vira uma estação do dial, na ordem daqui. Sem estações, o rádio sai do site.',
+        fields: [
+          {
+            key: 'stations', label: 'Estações', type: 'repeater', itemLabel: 'Estação', max: 12,
+            fields: [
+              { key: 'name', label: 'Nome no dial', type: 'text', required: true, maxLength: 18, placeholder: 'Indie' },
+              {
+                key: 'url', label: 'Link da playlist no Spotify', type: 'url', required: true, placeholder: 'https://open.spotify.com/playlist/…',
+                hint: 'No Spotify: ⋯ na playlist → Compartilhar → Copiar link da playlist. A playlist precisa ser pública.',
+                pattern: SPOTIFY_PLAYLIST, patternMessage: 'cole o link de uma playlist do Spotify (open.spotify.com/playlist/…).',
+              },
+            ],
+          },
+        ],
+      },
+      {
         key: 'seo', label: 'Busca e prévias de link', type: 'group',
         fields: [
           { key: 'title', label: 'Título do site', type: 'text', maxLength: 70 },
@@ -290,6 +311,8 @@ export function validate(fields, value, path = '') {
     if (field.type === 'date' && !/^\d{4}-\d{2}-\d{2}$/.test(v)) problems.push({ path: p, field, message: `${field.label}: data inválida.` });
     if (field.type === 'time' && !/^\d{2}:\d{2}$/.test(v)) problems.push({ path: p, field, message: `${field.label}: horário inválido.` });
     if (field.type === 'url' && !/^https?:\/\/\S+$/i.test(v)) problems.push({ path: p, field, message: `${field.label}: use um endereço completo, começando com https://` });
+    else if (field.pattern && !field.pattern.test(String(v).trim())) problems.push({ path: p, field, message: `${field.label}: ${field.patternMessage || 'formato inválido.'}` });
+    if (field.type === 'repeater' && field.max && v.length > field.max) problems.push({ path: p, field, message: `${field.label}: no máximo ${field.max}.` });
     if (field.type === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) problems.push({ path: p, field, message: `${field.label}: e-mail inválido.` });
     if (field.type === 'strings' && field.maxLength) {
       v.forEach((s, i) => {
