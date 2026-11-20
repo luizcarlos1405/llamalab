@@ -1,0 +1,13 @@
+{
+  "name": "llamalab",
+  "private": true,
+  "type": "module",
+  "description": "LlamaLab: o zine da cena cultural de Dourados. Static site built from JSON data, edited through a git-based admin.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "node scripts/dev.mjs"
+  }
+}

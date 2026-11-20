@@ -1,0 +1,14 @@
+# Build output
+_site/
+node_modules/
+
+# Local project files that stay out of the public repository
+COST.md
+tools/
+designs/
+previews/
+*.ai
+.htmlboard/
+.playwright/
+.playwright-cli/
+.DS_Store
