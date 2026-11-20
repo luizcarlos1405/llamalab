@@ -590,6 +590,21 @@
       .catch(() => { /* no offline copy: the site works as before */ });
     if (d.readyState === 'complete') register();
     else addEventListener('load', register, { once: true });
+
+    // The installed app keeps the whole site, every page and image, and the worker keeps it
+    // current at each deploy. Asked once per launch, and right after installing (Android).
+    const keepSite = () => navigator.serviceWorker.ready
+      .then((reg) => reg.active && reg.active.postMessage({ type: 'keep', pack: 'site' }))
+      .catch(() => { /* only what was opened stays */ });
+    try {
+      if (installed() && !sessionStorage.getItem('llamalab:kept')) {
+        sessionStorage.setItem('llamalab:kept', '1');
+        keepSite();
+      }
+    } catch {
+      if (installed()) keepSite();
+    }
+    addEventListener('appinstalled', keepSite);
   })();
 
   /* From page to page without reloading, once the radio is on (radio.js adds radio-on
