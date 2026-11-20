@@ -104,7 +104,8 @@ img{max-width:100%}
 .llama .ll-eye{transform-box:fill-box;transform-origin:50% 50%;animation:blink 4.6s infinite}
 .llama .ll-eye-r{animation-delay:.04s}
 @keyframes blink{0%,93%,100%{transform:scaleY(1)}96%{transform:scaleY(.08)}}
-.llama .ll-ring{transform-box:fill-box;transform-origin:25% 15%;animation:swing 1.84s ease-in-out infinite}
+/* the earring swings on its piercing, the hole in the ear at (107.35, 14.44), so it stays hooked in */
+.llama .ll-ring{transform-box:view-box;transform-origin:107.35px 14.44px;animation:swing 1.84s ease-in-out infinite}
 .llama.bang .ll-ring{animation-duration:.46s}
 @keyframes swing{50%{transform:rotate(22deg)}}
 .llama .ll-ears{transform-box:fill-box;transform-origin:50% 100%}
