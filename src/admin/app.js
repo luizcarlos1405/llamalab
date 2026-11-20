@@ -10,6 +10,7 @@ import { createClient, describeError } from './github.js';
 import { isPersistent } from './idb.js';
 import { buildForm } from './fields.js';
 import { previewPane, siteUrl } from './preview.js';
+import { postView } from './post.js';
 import * as store from './store.js';
 
 const TOKEN_KEY = 'llamalab:token';
@@ -242,6 +243,7 @@ function route() {
     return itemEditor(type, id === 'novo' ? null : id, query);
   }
   if (type === 'paginas') return pagesView();
+  if (type === 'instagram') return postScreen();
   if (SINGLETONS[type]) return singletonEditor(type);
   return dashboard();
 }
@@ -263,7 +265,8 @@ function dashboard() {
   const next = h('div', { class: 'card next' }, h('h2', null, 'Próximos rolês'),
     upcoming.length
       ? h('ol', { class: 'mini-list' }, upcoming.slice(0, 5).map((ev) => h('li', null, h('a', { href: `#/agenda/${ev.id}` }, h('b', null, fmtShort(ev.date, false)), ' ', ev.title))))
-      : h('p', { class: 'warn' }, 'A agenda está vazia: o site mostra "Nenhum rolê marcado". ', h('a', { href: '#/agenda/novo' }, 'Adicionar um evento →')));
+      : h('p', { class: 'warn' }, 'A agenda está vazia: o site mostra "Nenhum rolê marcado". ', h('a', { href: '#/agenda/novo' }, 'Adicionar um evento →')),
+    upcoming.length ? h('a', { class: 'btn btn-ghost btn-sm', href: '#/instagram' }, 'Montar o post da agenda') : null);
   add(view, h('section', { class: 'dash' },
     h('div', { class: 'page-head' }, h('p', { class: 'eyebrow' }, 'Painel'), h('h1', null, name ? `Oi, ${name}.` : 'Oi!')),
     h('div', { class: 'dash-grid' }, pending, h('div', { class: 'dash-side' }, status, quick, next))));
@@ -518,7 +521,9 @@ function listView(type) {
   add(view, h('section', { class: 'list-view' },
     h('div', { class: 'page-head row' },
       h('div', null, h('p', { class: 'eyebrow' }, 'Conteúdo'), h('h1', null, t.label, ' ', count)),
-      h('a', { class: 'btn btn-red', href: `#/${type}/novo` }, `+ ${t.newLabel}`)),
+      h('div', { class: 'btns' },
+        type === 'agenda' ? h('a', { class: 'btn btn-ghost', href: '#/instagram' }, 'Post para o Instagram') : null,
+        h('a', { class: 'btn btn-red', href: `#/${type}/novo` }, `+ ${t.newLabel}`))),
     h('div', { class: 'tools' }, search, chips),
     list));
 
@@ -577,6 +582,13 @@ async function removeFlow(type, item, after) {
   await store.pruneStaged();
   toast(status === 'add' ? 'Descartado.' : 'Removido. Publique para tirar do site.');
   if (after) after();
+}
+
+/* ================= post da agenda ================= */
+
+function postScreen() {
+  setTab('agenda');
+  postView(clear(app.view));
 }
 
 /* ================= editors ================= */
