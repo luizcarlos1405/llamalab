@@ -528,7 +528,7 @@
 
   // The head's own links (icon, feed…) are relative, and browsers read some of them again
   // as soon as the address changes, before the new page arrives: make them absolute.
-  const HEAD_LINKS = 'link[rel="icon"],link[rel="apple-touch-icon"],link[rel="alternate"],link[rel="canonical"]';
+  const HEAD_LINKS = 'link[rel="icon"],link[rel="apple-touch-icon"],link[rel="manifest"],link[rel="alternate"],link[rel="canonical"]';
   const pinHead = () => $$(HEAD_LINKS).forEach((link) => link.setAttribute('href', link.href));
 
   let loading = null;

@@ -67,6 +67,7 @@ ${image.alt ? `<meta property="og:image:alt" content="${esc(image.alt)}">` : ''}
 <meta name="theme-color" content="#0a0a0a">
 <link rel="icon" href="${P.href('assets/favicon.svg')}" type="image/svg+xml">
 <link rel="apple-touch-icon" href="${P.href('assets/apple-touch-icon.png')}">
+${P.preview ? '' : `<link rel="manifest" href="${P.href('manifest.webmanifest')}">\n<meta name="apple-mobile-web-app-title" content="LlamaLab">`}
 <link rel="alternate" type="application/rss+xml" title="LlamaLab" href="${P.href('feed.xml')}">
 <link rel="preload" href="${P.href('assets/fonts/anton-400.woff2')}" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="${P.href('assets/fonts/outfit-300-800.woff2')}" as="font" type="font/woff2" crossorigin>

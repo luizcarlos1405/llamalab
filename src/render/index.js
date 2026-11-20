@@ -28,17 +28,60 @@ export function renderSite(data, opts) {
 
   // GitHub Pages serves 404.html at whatever URL was asked for, so its links
   // must be absolute paths.
-  const P404 = pageContext(ctx, '404.html');
   const base = new URL(`${ctx.siteUrl}/`).pathname;
-  P404.root = base;
-  P404.href = (to = '') => base + to;
-  P404.src = (p) => base + p;
-  files.push({ path: '404.html', html: notFoundPage(P404) });
+  const anywhere = (path) => {
+    const P = pageContext(ctx, path);
+    P.root = base;
+    P.href = (to = '') => base + to;
+    P.src = (p) => base + p;
+    return P;
+  };
+  files.push({ path: '404.html', html: notFoundPage(anywhere('404.html')) });
 
   files.push({ path: 'sitemap.xml', html: sitemap(ctx, files) });
   files.push({ path: 'feed.xml', html: feed(ctx) });
   files.push({ path: 'robots.txt', html: `User-agent: *\nDisallow: /admin\nSitemap: ${ctx.siteUrl}/sitemap.xml\n` });
+  files.push(...manifests(ctx));
   return files;
+}
+
+// What makes the site and the admin installable: two apps, so editors get an icon of its
+// own that opens straight into the admin. Both manifests sit at the site's root ("./").
+function manifests(ctx) {
+  const icons = (name) => [
+    { src: `assets/icons/${name}-192.png`, sizes: '192x192', type: 'image/png', purpose: 'any' },
+    { src: `assets/icons/${name}-512.png`, sizes: '512x512', type: 'image/png', purpose: 'any' },
+    { src: `assets/icons/${name}-maskable-512.png`, sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+  ];
+  const shortcut = (name, url, icon) => ({ name, url, icons: [{ src: `assets/icons/${icon}-192.png`, sizes: '192x192', type: 'image/png' }] });
+  const app = { lang: 'pt-BR', dir: 'ltr', display: 'standalone', background_color: '#0a0a0a', theme_color: '#0a0a0a' };
+  const site = {
+    id: './',
+    name: SITE.name,
+    short_name: SITE.name,
+    description: (ctx.site.seo || {}).description || 'O zine da cena cultural de Dourados.',
+    start_url: './',
+    scope: './',
+    ...app,
+    categories: ['entertainment', 'music', 'news'],
+    icons: icons('site'),
+    shortcuts: [shortcut('Agenda', 'agenda/', 'site'), shortcut('Entrevistas', 'entrevistas/', 'site')],
+  };
+  const admin = {
+    id: './admin',
+    name: `${SITE.name} Admin`,
+    short_name: 'Llama Admin',
+    description: 'Edite a agenda, as notícias e as entrevistas do LlamaLab e publique no site.',
+    start_url: './admin',
+    scope: './admin',
+    ...app,
+    icons: icons('admin'),
+    shortcuts: [shortcut('Novo evento', './admin#/agenda/novo', 'admin'), shortcut('Post da agenda', './admin#/instagram', 'admin')],
+  };
+  return [
+    { path: 'manifest.webmanifest', html: `${JSON.stringify(site, null, 2)}\n` },
+    { path: 'admin.webmanifest', html: `${JSON.stringify(admin, null, 2)}\n` },
+  ];
 }
 
 // One page for the admin's live preview. `route` is "home", "agenda",
