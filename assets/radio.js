@@ -113,6 +113,11 @@
   }
 
   async function start() {
+    // without internet, say so at once instead of waiting for Spotify
+    if (!controller && navigator.onLine === false) {
+      say('O rádio precisa de internet');
+      return;
+    }
     wantPlay = true;
     clearHint();
     render();
@@ -130,7 +135,7 @@
       creating = false;
       wantPlay = false;
       render();
-      say('O Spotify não carregou. Tenta de novo?');
+      say(navigator.onLine === false ? 'O rádio precisa de internet' : 'O Spotify não carregou. Tenta de novo?');
       return;
     }
     const el = d.createElement('div');

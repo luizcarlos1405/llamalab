@@ -84,6 +84,48 @@
     toastTimer = setTimeout(() => toastEl.classList.remove('on'), 2400);
   };
 
+  /* Without internet, a note under the nav says the page is a saved copy, and from when
+     (the service worker knows); a toast says when the connection is back. The offline
+     page says it itself. */
+  const WIFI_OFF = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 2l20 20M8.5 16.4a5 5 0 0 1 7 0M5 12.9a10 10 0 0 1 5.2-2.8M19 12.9a10 10 0 0 0-2.3-1.6M2 9.4a15 15 0 0 1 4.4-2.8M22 9.4a15 15 0 0 0-11.7-3.8M12 20h.01"/></svg>';
+  let note = null;
+  const savedAt = (url) => new Promise((resolve) => {
+    const sw = navigator.serviceWorker && navigator.serviceWorker.controller;
+    if (!sw) {
+      resolve(null);
+      return;
+    }
+    const channel = new MessageChannel();
+    const timer = setTimeout(() => resolve(null), 1500);
+    channel.port1.onmessage = (e) => {
+      clearTimeout(timer);
+      resolve(e.data || null);
+    };
+    sw.postMessage({ type: 'saved', url }, [channel.port2]);
+  });
+  async function offlineNote() {
+    if (navigator.onLine || d.body.classList.contains('offline-page')) {
+      if (note) note.hidden = true;
+      return;
+    }
+    if (!note) {
+      note = d.createElement('div');
+      note.className = 'offline-note';
+      note.setAttribute('role', 'status');
+      d.body.append(note);
+    }
+    const at = await savedAt(location.href);
+    const t = at ? new Date(at) : null;
+    const when = !t ? '' : `${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())}` === today ? 'hoje' : `em ${pad(t.getDate())}/${pad(t.getMonth() + 1)}`;
+    note.innerHTML = `${WIFI_OFF}Sem internet${when ? ` <span>· salva ${when}</span>` : ''}`;
+    note.hidden = navigator.onLine;
+  }
+  addEventListener('offline', offlineNote);
+  addEventListener('online', () => {
+    if (note && !note.hidden) toast('A conexão voltou ✺');
+    if (note) note.hidden = true;
+  });
+
   // the site opened as an installed app (from the home screen), not in a browser tab
   const installed = () => matchMedia('(display-mode: standalone), (display-mode: fullscreen), (display-mode: minimal-ui), (display-mode: window-controls-overlay)').matches || navigator.standalone === true;
 
@@ -400,6 +442,7 @@
       closeMenu,
     };
     if (tps.length) measure();
+    offlineNote();
   }
 
   mount();
