@@ -48,7 +48,11 @@ self.addEventListener('install', (event) => {
 // (the radio keeps playing). The admin offers to reload, since its code came from the old one.
 self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
-    if (self.registration.navigationPreload) await self.registration.navigationPreload.enable().catch(() => {});
+    // Navigation preload starts a page's request while the worker wakes up. Firefox (148) fails
+    // the whole navigation when that request fails, even when the worker answers from its copy,
+    // so it's on only in Chromium ('userAgentData' is Chromium's).
+    const preload = self.registration.navigationPreload;
+    if (preload) await ('userAgentData' in self.navigator ? preload.enable() : preload.disable()).catch(() => {});
     for (const name of await caches.keys()) {
       if (name.startsWith('llamalab-pre-') && name !== PRE) await caches.delete(name);
     }
