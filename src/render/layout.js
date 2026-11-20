@@ -21,6 +21,10 @@ export const CSP = [
 ].join('; ');
 
 // opts: { title, description, image, type, current, bodyClass, main, cta, edit, head }
+// Admin previews leave out the page's own CSP: Firefox doesn't match 'self'
+// inside an iframe srcdoc and would block the stylesheets. The preview still
+// runs under the admin page's CSP, which the srcdoc inherits. Previews also
+// skip the `js` class, so the entrance animations don't replay on every edit.
 export function layout(P, opts) {
   const seo = P.site.seo || {};
   const siteTitle = seo.title || 'LlamaLab';
@@ -36,7 +40,7 @@ export function layout(P, opts) {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="${CSP}">
+${P.preview ? '' : `<meta http-equiv="Content-Security-Policy" content="${CSP}">`}
 <title>${esc(title)}</title>
 ${description ? `<meta name="description" content="${esc(description)}">` : ''}
 <link rel="canonical" href="${esc(P.canonical)}">
@@ -58,7 +62,7 @@ ${image.alt ? `<meta property="og:image:alt" content="${esc(image.alt)}">` : ''}
 <link rel="preload" href="${P.href('assets/fonts/outfit-300-800.woff2')}" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="${P.href('assets/fonts.css')}${v}">
 <link rel="stylesheet" href="${P.href('assets/site.css')}${v}">
-<script>${JS_FLAG}</script>
+${P.preview ? '' : `<script>${JS_FLAG}</script>`}
 <script src="${P.href('assets/site.js')}${v}" defer></script>
 ${opts.head || ''}
 </head>
