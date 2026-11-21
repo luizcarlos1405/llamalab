@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// Draws the app icons (the installed site and the installed admin) from the llama in
-// assets/favicon.svg and saves them as PNGs in assets/icons/. Needs rsvg-convert (librsvg).
+// Draws the installed app's icons from the llama in assets/favicon.svg and saves them as
+// PNGs in assets/icons/. Needs rsvg-convert (librsvg).
 // Run it again when the llama changes; the build doesn't, so it needs nothing extra.
 //
 //   node scripts/icons.mjs
@@ -21,7 +21,6 @@ const head = favicon.slice(favicon.indexOf('<g transform'), favicon.lastIndexOf(
 // bg: the tile; glow: the light behind the head; accent: glasses, tuft and earring.
 const LOOKS = {
   site: { bg: '#0a0a0a', glow: '#5c1307', accent: '#ee3c23' },
-  admin: { bg: '#ee3c23', glow: '#ff8a70', accent: '#0a0a0a' },
 };
 
 // round: corner radius in the square's units (0 = full bleed, what phones crop themselves).
@@ -44,10 +43,6 @@ const ICONS = [
   ['site-192.png', 'site', ANY, 192],
   ['site-512.png', 'site', ANY, 512],
   ['site-maskable-512.png', 'site', MASKABLE, 512],
-  ['admin-192.png', 'admin', ANY, 192],
-  ['admin-512.png', 'admin', ANY, 512],
-  ['admin-maskable-512.png', 'admin', MASKABLE, 512],
-  ['admin-apple-touch-icon.png', 'admin', {}, 180],
 ];
 
 const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'llamalab-icons-'));

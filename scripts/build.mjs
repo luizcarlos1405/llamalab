@@ -169,7 +169,7 @@ export function readImageSize(buf) {
 //   site   the installed app: every other page, the events' .ics files, every image
 //   admin  editors: the admin's page, modules, styles and fonts
 const BASE = ['assets/site.css', 'assets/site.js', 'assets/radio.js', 'assets/favicon.svg', 'assets/fonts/anton-400.woff2', 'assets/fonts/outfit-300-800.woff2'];
-const ADMIN = ['assets/admin.css', 'assets/fonts.css', 'assets/fonts/bagel-fat-one-400.woff2', 'assets/icons/admin-192.png'];
+const ADMIN = ['assets/admin.css', 'assets/fonts.css', 'assets/fonts/bagel-fat-one-400.woff2', 'assets/icons/site-192.png'];
 
 async function writeWorker(assets) {
   await fs.rm(path.join(OUT, 'src/sw.js'), { force: true });

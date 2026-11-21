@@ -80,10 +80,16 @@ Worth knowing:
 
 ## Offline and installing
 
-The site and the admin are two installable apps (PWAs): **LlamaLab**, with the dark llama icon, and **Llama Admin**,
-with a red one, opening straight into the admin. Each has its manifest, written by the build (`manifest.webmanifest`,
-`admin.webmanifest`). One service worker, [`src/sw.js`](src/sw.js), serves both; the build writes it to `_site/sw.js`
-with the list of files it may keep and a hash of each one.
+The site installs as an app (a PWA), **LlamaLab**, with the admin inside it: editors open it with the Admin button,
+which shows on every page once they've signed in. Its manifest is written by the build (`manifest.webmanifest`, linked
+from the pages and the admin), and one service worker, [`src/sw.js`](src/sw.js), keeps both usable offline; the build
+writes it to `_site/sw.js` with the list of files it may keep and a hash of each one.
+
+Why one app and not a separate one for the admin: on Android, an installed app claims every address under its scope, and
+the site's scope (the whole site) contains `/admin`. A second app there can't be installed: Chrome opens the site's app
+instead ([web.dev](https://web.dev/articles/building-multiple-pwas-on-the-same-domain)). A separate admin app would need
+an address of its own, outside the site's, such as a subdomain (`admin.llamalab.com.br`). The manifest's `id` is the
+site's path (`/llamalab/` on github.io), since browsers read it from the domain's root.
 
 What it keeps without internet:
 
@@ -107,8 +113,8 @@ How it behaves:
 - **Updates** take over at once and never reload an open page (the radio keeps playing). A deploy that changes the
   admin's own code shows a banner in the admin offering to reload.
 - **Installing:** where the browser can install the site (Chrome, Edge, Samsung Internet), a quiet "Instalar o app" shows
-  at the end of the phone menu and in the footer, and the admin's dashboard has a card for it. iPhones have no install
-  button for sites, so there the same buttons explain the way: Compartilhar → Adicionar à Tela de Início.
+  at the end of the phone menu and in the footer, and the admin's dashboard has a card for the same app. iPhones have no
+  install button for sites, so there the same buttons explain the way: Compartilhar → Adicionar à Tela de Início.
 
 The admin without internet:
 
@@ -120,8 +126,9 @@ The admin without internet:
   replays the drafts on it: an item someone else changed too counts as a conflict, as always. Then a banner invites to
   review and publish.
 - The admin asks the browser to keep its data even when the device runs low on space.
-- **On iPhone**, an app on the home screen keeps its own data, apart from Safari: editors sign in again inside the app,
-  and drafts made in Safari stay in Safari. Install first, then use only the app.
+- **On iPhone**, an app on the home screen keeps its own data, apart from Safari: drafts made in Safari stay in Safari,
+  and editors sign in again inside the app. The installed app has no address bar, so its footer shows an "Área da equipe"
+  link to the admin (only in the app, never in the browser). Install first, then use only the app.
 
 For developers:
 
@@ -230,7 +237,7 @@ The site is ready to move to `llamalab.com.br`; all internal links are relative.
 3. Update `defaultUrl` in [`src/config.js`](src/config.js).
 
 Browsers keep tokens, drafts, installed apps and offline copies per address, so editors sign in again on the new
-domain, and whoever installed the site or the admin installs it again from there. Publish everything before switching.
+domain, and whoever installed the app installs it again from there. Publish everything before switching.
 The old address keeps working for them: its service worker fetches pages from the network first, so it follows
 GitHub's redirect to the new domain.
 
@@ -239,7 +246,7 @@ GitHub's redirect to the new domain.
 ```
 admin.html            the CMS, served at /admin (loads src/admin/main.js)
 assets/               CSS, the public pages' JS (site.js; radio.js for the radio), fonts (Anton, Outfit; Bagel Fat One
-                      for the Instagram post), logos, icons (icons/: the apps', drawn by scripts/icons.mjs)
+                      for the Instagram post), logos, icons (icons/: the app's, drawn by scripts/icons.mjs)
 data/                 the content, as JSON
 images/               the content's images, as WebP
 scripts/build.mjs     static build; scripts/dev.mjs is the local server; scripts/icons.mjs draws the app icons

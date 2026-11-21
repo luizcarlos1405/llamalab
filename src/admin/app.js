@@ -391,8 +391,8 @@ function dashboard() {
   });
 }
 
-// Installing the admin as an app of its own: where the browser offers to, or on iPhone (the
-// way through Compartilhar). "Agora não" hides the card on this device.
+// Installing the LlamaLab app, with the admin inside it: where the browser offers to, or on
+// iPhone (the way through Compartilhar). "Agora não" hides the card on this device.
 const INSTALL_KEY = 'llamalab:install-card';
 const IOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 const standalone = () => matchMedia('(display-mode: standalone), (display-mode: fullscreen), (display-mode: minimal-ui)').matches || navigator.standalone === true;
@@ -403,12 +403,12 @@ function installCard(slot) {
     slot.hidden = standalone() || ls.get(INSTALL_KEY) === 'no' || !(net.installPrompt || IOS);
     if (slot.hidden) return;
     add(slot, h('div', { class: 'card app' },
-      h('img', { src: 'assets/icons/admin-192.png', alt: '', width: '72', height: '72' }),
+      h('img', { src: 'assets/icons/site-192.png', alt: '', width: '72', height: '72' }),
       h('div', null,
-        h('h2', null, matchMedia('(pointer: coarse)').matches ? 'Admin no celular' : 'Admin como app'),
-        h('p', { class: 'muted' }, 'Instale o admin: ele abre direto aqui, com o próprio ícone, e funciona sem internet.'),
+        h('h2', null, matchMedia('(pointer: coarse)').matches ? 'O app no celular' : 'O app no computador'),
+        h('p', { class: 'muted' }, 'Instale o app do LlamaLab: o site e este admin funcionam até sem internet. O admin abre pelo botão Admin, em qualquer página.'),
         h('div', { class: 'btns' },
-          h('button', { class: 'btn btn-k btn-sm', type: 'button', onclick: () => installAdmin(draw) }, 'Instalar o admin'),
+          h('button', { class: 'btn btn-k btn-sm', type: 'button', onclick: () => installApp(draw) }, 'Instalar o app'),
           h('button', { class: 'btn btn-ghost btn-sm', type: 'button', onclick: () => { ls.set(INSTALL_KEY, 'no'); draw(); } }, 'Agora não')))));
   };
   draw();
@@ -421,7 +421,7 @@ function installCard(slot) {
   });
 }
 
-async function installAdmin(done) {
+async function installApp(done) {
   if (net.installPrompt) {
     const ask = net.installPrompt;
     net.installPrompt = null;
@@ -433,12 +433,12 @@ async function installAdmin(done) {
   dialog({
     title: 'Instale no iPhone',
     body: h('div', { class: 'ios-steps' },
-      h('p', null, 'O admin vira um app na tela inicial e funciona até sem internet.'),
+      h('p', null, 'O LlamaLab vira um app na tela inicial, com o admin dentro, e funciona até sem internet.'),
       h('ol', null,
         h('li', null, 'Toque em ', h('b', null, 'Compartilhar'), ' (o quadrado com a seta), na barra do navegador.'),
         h('li', null, 'Escolha ', h('b', null, 'Adicionar à Tela de Início'), '.'),
         h('li', null, 'Toque em ', h('b', null, 'Adicionar'), '.')),
-      h('p', { class: 'muted' }, 'O app guarda os dados separado do navegador: entre nele de novo com seu nome e o token, e publique antes o que estiver esperando aqui.')),
+      h('p', { class: 'muted' }, 'O app guarda os dados separado do navegador. Publique antes o que estiver esperando aqui; depois, no app, toque em “Área da equipe”, no fim de qualquer página, e entre de novo com seu nome e o token.')),
     actions: (close) => [h('button', { class: 'btn btn-k', type: 'button', onclick: () => close() }, 'Entendi')],
   });
 }

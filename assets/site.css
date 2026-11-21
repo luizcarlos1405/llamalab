@@ -366,6 +366,7 @@ a:hover .uw{background-size:100% 3px}
 .js .fwm .ch{transform:translateY(105%);transition:transform 1.2s var(--ease);transition-delay:calc(var(--i)*70ms)}
 .js .fwm.in .ch{transform:none}
 .legal{display:flex;justify-content:space-between;gap:20px;padding:22px 0 26px;font-size:14px;color:#888;flex-wrap:wrap}
+.legal .team{margin-left:16px;color:#aaa;text-decoration:underline;text-underline-offset:3px}
 /* llama peeking from behind the "B" of the footer wordmark (B centre = 93.9% of the line) */
 .peek{position:absolute;z-index:0;left:93.9%;top:calc(clamp(90px,11vw,170px) + 2.9vw);width:clamp(70px,7.6vw,116px);aspect-ratio:120/239;transform:translate(-50%,-100%);overflow:hidden}
 .peek .pk{margin-top:55%;transform:translateY(3%);transition:transform 1.2s var(--spring) .5s}

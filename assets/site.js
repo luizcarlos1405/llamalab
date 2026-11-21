@@ -197,6 +197,11 @@
     $$('[data-app-note]').forEach((el) => {
       el.hidden = installed();
     });
+    // the installed app has no address bar: "Área da equipe" (footer) leads to the admin, which
+    // matters on iPhone, where the app keeps its own sign-in apart from Safari
+    $$('[data-app-only]').forEach((el) => {
+      el.hidden = !installed() || html.hasAttribute('data-preview');
+    });
     showInstall();
 
     /* reveal on scroll */

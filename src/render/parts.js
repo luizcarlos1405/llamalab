@@ -166,7 +166,7 @@ export function footer(P, { withCta = true } = {}) {
     <div><h2>Contato</h2>${c.email ? `<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>` : ''}${c.whatsapp ? `<a href="${esc(waLink(c.whatsapp))}" target="_blank" rel="noopener">${esc(formatPhone(c.whatsapp))}</a>` : ''}<a href="${P.href('sobre/')}">Dourados — MS</a></div>
   </div>
   <div class="fwm" data-io><div class="peek" aria-hidden="true"><div class="pk">${llama('')}</div></div><span class="bubble" aria-hidden="true">Bora?</span>${wordmark('')}</div>
-  <div class="legal"><span>© ${year} LlamaLab — Laboratório Criativo${c.cnpj ? ` · CNPJ ${esc(c.cnpj)}` : ''}</span><span>Feito em Dourados, no volume máximo.</span></div>
+  <div class="legal"><span>© ${year} LlamaLab — Laboratório Criativo${c.cnpj ? ` · CNPJ ${esc(c.cnpj)}` : ''}</span><span>Feito em Dourados, no volume máximo.<a class="team" href="${P.href('admin')}" data-app-only hidden>Área da equipe</a></span></div>
 </section>`;
 }
 

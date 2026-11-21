@@ -46,43 +46,32 @@ export function renderSite(data, opts) {
   return files;
 }
 
-// What makes the site and the admin installable: two apps, so editors get an icon of its
-// own that opens straight into the admin. Both manifests sit at the site's root ("./").
+// What makes the site installable. One app, with the admin inside it (editors open it with
+// the Admin button): a second app whose pages sit inside this one's (/admin) can't be
+// installed on Android, where the installed site claims every address under its scope.
+// Browsers read the id from the domain's root, so it's the site's path: /llamalab/ on
+// github.io, / on its own domain.
 function manifests(ctx) {
-  const icons = (name) => [
-    { src: `assets/icons/${name}-192.png`, sizes: '192x192', type: 'image/png', purpose: 'any' },
-    { src: `assets/icons/${name}-512.png`, sizes: '512x512', type: 'image/png', purpose: 'any' },
-    { src: `assets/icons/${name}-maskable-512.png`, sizes: '512x512', type: 'image/png', purpose: 'maskable' },
-  ];
-  const shortcut = (name, url, icon) => ({ name, url, icons: [{ src: `assets/icons/${icon}-192.png`, sizes: '192x192', type: 'image/png' }] });
-  const app = { lang: 'pt-BR', dir: 'ltr', display: 'standalone', background_color: '#0a0a0a', theme_color: '#0a0a0a' };
+  const root = new URL(`${ctx.siteUrl}/`).pathname;
+  const icon = (size, purpose = 'any') => ({ src: `assets/icons/site-${purpose === 'maskable' ? 'maskable-' : ''}${size}.png`, sizes: `${size}x${size}`, type: 'image/png', purpose });
+  const shortcut = (name, url) => ({ name, url, icons: [{ src: 'assets/icons/site-192.png', sizes: '192x192', type: 'image/png' }] });
   const site = {
-    id: './',
+    id: root,
     name: SITE.name,
     short_name: SITE.name,
     description: (ctx.site.seo || {}).description || 'O zine da cena cultural de Dourados.',
     start_url: './',
     scope: './',
-    ...app,
+    lang: 'pt-BR',
+    dir: 'ltr',
+    display: 'standalone',
+    background_color: '#0a0a0a',
+    theme_color: '#0a0a0a',
     categories: ['entertainment', 'music', 'news'],
-    icons: icons('site'),
-    shortcuts: [shortcut('Agenda', 'agenda/', 'site'), shortcut('Entrevistas', 'entrevistas/', 'site')],
+    icons: [icon(192), icon(512), icon(512, 'maskable')],
+    shortcuts: [shortcut('Agenda', 'agenda/'), shortcut('Entrevistas', 'entrevistas/')],
   };
-  const admin = {
-    id: './admin',
-    name: `${SITE.name} Admin`,
-    short_name: 'Llama Admin',
-    description: 'Edite a agenda, as notícias e as entrevistas do LlamaLab e publique no site.',
-    start_url: './admin',
-    scope: './admin',
-    ...app,
-    icons: icons('admin'),
-    shortcuts: [shortcut('Novo evento', './admin#/agenda/novo', 'admin'), shortcut('Post da agenda', './admin#/instagram', 'admin')],
-  };
-  return [
-    { path: 'manifest.webmanifest', html: `${JSON.stringify(site, null, 2)}\n` },
-    { path: 'admin.webmanifest', html: `${JSON.stringify(admin, null, 2)}\n` },
-  ];
+  return [{ path: 'manifest.webmanifest', html: `${JSON.stringify(site, null, 2)}\n` }];
 }
 
 // One page for the admin's live preview. `route` is "home", "agenda",
