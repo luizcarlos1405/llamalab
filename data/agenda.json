@@ -313,10 +313,15 @@
     "price": "",
     "lineup": "",
     "summary": "A última edição do ano com muitos garimpos lindos, acessórios, música e chopp geladíssimo",
-    "description": "",
-    "image": null,
-    "link": "",
-    "linkLabel": "",
+    "description": "Quem estava com saudades de uma boa feira de brechós SÓ VEM QUE EM DEZEMBRO TEM!!\nVem aí a última edição do GARIMPO COLETIVO do ano de 2026, e a gente espera por vocês com muitos garimpos lindos, acessórios, música e chopp geladíssimo!!!\nJá anota na agenda:\n📅 05/12 - sábado\n📍 Rua Ciro Melo, 3050 (espaço @mayconceptbrecho)\n⏰ 16h às 21h",
+    "image": {
+      "src": "images/agenda/garimpo-coletivo-l5fz.webp",
+      "alt": "Flyer de Garimpo Coletivo",
+      "w": 1120,
+      "h": 1400
+    },
+    "link": "https://www.instagram.com/p/Df3AujmhofK/",
+    "linkLabel": "Mais informações",
     "featured": false
   },
   {
