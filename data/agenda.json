@@ -260,13 +260,18 @@
     "venue": "Sucata Cultural",
     "address": "",
     "city": "Dourados",
-    "price": "",
-    "lineup": "",
-    "summary": "Moda e garimpo, artesanato, gastronomia e mimos criativos",
-    "description": "",
-    "image": null,
-    "link": "",
-    "linkLabel": "",
+    "price": "Grátis",
+    "lineup": "Gold Times (Danilo Capilé), Olê Olá (Vitória Liz)",
+    "summary": "Moda e garimpo, artesanato, gastronomia e mimos criativos.",
+    "description": "Teremos uma programação recheada de música, teatro, dança, circo, movimento e muitas manifestações artísticas!\n\nA arte ocupa, transforma e conecta!\nNos encontramos no Sucata! 🔥🎨",
+    "image": {
+      "src": "images/agenda/feira-caminhos-da-arte-ybur.webp",
+      "alt": "Flyer de Feira Caminhos da Arte",
+      "w": 1120,
+      "h": 1400
+    },
+    "link": "https://www.instagram.com/p/DfuvkYoljM5/?img_index=1",
+    "linkLabel": "Mais informações",
     "featured": false
   },
   {
