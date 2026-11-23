@@ -363,10 +363,15 @@
     "price": "",
     "lineup": "Não Tem Hora, Kinho Malta",
     "summary": "Comemoração dos 18 anos do grupo Não Tem Hora com a participação de Kinho Malta",
-    "description": "",
-    "image": null,
-    "link": "",
-    "linkLabel": "",
+    "description": "🎈Isso mesmo família, e a comemoração da “maioridade” do Não Tem Hora já tem dia, local, hora marcada e até convidado especial…\n\n🗓️ 12 de Dezembro\n📍 Espaço Pinotti\n⏰ das 17h às 00:00h\n\n🎁 Teremos a Participação Especial, Diretamente do Rio de Janeiro, dele que é uma das novas revelações do Pagode KINHO MALTA @kinhomalta.oficial\n\n🎫 Você não Vai Querer Ficar de Fora dessa, não é mesmo?!",
+    "image": {
+      "src": "images/agenda/entre-amigos-jeje.webp",
+      "alt": "Flyer de Entre Amigos",
+      "w": 1120,
+      "h": 1399
+    },
+    "link": "https://www.instagram.com/p/Dfs54-phVQl/",
+    "linkLabel": "Mais informações",
     "featured": false
   },
   {
