@@ -214,9 +214,14 @@
     "lineup": "",
     "summary": "Seu reencontro com a pista depois do sucesso da última edição, do house ao techno",
     "description": "",
-    "image": null,
-    "link": "",
-    "linkLabel": "",
+    "image": {
+      "src": "images/agenda/avesso-2-edicao-shhr.webp",
+      "alt": "Flyer de Avesso 2ª Edição",
+      "w": 1050,
+      "h": 1400
+    },
+    "link": "https://cheers.com.br/evento/avesso-do-house-ao-techno-38129?utm_source=ig&utm_medium=social&utm_content=link_in_bio&fbclid=PAZXh0bgNhZW0CMTEAcGRvZgJzcnRjBmFwcF9pZA85MzY2MTk3NDMzOTI0NTkAAaeyvCCVbT4R0FYhq_LulNXpsSC1SQpPZIRor5JKNx9054cB3KGxaTJVQ6zgDQ_aem_8VrAfbCNSKpy7WeJrjNlSQ",
+    "linkLabel": "Comprar ingresso",
     "featured": false
   },
   {
