@@ -287,11 +287,16 @@
     "city": "Dourados",
     "price": "",
     "lineup": "Não Tem Hora, Alexandro Alves, DJ Rod",
-    "summary": "Pagode, sertanejo e eletrônico com Não Tem Hora, Alexandro Alves e DJ Rod",
-    "description": "",
-    "image": null,
-    "link": "",
-    "linkLabel": "",
+    "summary": "Pagode, sertanejo e eletrônico ",
+    "description": "Dia 28/11 tem a 2ª edição do MISTURADIN!\n\nUma noite especial com Bday Binho Dakar, muito pagode, sertanejo e DJ!\n\nNÃO TEM HORA • ALEXANDRO ALVES • DJ ROD\n\nA partir das 20H, na Sance's Casa de Eventos.\nGaranta seu convite antecipado e ganhe o copo da festa!!!",
+    "image": {
+      "src": "images/agenda/misturadin-4uth.webp",
+      "alt": "Flyer de Misturadin",
+      "w": 477,
+      "h": 727
+    },
+    "link": "https://www.instagram.com/p/DfVfHKEvZ9w/",
+    "linkLabel": "Mais informações",
     "featured": false
   },
   {
