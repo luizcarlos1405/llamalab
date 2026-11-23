@@ -239,9 +239,14 @@
     "lineup": "",
     "summary": "Cada brechó com uma surpresa e o bar do acervo para deixar tudo ainda melhor",
     "description": "",
-    "image": null,
-    "link": "",
-    "linkLabel": "",
+    "image": {
+      "src": "images/agenda/brechozada-o9te.webp",
+      "alt": "Flyer de Brechózada",
+      "w": 1049,
+      "h": 1400
+    },
+    "link": "https://www.instagram.com/p/Dfm5QzXlVgg/?img_index=1",
+    "linkLabel": "Mais informações",
     "featured": false
   },
   {
