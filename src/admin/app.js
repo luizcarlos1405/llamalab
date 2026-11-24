@@ -1,4 +1,4 @@
-// LlamaLab admin: edit the site's content in the browser, keep the edits as
+// LLama Lab admin: edit the site's content in the browser, keep the edits as
 // drafts on this device, and publish them all at once as one commit.
 
 import { COLLECTIONS, SINGLETONS, emptyItem, normalize, validate } from '../schema.js';
@@ -391,7 +391,7 @@ function dashboard() {
   });
 }
 
-// Installing the LlamaLab app, with the admin inside it: where the browser offers to, or on
+// Installing the LLama Lab app, with the admin inside it: where the browser offers to, or on
 // iPhone (the way through Compartilhar). "Agora não" hides the card on this device.
 const INSTALL_KEY = 'llamalab:install-card';
 const IOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -406,7 +406,7 @@ function installCard(slot) {
       h('img', { src: 'assets/icons/site-192.png', alt: '', width: '72', height: '72' }),
       h('div', null,
         h('h2', null, matchMedia('(pointer: coarse)').matches ? 'O app no celular' : 'O app no computador'),
-        h('p', { class: 'muted' }, 'Instale o app do LlamaLab: o site e este admin funcionam até sem internet. O admin abre pelo botão Admin, em qualquer página.'),
+        h('p', { class: 'muted' }, 'Instale o app do LLama Lab: o site e este admin funcionam até sem internet. O admin abre pelo botão Admin, em qualquer página.'),
         h('div', { class: 'btns' },
           h('button', { class: 'btn btn-k btn-sm', type: 'button', onclick: () => installApp(draw) }, 'Instalar o app'),
           h('button', { class: 'btn btn-ghost btn-sm', type: 'button', onclick: () => { ls.set(INSTALL_KEY, 'no'); draw(); } }, 'Agora não')))));
@@ -433,7 +433,7 @@ async function installApp(done) {
   dialog({
     title: 'Instale no iPhone',
     body: h('div', { class: 'ios-steps' },
-      h('p', null, 'O LlamaLab vira um app na tela inicial, com o admin dentro, e funciona até sem internet.'),
+      h('p', null, 'O LLama Lab vira um app na tela inicial, com o admin dentro, e funciona até sem internet.'),
       h('ol', null,
         h('li', null, 'Toque em ', h('b', null, 'Compartilhar'), ' (o quadrado com a seta), na barra do navegador.'),
         h('li', null, 'Escolha ', h('b', null, 'Adicionar à Tela de Início'), '.'),
@@ -936,8 +936,8 @@ function pagesView() {
     h('h2', null, s.label),
     h('p', null, {
       site: 'Abertura da capa, faixas, chamada do rodapé, contatos e redes.',
-      sobre: 'A página Sobre: quem é a Llama.',
-      contrate: 'Serviços e chamada para contratar a Llama.',
+      sobre: 'A página Sobre: quem é a LLama.',
+      contrate: 'Serviços e chamada para contratar a LLama.',
     }[s.name]),
     store.singletonChanged(s.name) ? badge('Editado', 'edit') : null));
   add(view, h('section', { class: 'pages' }, h('div', { class: 'page-head' }, h('p', { class: 'eyebrow' }, 'Conteúdo'), h('h1', null, 'Páginas')), h('div', { class: 'page-grid' }, cards)));

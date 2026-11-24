@@ -127,7 +127,7 @@ function feed(ctx) {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
 <channel>
-  <title>LlamaLab</title>
+  <title>LLama Lab</title>
   <link>${esc(ctx.siteUrl)}/</link>
   <description>${esc((ctx.site.seo || {}).description || 'O zine da cena cultural de Dourados.')}</description>
   <language>pt-BR</language>
@@ -179,7 +179,7 @@ function ics(ctx, ev) {
   }
   const stamp = new Date(ctx.buildTime).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
   return [
-    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//LlamaLab//Agenda//PT', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//LLama Lab//Agenda//PT', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
     'BEGIN:VEVENT',
     `UID:${ev.id}@llamalab`,
     `DTSTAMP:${stamp}`,

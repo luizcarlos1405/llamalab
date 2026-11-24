@@ -38,15 +38,15 @@ const installButton = (attrs = '') => `<button class="btn btn-ghost btn-sm insta
 export function nav(P, current = '') {
   const links = NAV.map((n) => `<a href="${P.href(n.href)}"${n.key === current ? ' aria-current="page"' : ''}>${n.label}</a>`).join('');
   return `<header class="nav" id="nav">
-  <a class="brand" href="${P.href('')}" aria-label="LlamaLab — capa">${lockup}</a>
+  <a class="brand" href="${P.href('')}" aria-label="LLama Lab — capa">${lockup}</a>
   <nav class="nav-links" aria-label="Seções">${links}</nav>
   <div class="nav-cta">${radioStations(P).length ? somControl : '<span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>'}<a class="btn btn-solid" href="${esc(rolêLink(P))}" target="_blank" rel="noopener">${esc((P.site.cta || {}).eventLabel || 'Divulgue seu evento')} <span class="arr">→</span></a><button class="burger" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="menu"><i></i><i></i></button></div>
 </header>
 <div class="menu" id="menu" hidden>
-  <div class="menu-top"><a href="${P.href('')}" aria-label="LlamaLab — capa">${lockup}</a><button class="close" type="button" aria-label="Fechar menu">×</button></div>
+  <div class="menu-top"><a href="${P.href('')}" aria-label="LLama Lab — capa">${lockup}</a><button class="close" type="button" aria-label="Fechar menu">×</button></div>
   <nav aria-label="Menu">${links}</nav>
   <a class="btn btn-red" href="${esc(rolêLink(P))}" target="_blank" rel="noopener">${esc((P.site.cta || {}).eventLabel || 'Divulgue seu evento')} <span class="arr">→</span></a>
-  <div class="menu-app" data-install hidden><p><b>Leve o LlamaLab no celular.</b>A agenda abre direto da tela inicial, até sem internet.</p>${installButton()}</div>
+  <div class="menu-app" data-install hidden><p><b>Leve o LLama Lab no celular.</b>A agenda abre direto da tela inicial, até sem internet.</p>${installButton()}</div>
 </div>`;
 }
 
@@ -160,13 +160,13 @@ export function footer(P, { withCta = true } = {}) {
   return `<section class="panel dark foot" id="contato">
   ${ctaHtml}
   <div class="fgrid">
-    <div><h2>LlamaLab</h2><p>Laboratório criativo de divulgação cultural. Agenda, entrevistas e notícias de quem faz a cultura acontecer em Dourados — MS.</p><div class="btns">${c.whatsapp ? `<a class="btn btn-red btn-sm" href="${esc(waLink(c.whatsapp))}" target="_blank" rel="noopener">Chama no WhatsApp <span class="arr">→</span></a>` : ''}${installButton(' data-install hidden')}</div></div>
+    <div><h2>LLama Lab</h2><p>Laboratório criativo de divulgação cultural. Agenda, entrevistas e notícias de quem faz a cultura acontecer em Dourados — MS.</p><div class="btns">${c.whatsapp ? `<a class="btn btn-red btn-sm" href="${esc(waLink(c.whatsapp))}" target="_blank" rel="noopener">Chama no WhatsApp <span class="arr">→</span></a>` : ''}${installButton(' data-install hidden')}</div></div>
     <div><h2>Navegue</h2>${NAV.map((n) => `<a href="${P.href(n.href)}">${n.label}</a>`).join('')}</div>
     ${social.length ? `<div><h2>Redes</h2>${social.map(([name, url]) => `<a href="${esc(url)}" target="_blank" rel="noopener">${name}</a>`).join('')}</div>` : ''}
     <div><h2>Contato</h2>${c.email ? `<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>` : ''}${c.whatsapp ? `<a href="${esc(waLink(c.whatsapp))}" target="_blank" rel="noopener">${esc(formatPhone(c.whatsapp))}</a>` : ''}<a href="${P.href('sobre/')}">Dourados — MS</a></div>
   </div>
   <div class="fwm" data-io><div class="peek" aria-hidden="true"><div class="pk">${llama('')}</div></div><span class="bubble" aria-hidden="true">Bora?</span>${wordmark('')}</div>
-  <div class="legal"><span>© ${year} LlamaLab — Laboratório Criativo${c.cnpj ? ` · CNPJ ${esc(c.cnpj)}` : ''}</span><span>Feito em Dourados, no volume máximo.<a class="team" href="${P.href('admin')}" data-app-only hidden>Área da equipe</a></span></div>
+  <div class="legal"><span>© ${year} LLama Lab — Laboratório Criativo${c.cnpj ? ` · CNPJ ${esc(c.cnpj)}` : ''}</span><span>Feito em Dourados, no volume máximo.<a class="team" href="${P.href('admin')}" data-app-only hidden>Área da equipe</a></span></div>
 </section>`;
 }
 

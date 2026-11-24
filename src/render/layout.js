@@ -38,12 +38,12 @@ export const CSP = [
 // skip the `js` class, so the entrance animations don't replay on every edit.
 export function layout(P, opts) {
   const seo = P.site.seo || {};
-  const siteTitle = seo.title || 'LlamaLab';
-  const title = opts.title ? `${opts.title} — LlamaLab` : siteTitle;
+  const siteTitle = seo.title || 'LLama Lab';
+  const title = opts.title ? `${opts.title} — LLama Lab` : siteTitle;
   const description = excerpt(opts.description || seo.description || '', 200);
   const image = opts.image && opts.image.src
     ? { url: P.abs(opts.image.src), w: opts.image.w, h: opts.image.h, alt: opts.image.alt }
-    : { url: P.abs('assets/og.png'), w: 1200, h: 630, alt: 'LlamaLab — cultura que faz barulho em Dourados' };
+    : { url: P.abs('assets/og.png'), w: 1200, h: 630, alt: 'LLama Lab — cultura que faz barulho em Dourados' };
   const v = P.version ? `?v=${P.version}` : '';
   const edit = opts.edit ? ` data-edit="${esc(opts.edit)}"` : '';
   const radioHtml = radio(P);
@@ -57,7 +57,7 @@ ${P.preview ? '' : `<meta http-equiv="Content-Security-Policy" content="${CSP}">
 ${description ? `<meta name="description" content="${esc(description)}">` : ''}
 <link rel="canonical" href="${esc(P.canonical)}">
 <meta property="og:type" content="${opts.type || 'website'}">
-<meta property="og:site_name" content="LlamaLab">
+<meta property="og:site_name" content="LLama Lab">
 <meta property="og:locale" content="pt_BR">
 <meta property="og:title" content="${esc(opts.title || siteTitle)}">
 ${description ? `<meta property="og:description" content="${esc(description)}">` : ''}
@@ -69,8 +69,8 @@ ${image.alt ? `<meta property="og:image:alt" content="${esc(image.alt)}">` : ''}
 <meta name="theme-color" content="#0a0a0a">
 <link rel="icon" href="${P.href('assets/favicon.svg')}" type="image/svg+xml">
 <link rel="apple-touch-icon" href="${P.href('assets/apple-touch-icon.png')}">
-${P.preview ? '' : `<link rel="manifest" href="${P.href('manifest.webmanifest')}">\n<meta name="apple-mobile-web-app-title" content="LlamaLab">`}
-<link rel="alternate" type="application/rss+xml" title="LlamaLab" href="${P.href('feed.xml')}">
+${P.preview ? '' : `<link rel="manifest" href="${P.href('manifest.webmanifest')}">\n<meta name="apple-mobile-web-app-title" content="LLama Lab">`}
+<link rel="alternate" type="application/rss+xml" title="LLama Lab" href="${P.href('feed.xml')}">
 <link rel="preload" href="${P.href('assets/fonts/anton-400.woff2')}" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="${P.href('assets/fonts/outfit-300-800.woff2')}" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="${P.href('assets/site.css')}${v}">

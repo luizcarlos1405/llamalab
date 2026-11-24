@@ -1,4 +1,4 @@
-// LlamaLab public pages: stage animations, agenda calendar and filters, sharing
+// LLama Lab public pages: stage animations, agenda calendar and filters, sharing
 // and the admin shortcut. Pages are prerendered; this only adds behaviour.
 //
 // Everything that belongs to a page is set up in mount(), which runs on load and again
@@ -158,7 +158,7 @@
     tip.setAttribute('role', 'dialog');
     tip.setAttribute('aria-modal', 'true');
     tip.setAttribute('aria-label', 'Como instalar no iPhone');
-    tip.innerHTML = `<h2>Instale no iPhone</h2><p>O LlamaLab vira um app na tela inicial e funciona até sem internet.</p><ol><li><span>Toque em <span class="sh">${SHARE}</span> <b>Compartilhar</b>, na barra do navegador.</span></li><li><span>Escolha <b>Adicionar à Tela de Início</b>.</span></li><li><span>Toque em <b>Adicionar</b>.</span></li></ol><button class="btn btn-k" type="button">Entendi</button>`;
+    tip.innerHTML = `<h2>Instale no iPhone</h2><p>O LLama Lab vira um app na tela inicial e funciona até sem internet.</p><ol><li><span>Toque em <span class="sh">${SHARE}</span> <b>Compartilhar</b>, na barra do navegador.</span></li><li><span>Escolha <b>Adicionar à Tela de Início</b>.</span></li><li><span>Toque em <b>Adicionar</b>.</span></li></ol><button class="btn btn-k" type="button">Entendi</button>`;
     const close = () => {
       dim.remove();
       tip.remove();

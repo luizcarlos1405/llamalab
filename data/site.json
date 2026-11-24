@@ -27,9 +27,9 @@
     "highlight": "A gente espalha.",
     "text": "Somos um laboratório criativo de divulgação cultural. Entrevistas, cobertura, agenda e redes — pra sua arte ser ouvida em Dourados e além.",
     "eventLabel": "Divulgue seu evento",
-    "eventMessage": "Oi, Llama! Quero divulgar um evento: ",
+    "eventMessage": "Oi, LLama! Quero divulgar um evento: ",
     "interviewLabel": "Quero dar entrevista",
-    "interviewMessage": "Oi, Llama! Quero contar minha história numa entrevista: "
+    "interviewMessage": "Oi, LLama! Quero contar minha história numa entrevista: "
   },
   "contact": {
     "whatsapp": "5567992475409",
@@ -85,7 +85,7 @@
     ]
   },
   "seo": {
-    "title": "LlamaLab — cultura que faz barulho em Dourados",
+    "title": "LLama Lab",
     "description": "Agenda cultural, entrevistas e notícias de quem faz a cultura acontecer em Dourados (MS): shows, teatro, saraus, feiras e festivais."
   }
 }

@@ -1,8 +1,8 @@
 // Site-wide settings shared by the build, the public pages and the admin.
 
 export const SITE = {
-  name: 'LlamaLab',
-  fullName: 'LlamaLab — Laboratório Criativo',
+  name: 'LLama Lab',
+  fullName: 'LLama Lab — Laboratório Criativo',
   // Used for canonical URLs, link previews, the sitemap and the feed when the
   // build doesn't get SITE_URL from the environment (GitHub Actions sets it).
   defaultUrl: 'https://luizcarlos1405.github.io/llamalab',

@@ -1,4 +1,4 @@
-// LlamaLab's service worker: keeps the site readable without internet, and the admin usable.
+// LLama Lab's service worker: keeps the site readable without internet, and the admin usable.
 // scripts/build.mjs writes it to _site/sw.js with the BUILD line filled in: the version, the
 // assets' ?v= and every file the worker may keep, with a hash of its content.
 //

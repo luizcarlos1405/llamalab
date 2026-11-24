@@ -1,6 +1,6 @@
-# LlamaLab
+# LLama Lab
 
-Site of LlamaLab — Como se Llama, Laboratório Criativo: the agenda, interviews and news of the cultural
+Site of LLama Lab — Como se LLama, Laboratório Criativo: the agenda, interviews and news of the cultural
 scene of Dourados (MS). Live at <https://luizcarlos1405.github.io/llamalab/>.
 
 It's a static site with no server and no database. The content lives in this repository as JSON and
@@ -80,7 +80,7 @@ Worth knowing:
 
 ## Offline and installing
 
-The site installs as an app (a PWA), **LlamaLab**, with the admin inside it: editors open it with the Admin button,
+The site installs as an app (a PWA), **LLama Lab**, with the admin inside it: editors open it with the Admin button,
 which shows on every page once they've signed in. Its manifest is written by the build (`manifest.webmanifest`, linked
 from the pages and the admin), and one service worker, [`src/sw.js`](src/sw.js), keeps both usable offline; the build
 writes it to `_site/sw.js` with the list of files it may keep and a hash of each one.
@@ -208,7 +208,7 @@ The admin talks to `api.github.com` with a personal access token, which you crea
 The admin never mentions GitHub: the sign-in screen asks for a "token de acesso", and when one expires or
 stops working it tells the editor to ask whoever looks after the site for a new one.
 
-1. Open this pre-filled link: [new fine-grained token](https://github.com/settings/personal-access-tokens/new?name=Admin+do+site+LlamaLab&description=Publicar+altera%C3%A7%C3%B5es+no+site+pelo+admin+%28luizcarlos1405%2Fllamalab%29&target_name=luizcarlos1405&expires_in=366&contents=write).
+1. Open this pre-filled link: [new fine-grained token](https://github.com/settings/personal-access-tokens/new?name=Admin+do+site+LLama+Lab&description=Publicar+altera%C3%A7%C3%B5es+no+site+pelo+admin+%28luizcarlos1405%2Fllamalab%29&target_name=luizcarlos1405&expires_in=366&contents=write).
    It sets **Contents: Read and write** and a one-year expiration; pick a shorter one if you prefer.
 2. Under **Repository access**, choose **Only select repositories** and pick `llamalab`.
 3. Name it after the editor, so you can revoke one person's access without touching the others.

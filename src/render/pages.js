@@ -59,7 +59,7 @@ function agendaPanel(P) {
   const recent = P.past.slice(0, 3);
   const body = list.length
     ? `<div class="dates-wrap"><ol class="dates">${list.map((ev, i) => row(P, ev, i).replace('<li ', `<li data-month="${ev.date.slice(0, 7)}" `)).join('')}</ol>${posterFollower()}</div>`
-    : `<div class="empty" data-r><p class="h3">Nenhum rolê marcado por enquanto.</p><p>Tem show, peça, sarau ou feira vindo aí? Manda pra gente que a LlamaLab coloca na agenda.</p><a class="btn btn-k" href="${esc(rolêLink(P))}" target="_blank" rel="noopener">Enviar meu evento <span class="arr">→</span></a></div>
+    : `<div class="empty" data-r><p class="h3">Nenhum rolê marcado por enquanto.</p><p>Tem show, peça, sarau ou feira vindo aí? Manda pra gente que a LLama Lab coloca na agenda.</p><a class="btn btn-k" href="${esc(rolêLink(P))}" target="_blank" rel="noopener">Enviar meu evento <span class="arr">→</span></a></div>
       ${recent.length ? `<div class="month-h" style="margin-top:clamp(50px,6vw,80px)"><h2>Já rolou</h2><span>ARQUIVO</span></div><div class="dates-wrap"><ol class="dates">${recent.map((ev, i) => row(P, ev, i, { past: true })).join('')}</ol>${posterFollower()}</div>` : ''}`;
   return `<section class="panel light sec" id="agenda">
   <div class="sec-head">
@@ -67,7 +67,7 @@ function agendaPanel(P) {
     <div class="months" data-r>${monthChips}<a class="link" href="${P.href('agenda/')}">Calendário completo →</a></div>
   </div>
   ${body}
-  ${list.length ? `<div class="agenda-foot" data-r><p>Tem evento cultural em Dourados? Manda pra gente que a LlamaLab coloca na agenda — e no volume máximo.</p><a class="btn btn-k" href="${esc(rolêLink(P))}" target="_blank" rel="noopener">Enviar meu evento <span class="arr">→</span></a></div>` : ''}
+  ${list.length ? `<div class="agenda-foot" data-r><p>Tem evento cultural em Dourados? Manda pra gente que a LLama Lab coloca na agenda — e no volume máximo.</p><a class="btn btn-k" href="${esc(rolêLink(P))}" target="_blank" rel="noopener">Enviar meu evento <span class="arr">→</span></a></div>` : ''}
 </section>`;
 }
 
@@ -122,7 +122,7 @@ export function agendaPage(P) {
     const [y, m] = key.split('-').map(Number);
     return `<div class="month-block" data-month="${key}"><div class="month-h"><h2>${esc(monthLabel(y, m).split(' ')[0])}</h2><span>${y}</span></div><ol class="dates">${evs.map((ev) => row(P, ev, n++)).join('')}</ol></div>`;
   }).join('');
-  const empty = `<div class="empty"><p class="h3">Nenhum rolê marcado por enquanto.</p><p>Tem show, peça, sarau ou feira vindo aí? Manda pra gente que a LlamaLab coloca na agenda.</p><a class="btn btn-k" href="${esc(rolêLink(P))}" target="_blank" rel="noopener">Enviar meu evento <span class="arr">→</span></a></div>`;
+  const empty = `<div class="empty"><p class="h3">Nenhum rolê marcado por enquanto.</p><p>Tem show, peça, sarau ou feira vindo aí? Manda pra gente que a LLama Lab coloca na agenda.</p><a class="btn btn-k" href="${esc(rolêLink(P))}" target="_blank" rel="noopener">Enviar meu evento <span class="arr">→</span></a></div>`;
   const past = P.past.length
     ? `<details class="past-list"${P.upcoming.length ? '' : ' open'}><summary><span class="h3">Já rolou</span></summary><ol class="dates">${P.past.map((ev, i) => row(P, ev, i, { past: true })).join('')}</ol></details>`
     : '';
@@ -147,7 +147,7 @@ export function agendaPage(P) {
       ${calendarList(P, P.upcoming)}
     </aside>
   </div>
-  <div class="wrap agenda-foot"><p>Tem evento cultural em Dourados? Manda pra gente que a LlamaLab coloca na agenda — e no volume máximo.</p><a class="btn btn-k" href="${esc(rolêLink(P))}" target="_blank" rel="noopener">Enviar meu evento <span class="arr">→</span></a></div>
+  <div class="wrap agenda-foot"><p>Tem evento cultural em Dourados? Manda pra gente que a LLama Lab coloca na agenda — e no volume máximo.</p><a class="btn btn-k" href="${esc(rolêLink(P))}" target="_blank" rel="noopener">Enviar meu evento <span class="arr">→</span></a></div>
   <script type="application/json" id="agenda-data">${JSON.stringify(calData).replace(/</g, '\\u003c')}</script>
 </section>`;
   return layout(P, {
@@ -244,7 +244,7 @@ export function eventPage(P, ev) {
     ...(ev.image && ev.image.src ? { image: [P.abs(ev.image.src)] } : {}),
     description: excerpt(ev.summary || stripMarkdown(ev.description) || eventLine(ev) || ev.title, 300),
     url,
-    organizer: { '@type': 'Organization', name: 'LlamaLab', url: P.abs('') },
+    organizer: { '@type': 'Organization', name: 'LLama Lab', url: P.abs('') },
   };
   return layout(P, {
     title: `${ev.title} · ${String(p.d).padStart(2, '0')}/${String(p.m).padStart(2, '0')}`,
@@ -268,7 +268,7 @@ export function newsListPage(P) {
   const content = P.news.length
     ? `<div class="news-grid">${newsFeature(P, lead, { fresh: lead.date >= addDays(P.today, -7), tag: 'h2' })}<div class="nl">${side.map((n, i) => newsItem(P, n, i)).join('')}</div></div>
       ${more.length ? `<div class="ncards">${more.map((n) => newsFeature(P, n)).join('')}</div>` : ''}`
-    : `<div class="empty"><p class="h3">Nenhuma notícia por enquanto.</p><p>Edital, festival, estreia, inscrições abertas: a LlamaLab conta tudo por aqui. Tem uma pauta? Manda pra gente.</p><a class="btn btn-k" href="${esc(rolêLink(P))}" target="_blank" rel="noopener">Sugerir pauta <span class="arr">→</span></a></div>`;
+    : `<div class="empty"><p class="h3">Nenhuma notícia por enquanto.</p><p>Edital, festival, estreia, inscrições abertas: a LLama Lab conta tudo por aqui. Tem uma pauta? Manda pra gente.</p><a class="btn btn-k" href="${esc(rolêLink(P))}" target="_blank" rel="noopener">Sugerir pauta <span class="arr">→</span></a></div>`;
   const main = `${pageHero(P, { crumbs: [['Notícias']], eyebrow: 'Últimas do rolê', title: 'Notícias', lead: 'Editais, festivais, estreias e oportunidades da cena cultural de Dourados.' })}
 <section class="panel light sec"><div class="wrap">${content}</div></section>`;
   return layout(P, { title: 'Notícias', description: 'Notícias da cena cultural de Dourados: editais, festivais, estreias e oportunidades.', current: 'noticias', main, edit: 'noticias' });
@@ -298,8 +298,8 @@ export function newsPage(P, n) {
     headline: n.title,
     datePublished: n.date,
     ...(n.image && n.image.src ? { image: [P.abs(n.image.src)] } : {}),
-    author: n.author ? { '@type': 'Person', name: n.author } : { '@type': 'Organization', name: 'LlamaLab' },
-    publisher: { '@type': 'Organization', name: 'LlamaLab' },
+    author: n.author ? { '@type': 'Person', name: n.author } : { '@type': 'Organization', name: 'LLama Lab' },
+    publisher: { '@type': 'Organization', name: 'LLama Lab' },
   };
   return layout(P, { title: n.title, description: n.summary || stripMarkdown(n.body), image: n.image, type: 'article', current: 'noticias', main, head: jsonLd(ld), edit: `noticias/${n.id}` });
 }
@@ -369,7 +369,7 @@ export function interviewPage(P, it) {
 export function sobrePage(P) {
   const s = P.data.sobre || {};
   const c = P.site.contact || {};
-  const main = `${pageHero(P, { crumbs: [['Sobre']], eyebrow: 'Quem é a Llama', title: s.title || 'Sobre', titleClass: titleSize(s.title || '', 14, 30), lead: s.lead })}
+  const main = `${pageHero(P, { crumbs: [['Sobre']], eyebrow: 'Quem é a LLama', title: s.title || 'Sobre', titleClass: titleSize(s.title || '', 14, 30), lead: s.lead })}
 <section class="panel light sec">
   <div class="detail">
     <div class="prose dropcap">${md(P, s.body)}</div>
@@ -392,7 +392,7 @@ export function contratePage(P) {
   ${s.body ? `<div class="prose" style="margin-top:clamp(40px,5vw,70px)">${md(P, s.body)}</div>` : ''}
   <div class="pull" style="margin-top:clamp(50px,6vw,80px);display:flex;flex-wrap:wrap;gap:24px;align-items:center;justify-content:space-between"><p class="q" style="max-width:720px">${esc(s.ctaText || 'Conta pra gente o que você precisa.')}</p><a class="btn btn-red" href="${esc(link)}" target="_blank" rel="noopener">${esc(s.ctaLabel || 'Chamar no WhatsApp')} <span class="arr">→</span></a></div>
 </div></section>`;
-  return layout(P, { title: s.title || 'Contrate', description: s.lead || 'Serviços de divulgação cultural da LlamaLab.', current: 'contrate', main, cta: false, edit: 'contrate' });
+  return layout(P, { title: s.title || 'Contrate', description: s.lead || 'Serviços de divulgação cultural da LLama Lab.', current: 'contrate', main, cta: false, edit: 'contrate' });
 }
 
 export function notFoundPage(P) {
