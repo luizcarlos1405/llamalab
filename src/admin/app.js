@@ -35,7 +35,7 @@ const initial = () => ((ls.get(EDITOR_KEY) || '').trim().charAt(0) || '✺').toU
 const app = { gh: null, user: null, root: null, view: null, guard: null, lastHash: '', media: 'loading' };
 const clone = (v) => JSON.parse(JSON.stringify(v));
 const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
-const TYPE_ICON = { agenda: '✺', noticias: '✎', entrevistas: '❝', artistas: '✦', site: '⌂', sobre: 'i', contrate: '$' };
+const TYPE_ICON = { agenda: '✺', noticias: '✎', entrevistas: '❝', artistas: '✦', fotos: '◉', site: '⌂', sobre: 'i', contrate: '$' };
 const WIFI_OFF = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 2l20 20M8.5 16.4a5 5 0 0 1 7 0M5 12.9a10 10 0 0 1 5.2-2.8M19 12.9a10 10 0 0 0-2.3-1.6M2 9.4a15 15 0 0 1 4.4-2.8M22 9.4a15 15 0 0 0-11.7-3.8M12 20h.01"/></svg>';
 const WIFI = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.6a10 10 0 0 1 14 0M8.5 16.1a5 5 0 0 1 7 0M2 9a15 15 0 0 1 20 0M12 20h.01"/></svg>';
 const CLOCK = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
@@ -254,6 +254,7 @@ const TABS = [
   ['noticias', 'Radar Cultural'],
   ['entrevistas', 'Entrevistas'],
   ['artistas', 'Artistas'],
+  ['fotos', 'Fotos'],
   ['paginas', 'Páginas'],
 ];
 
@@ -408,7 +409,8 @@ function dashboard() {
     h('a', { class: 'btn btn-k', href: '#/agenda/novo' }, '+ Evento'),
     h('a', { class: 'btn btn-k', href: '#/noticias/novo' }, '+ Notícia do Radar'),
     h('a', { class: 'btn btn-k', href: '#/entrevistas/novo' }, '+ Entrevista'),
-    h('a', { class: 'btn btn-k', href: '#/artistas/novo' }, '+ Artista'));
+    h('a', { class: 'btn btn-k', href: '#/artistas/novo' }, '+ Artista'),
+    h('a', { class: 'btn btn-k', href: '#/fotos/novo' }, '+ Álbum de fotos'));
   const today = todayISO();
   const upcoming = store.state.working.agenda.filter((ev) => isUpcoming(ev, today));
   const next = h('div', { class: 'card next' }, h('h2', null, 'Próximos rolês'),
@@ -889,6 +891,7 @@ function itemLine(type, item) {
   if (type === 'agenda') return [item.venue, fmtHours(item), item.category, item.price].filter(Boolean).join(' · ');
   if (type === 'noticias') return [item.kicker, fmtShort(item.date)].filter(Boolean).join(' · ');
   if (type === 'artistas') return [item.area, item.role].filter(Boolean).join(' · ');
+  if (type === 'fotos') return [fmtShort(item.date), item.venue, `${(item.photos || []).length} ${(item.photos || []).length === 1 ? 'foto' : 'fotos'}`].filter(Boolean).join(' · ');
   return [item.name !== item.title ? item.name : '', item.area, fmtShort(item.date)].filter(Boolean).join(' · ');
 }
 
@@ -897,7 +900,9 @@ function itemArt(type, item) {
     const p = parseDate(item.date) || { d: '?', m: 1, y: '' };
     return h('div', { class: 'item-date' }, h('b', null, String(p.d).padStart(2, '0')), h('span', null, `${MONTHS_SHORT[p.m - 1]} ${p.y}`));
   }
-  const image = item.photo || item.image;
+  // an album shows its cover's small copy
+  const cover = type === 'fotos' ? (item.photos || []).find((p) => p.src === item.cover) || (item.photos || [])[0] : null;
+  const image = cover ? { src: cover.thumb } : item.photo || item.image;
   const src = image && image.src ? store.assetUrl(image.src) : null;
   // as on the site: news photos in black and white, interview photos in colour
   return h('div', { class: 'item-thumb' }, src ? h('img', { src, alt: '', loading: 'lazy', class: type === 'noticias' ? 'bw' : null }) : h('span', null, TYPE_ICON[type]));
@@ -1050,6 +1055,7 @@ function itemEditor(type, id, query) {
     if (!item.title && !item.name) item.title = t.newLabel;
     if (type === 'entrevistas' && !item.name) item.name = item.title;
     if (type === 'artistas' && !item.name) item.name = t.newLabel;
+    if (type === 'fotos' && !item.date) item.date = todayISO();
     data[type] = data[type].filter((i) => i.id !== previewId).concat(item).sort(t.sort);
     return data;
   };

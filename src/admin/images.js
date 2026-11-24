@@ -113,6 +113,19 @@ export async function processImage(file, slotName, crop = null, source = null) {
   return { blob: out.blob, type, w: out.w, h: out.h, bytes: out.blob.size, originalBytes: file.size, crop: region };
 }
 
+// An album's photo: decoded once, saved twice, the photo (1080 px wide at most) and its small
+// copy for the album's rows. Neither is cropped.
+export async function processPhoto(file) {
+  const bmp = await decode(file);
+  try {
+    const full = await processImage(file, 'foto', null, bmp);
+    const mini = await processImage(file, 'fotoMini', null, bmp);
+    return { full, mini };
+  } finally {
+    if (bmp.close) bmp.close();
+  }
+}
+
 // Default crop: centered across, and nearer the top on tall photos, where
 // faces usually are.
 export function autoCrop(iw, ih, aspect) {

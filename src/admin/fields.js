@@ -9,6 +9,7 @@ import { h, add, dialog, toast, formatBytes } from './dom.js';
 import { processImage, cropDialog, slotInfo, extFor, ACCEPT } from './images.js';
 import { IMAGE_SLOTS } from '../config.js';
 import * as store from './store.js';
+import { photosField, eventField } from './photos.js';
 
 let uid = 0;
 const nextId = () => `f${++uid}`;
@@ -129,6 +130,12 @@ function renderField(field, path, ctx) {
     }
     case 'image':
       return wrap(field, path, imageField(field, get, set, ctx), { id });
+    case 'photos':
+      return photosField(field, get, set, ctx);
+    case 'event':
+      return wrap(field, path, eventField(field, get, set, ctx), { id });
+    case 'hidden':
+      return h('div', { hidden: true });
     case 'strings':
       return wrap(field, path, stringsField(field, path, get, set, ctx), { id });
     case 'repeater':

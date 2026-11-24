@@ -311,7 +311,7 @@ While a token is saved, the public pages show a red pencil button in the corner.
   its own with the site's, and when the site's is newer it asks the editor to reload first; the drafts stay. An admin
   from before a change may not know a new content type or field, and would drop it: on 24/11/2026 one from before
   Artistas removed the artists' photos.
-- **Agenda, Radar Cultural, Entrevistas, Artistas** list, search, filter, create, duplicate (events), edit and remove items.
+- **Agenda, Radar Cultural, Entrevistas, Artistas, Fotos** list, search, filter, create, duplicate (events), edit and remove items.
   The editor shows a live preview of the real page, at desktop or phone width.
 - **Páginas** edits the home page settings, the radio's stations, contacts, Sobre and Contrate.
 - **Post da agenda** (Agenda → Post para o Instagram) turns the events of a date range into the "Agenda
@@ -428,7 +428,8 @@ scripts/build.mjs     static build; scripts/dev.mjs is the local server; scripts
 src/schema.js         content model; src/config.js holds the site settings and image sizes
 src/render/           page templates, shared by the build and the admin preview
 src/sw.js             the service worker (offline copies), completed by the build
-src/admin/            the CMS: GitHub client, drafts store, forms, image processing, the Instagram post, the
+src/admin/            the CMS: GitHub client, drafts store, forms, image processing, the bucket (r2.js) and the
+                      uploads to it (uploads.js), the albums' fields (photos.js), the Instagram post, the
                       connection (net.js)
 src/zip.js            the .zip writer (an album's photos, the Instagram post's slides)
 .github/workflows/    build and deploy to Pages
