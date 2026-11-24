@@ -702,7 +702,8 @@ function itemArt(type, item) {
   }
   const image = item.photo || item.image;
   const src = image && image.src ? store.assetUrl(image.src) : null;
-  return h('div', { class: 'item-thumb' }, src ? h('img', { src, alt: '', loading: 'lazy' }) : h('span', null, TYPE_ICON[type]));
+  // as on the site: news photos in black and white, interview photos in colour
+  return h('div', { class: 'item-thumb' }, src ? h('img', { src, alt: '', loading: 'lazy', class: type === 'noticias' ? 'bw' : null }) : h('span', null, TYPE_ICON[type]));
 }
 
 function listView(type) {
