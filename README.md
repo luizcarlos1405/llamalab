@@ -153,6 +153,9 @@ For developers:
   policy allows them only as `'self'`, and the preview then shows without its styles.
 - The icons are drawn from the llama in `assets/favicon.svg` by `node scripts/icons.mjs` (needs `rsvg-convert`), into
   `assets/icons/`. Run it again when the llama changes.
+- The link preview image, `assets/og.png`, shows the home page's headline (`hero` in `site.json`). When the team
+  changes the headline, draw it again with `node scripts/og.mjs` (needs Playwright's Chromium). Its alt text follows
+  the headline by itself.
 - If the worker ever misbehaves on visitors' devices, publish a `src/sw.js` that removes itself (keep the `BUILD` line,
   the build fills it in), and devices drop it on their next visit:
 

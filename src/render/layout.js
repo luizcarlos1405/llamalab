@@ -41,9 +41,12 @@ export function layout(P, opts) {
   const siteTitle = String(seo.title || '').trim() || 'LLama Lab';
   const title = opts.title ? `${opts.title} — LLama Lab` : siteTitle;
   const description = excerpt(opts.description || seo.description || '', 200);
+  // assets/og.png shows the home page's headline (scripts/og.mjs draws it), and so does its alt
+  const hero = P.site.hero || {};
+  const headline = [hero.title, hero.highlight].map((s) => String(s || '').trim()).filter(Boolean).join(' ');
   const image = opts.image && opts.image.src
     ? { url: P.abs(opts.image.src), w: opts.image.w, h: opts.image.h, alt: opts.image.alt }
-    : { url: P.abs('assets/og.png'), w: 1200, h: 630, alt: 'LLama Lab — cultura que faz barulho em Dourados' };
+    : { url: P.abs('assets/og.png'), w: 1200, h: 630, alt: `LLama Lab${headline ? ` — ${headline}` : ''} · Dourados, MS` };
   const v = P.version ? `?v=${P.version}` : '';
   const edit = opts.edit ? ` data-edit="${esc(opts.edit)}"` : '';
   const radioHtml = radio(P);
