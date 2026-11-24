@@ -203,6 +203,9 @@ While a token is saved, the public pages show a red pencil button in the corner.
 - **Publishing:**
   - If someone else published in the meantime, the edits are replayed on top of their version, item by item.
     Only an item both people changed counts as a conflict, and the editor picks which version stays.
+  - An item moved to another type in the meantime, with the same id (the artist profiles, from Entrevistas to
+    Artistas on 24/11/2026), never goes back where it was. A draft's edits to it go along, for the fields both
+    types have, always as a conflict that says where it went and which changes can't go along.
   - Images that nothing points to any more are deleted in the same commit, which keeps the published site small.
   - After a publish, the admin polls `version.json` until the new version is live (usually under a minute).
 

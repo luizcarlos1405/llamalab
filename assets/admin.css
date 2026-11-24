@@ -336,6 +336,7 @@ input:focus,textarea:focus{outline:0;border-color:var(--k);box-shadow:0 0 0 4px 
 .problems a{color:var(--k)}
 .conflicts{display:flex;flex-direction:column;gap:12px}
 .conflict{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px;border-radius:16px;background:var(--p)}
+.conflict .moved{margin-top:4px;font-size:14px;line-height:1.4;color:#555}
 .toast{position:fixed;left:50%;bottom:24px;z-index:300;max-width:min(560px,calc(100% - 24px));transform:translate(-50%,30px);opacity:0;background:var(--w);color:var(--k);padding:14px 22px;border-radius:22px;font:500 15px/1.35 var(--sans);box-shadow:0 20px 40px -10px rgba(0,0,0,.5);transition:transform .4s var(--spring),opacity .2s;pointer-events:none}
 .toast.on{transform:translate(-50%,0);opacity:1}
 .toast.error{background:#c62a14;color:var(--w)}

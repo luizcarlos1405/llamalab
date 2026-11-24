@@ -691,7 +691,7 @@ function conflictsDialog() {
     h('p', null, 'Outra pessoa publicou alterações nos mesmos itens que você editou. Escolha qual versão fica em cada um:'));
   const rows = list.map((c) => {
     const row = h('div', { class: 'conflict' },
-      h('b', null, c.title),
+      h('div', null, h('b', null, c.title), c.from ? h('p', { class: 'moved' }, movedNote(c)) : null),
       h('div', { class: 'btns' },
         h('button', { class: 'btn btn-k btn-sm', type: 'button', onclick: () => { store.resolveConflict(c, 'mine'); row.remove(); done(); } }, 'Manter a minha'),
         h('button', { class: 'btn btn-ghost btn-sm', type: 'button', onclick: () => { store.resolveConflict(c, 'theirs'); row.remove(); done(); } }, c.theirs === undefined ? 'Aceitar a remoção' : 'Usar a publicada')));
@@ -710,6 +710,18 @@ function conflictsDialog() {
       route();
     }
   }
+}
+
+// Under the name of an item the site moved to another type since the drafts were made (the artist
+// profiles, on 24/11/2026): where it went, and which of the editor's changes can't go along.
+function movedNote(c) {
+  const where = `Saiu de ${COLLECTIONS[c.from].label} e ${c.theirs ? 'agora está em' : 'foi para'} ${COLLECTIONS[c.type].label}.`;
+  if (!c.left.length) return `${where} “Manter a minha” leva suas alterações para lá.`;
+  const fields = new Intl.ListFormat('pt-BR').format(c.left.map((label) => `“${label}”`));
+  const gone = c.left.length > 1 ? 'esses campos não existem lá' : 'esse campo não existe lá';
+  // nothing else changed: both buttons keep it as published
+  if (JSON.stringify(c.mine) === JSON.stringify(c.theirs)) return `${where} O que você mudou em ${fields} fica de fora: ${gone}.`;
+  return `${where} “Manter a minha” leva suas alterações para lá, menos o que você mudou em ${fields}: ${gone}.`;
 }
 
 /* ================= lists ================= */
