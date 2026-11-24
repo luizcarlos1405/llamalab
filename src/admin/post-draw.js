@@ -432,7 +432,7 @@ function drawArt(ctx, art, x, y, w, h) {
 
 // The site's llama with sunglasses: `lens` paints the lenses and hides the eyes.
 function llamaArt({ white, line, red, lens }) {
-  return compileArt(llama(''), { '--llw': white, '--llk': line, '--llr': red, '--llh': 'transparent' }, {
+  return compileArt(llama(''), { '--llw': white, '--llk': line, '--llr': red }, {
     'll-lens': { fill: lens },
     'll-eye': { fill: lens },
   });
