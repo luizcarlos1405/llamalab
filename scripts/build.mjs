@@ -4,9 +4,12 @@
 //   node scripts/build.mjs
 //
 // Environment:
-//   SITE_URL    absolute URL the site is served from (default: SITE.defaultUrl)
-//   BUILD_DATE  YYYY-MM-DD to treat as today (default: today in Dourados)
-//   GITHUB_SHA  commit being built; written to version.json for the admin
+//   SITE_URL        absolute URL the site is served from (default: SITE.defaultUrl)
+//   BUILD_DATE      YYYY-MM-DD to treat as today (default: today in Dourados)
+//   GITHUB_SHA      commit being built; written to version.json for the admin
+//   GITHUB_ACTIONS  "true" in GitHub Actions, which sets it: there, content that points to
+//                   an image missing from the repository fails the build (see
+//                   missingImages); locally it's a warning
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -15,14 +18,24 @@ import { fileURLToPath } from 'node:url';
 import { renderSite } from '../src/render/index.js';
 import { COLLECTIONS, SINGLETONS, normalize, validate } from '../src/schema.js';
 import { SITE } from '../src/config.js';
-import { todayISO, imageRefs } from '../src/util.js';
+import { todayISO, imageRefsAt } from '../src/util.js';
 import { JS_FLAG, JS_FLAG_HASH } from '../src/render/layout.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = path.join(ROOT, '_site');
 const COPY = ['assets', 'images', 'data', 'src', 'admin.html'];
+// The image formats whose pixel size the build reads (readImageSize).
+const MEASURED = /\.(webp|png|jpe?g|gif)$/i;
 
-export async function build({ siteUrl = process.env.SITE_URL || SITE.defaultUrl, today = process.env.BUILD_DATE || todayISO(), quiet = false } = {}) {
+// A problem in the content that the build already explained: printed without a stack trace.
+class BuildError extends Error {}
+
+export async function build({
+  siteUrl = process.env.SITE_URL || SITE.defaultUrl,
+  today = process.env.BUILD_DATE || todayISO(),
+  quiet = false,
+  strict = process.env.GITHUB_ACTIONS === 'true',
+} = {}) {
   const started = Date.now();
   // The pages' inline script only runs if the Content-Security-Policy lists its hash.
   const flagHash = `'sha256-${crypto.createHash('sha256').update(JS_FLAG).digest('base64')}'`;
@@ -30,8 +43,17 @@ export async function build({ siteUrl = process.env.SITE_URL || SITE.defaultUrl,
   const warnings = [];
   const data = await loadData(warnings);
   const sizes = await imageSizes(warnings);
-  const referenced = imageRefs(data);
-  for (const ref of referenced) if (!sizes.has(ref)) warnings.push(`missing image: ${ref}`);
+  const missing = await missingImages(data, sizes, warnings);
+  if (missing.length && strict) {
+    if (!quiet) {
+      for (const w of warnings) console.warn(`warning: ${w}`);
+      await annotate(missing);
+    }
+    const n = missing.length;
+    throw new BuildError(`${n} ${n > 1 ? "references point to images that aren't" : "reference points to an image that isn't"} in the repository (listed above). `
+      + `The build stops here, so this version isn't deployed and the site keeps the last good one. README.md, "When a deploy fails", says how to fix it.`);
+  }
+  for (const m of missing) warnings.push(`${where(m)}: ${m.at} points to ${m.src}, which isn't in the repository`);
 
   const version = await assetVersion();
   const files = renderSite(data, {
@@ -123,7 +145,7 @@ async function imageSizes(warnings) {
     for (const entry of entries) {
       const rel = `${dir}/${entry.name}`;
       if (entry.isDirectory()) await walk(rel);
-      else if (/\.(webp|png|jpe?g|gif)$/i.test(entry.name)) {
+      else if (MEASURED.test(entry.name)) {
         const handle = await fs.open(path.join(ROOT, rel));
         const { buffer } = await handle.read(Buffer.alloc(65536), 0, 65536, 0);
         await handle.close();
@@ -136,6 +158,63 @@ async function imageSizes(warnings) {
   await walk('images');
   return sizes;
 }
+
+// What the content points to under images/ that isn't in the repository, each with the data
+// file, item and field that point to it. In GitHub Actions that fails the build, so the deploy
+// doesn't run and the site keeps its last good version: on 24/11/2026 an outdated admin removed
+// the 18 artists' photos, and the site went live with every one of them broken. Locally it's a
+// warning, so work can go on. An image that is there but whose size the build doesn't know (an
+// SVG or AVIF, or a file it can't parse, which imageSizes already warns about) only goes out
+// without width and height: a warning anywhere.
+async function missingImages(data, sizes, warnings) {
+  const present = new Set(await listFiles(ROOT, 'images').catch(() => []));
+  const missing = [];
+  const unmeasured = new Set();
+  const check = (file, item) => {
+    for (const { src, at } of imageRefsAt(item)) {
+      if (!present.has(src)) missing.push({ file, id: item.id || '', at, src });
+      else if (!sizes.has(src) && !MEASURED.test(src)) unmeasured.add(src);
+    }
+  };
+  for (const [name, type] of Object.entries(SINGLETONS)) check(type.file, data[name]);
+  for (const [name, type] of Object.entries(COLLECTIONS)) for (const item of data[name]) check(type.file, item);
+  for (const src of unmeasured) warnings.push(`no size for ${src}: the build only reads WebP, PNG, JPEG and GIF, so it goes out without width and height`);
+  return missing;
+}
+
+// "data/artistas.json ana-paula-lopes", or just the file for the pages' settings (no id).
+const where = (m) => (m.id ? `${m.file} ${m.id}` : m.file);
+
+// The missing images as error annotations, which GitHub Actions shows on the run's page: one
+// per data file (it shows only the first 10 of a step), with every item, field and image, and
+// linked to the line of the first one.
+async function annotate(missing) {
+  const byFile = new Map();
+  for (const m of missing) byFile.set(m.file, [...(byFile.get(m.file) || []), m]);
+  for (const [file, list] of byFile) {
+    const text = await fs.readFile(path.join(ROOT, file), 'utf8').catch(() => '');
+    const line = lineOf(text, list[0]);
+    const message = [
+      list.length > 1 ? `${list.length} references to images that aren't in the repository:` : "A reference to an image that isn't in the repository:",
+      ...list.map((m) => `${m.id ? `${m.id}: ` : ''}${m.at} points to ${m.src}`),
+    ].join('\n');
+    const props = `file=${escapeProperty(file)}${line ? `,line=${line}` : ''},title=${list.length > 1 ? 'Missing images' : 'Missing image'}`;
+    console.log(`::error ${props}::${escapeData(message)}`);
+  }
+}
+
+// The line of a reference in its data file: the first one with the image's path after the
+// item's id (the admin writes the files with one key per line).
+function lineOf(text, { id, src }) {
+  const lines = text.split('\n');
+  const from = id ? Math.max(0, lines.findIndex((l) => l.includes(`"id": ${JSON.stringify(id)}`))) : 0;
+  const i = lines.findIndex((l, n) => n >= from && l.includes(src));
+  return i < 0 ? 0 : i + 1;
+}
+
+// Workflow commands take their message and properties with these characters escaped.
+const escapeData = (s) => String(s).replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, '%0A');
+const escapeProperty = (s) => escapeData(s).replace(/:/g, '%3A').replace(/,/g, '%2C');
 
 export function readImageSize(buf) {
   if (buf.toString('ascii', 0, 4) === 'RIFF' && buf.toString('ascii', 8, 12) === 'WEBP') {
@@ -250,7 +329,7 @@ async function assetVersion() {
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   build().catch((error) => {
-    console.error(error);
+    console.error(error instanceof BuildError ? `error: ${error.message}` : error);
     process.exit(1);
   });
 }

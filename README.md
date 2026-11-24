@@ -33,6 +33,8 @@ data/*.json, images/  ──>  scripts/build.mjs  ──>  _site/  ──>  GitH
   preview. The build also writes `sitemap.xml`, `feed.xml` (RSS), an `.ics` file per event and `version.json`.
 - **Daily rebuild:** the Actions workflow also runs every night, so events that already happened leave the home
   page and the agenda without anyone publishing.
+- **A broken version doesn't go live:** in GitHub Actions, the build fails when the content points to an image
+  that isn't in the repository, and the site keeps its last good version (see [When a deploy fails](#when-a-deploy-fails)).
 - **Offline and installable:** a service worker keeps the site readable without internet, and the site and the
   admin can be installed as apps (see [Offline and installing](#offline-and-installing)).
 
@@ -178,6 +180,36 @@ npm run dev            # builds and serves http://localhost:8080, rebuilding on 
 PORT=3000 npm run dev  # another port
 npm run build          # just build into _site/
 ```
+
+## When a deploy fails
+
+Every push to `main`, and the daily rebuild, runs [`.github/workflows/site.yml`](.github/workflows/site.yml): it
+builds the site, then deploys it. When the build fails, the deploy doesn't run and GitHub Pages keeps serving the
+last version that built.
+
+- **A missing image fails the build in GitHub Actions:** content that points to an image that isn't in the
+  repository, from an image field or from a Markdown text. On 24/11/2026 an outdated admin removed the 18 artists'
+  photos, and the site went live with every one of them broken; a commit like that now stops at the build. The
+  build knows it's in Actions from `GITHUB_ACTIONS`, which Actions sets.
+- **Locally it's a warning,** with `npm run dev` and `npm run build`, so work can go on. To check a change the way
+  Actions will: `GITHUB_ACTIONS=true npm run build`.
+- An image that is in the repository but whose size the build can't read (an SVG, an AVIF, a file it can't parse)
+  is a warning everywhere: it goes out without `width` and `height`. An `images/` path inside a full address
+  (`https://…/images/…`) is another site's image, and isn't checked.
+
+To find and fix it:
+
+1. Open the failed run: the ✗ next to the commit on GitHub, or the repository's **Actions** tab. Its summary has
+   an error for each data file, with each item's id, the field (`photo.src`, `body`, `qa.1.a`) and the image it
+   points to, linked to the line of the first one.
+2. Bring the image back from before the commit that removed it, as 740243a did
+   (`git log --diff-filter=D --oneline -- images/…` finds that commit, `git checkout <commit>^ -- images/…`
+   restores the files), or point the item to another image, or to none, in the admin or in the JSON.
+3. Push to `main`. The next run deploys everything, including what came with the failed commit: nothing was lost.
+
+A run that failed for another reason (a step that broke, GitHub having a bad day) shows up the same way. Once the
+cause is fixed, **Re-run jobs** on the page of the latest run deploys it (an older one would put older content
+back).
 
 ## The admin (`/admin`)
 

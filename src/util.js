@@ -225,14 +225,38 @@ export function jsonFile(value) {
   return `${JSON.stringify(value, null, 2)}\n`;
 }
 
+// Only ever used with matchAll(), which leaves its lastIndex alone.
+const IMAGE_PATH = /images\/[\w./-]+?\.(?:webp|png|jpe?g|gif|svg|avif)/gi;
+
 // Every repository path under images/ mentioned anywhere in a value.
 export function imageRefs(value, out = new Set()) {
   if (typeof value === 'string') {
-    for (const m of value.matchAll(/images\/[\w./-]+?\.(?:webp|png|jpe?g|gif|svg|avif)/gi)) out.add(m[0]);
+    for (const m of value.matchAll(IMAGE_PATH)) out.add(m[0]);
   } else if (Array.isArray(value)) {
     value.forEach((v) => imageRefs(v, out));
   } else if (value && typeof value === 'object') {
     Object.values(value).forEach((v) => imageRefs(v, out));
+  }
+  return out;
+}
+
+// The repository's images a value points to, each with the key path it was found at
+// ("photo.src", "qa.1.a"), to say where to look when one is missing. Like imageRefs(), except
+// that an images/ path inside a full address (https://…/images/foo.jpg, www.…) is another
+// site's image: the pages link to it as it is. imageRefs() still counts those, so that the
+// admin never deletes an image something might point to.
+export function imageRefsAt(value, at = '', out = []) {
+  if (typeof value === 'string') {
+    for (const m of value.matchAll(IMAGE_PATH)) {
+      // back to the start of the address the path is part of: a space, a bracket or a quote
+      let start = m.index;
+      while (start > 0 && !/[\s()<>"'[\]]/.test(value[start - 1])) start -= 1;
+      if (!/^(?:(?:[a-z][a-z0-9+.-]*:)?\/\/|www\.)/i.test(value.slice(start, m.index))) out.push({ src: m[0], at });
+    }
+  } else if (Array.isArray(value)) {
+    value.forEach((v, i) => imageRefsAt(v, at ? `${at}.${i}` : String(i), out));
+  } else if (value && typeof value === 'object') {
+    for (const [key, v] of Object.entries(value)) imageRefsAt(v, at ? `${at}.${key}` : key, out);
   }
   return out;
 }

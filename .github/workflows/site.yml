@@ -29,6 +29,9 @@ jobs:
       - id: pages
         uses: actions/configure-pages@v5
       - name: Build
+        # Fails when the content points to an image that isn't in the repository (the build
+        # checks GITHUB_ACTIONS), so the deploy doesn't run and the site keeps its last good
+        # version. See "When a deploy fails" in README.md.
         run: node scripts/build.mjs
         env:
           SITE_URL: ${{ steps.pages.outputs.base_url }}
