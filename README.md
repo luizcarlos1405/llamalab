@@ -184,6 +184,11 @@ While a token is saved, the public pages show a red pencil button in the corner.
 
 - **Painel** lists every unpublished change (new, edited, removed) with undo, and publishes all of them
   as one commit with a generated message. The editor's name is the commit author.
+- **An outdated admin doesn't publish.** The build stamps the admin's version into `admin.html` and `version.json`
+  (a hash of its page, modules and styles; content alone doesn't change it). Before publishing, the admin compares
+  its own with the site's, and when the site's is newer it asks the editor to reload first; the drafts stay. An admin
+  from before a change may not know a new content type or field, and would drop it: on 24/11/2026 one from before
+  Artistas removed the artists' photos.
 - **Agenda, Radar Cultural, Entrevistas, Artistas** list, search, filter, create, duplicate (events), edit and remove items.
   The editor shows a live preview of the real page, at desktop or phone width.
 - **Páginas** edits the home page settings, the radio's stations, contacts, Sobre and Contrate.

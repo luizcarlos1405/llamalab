@@ -8,7 +8,7 @@ import { lockup, symbols } from '../render/svg.js';
 import { h, add, $, clear, toast, dialog, confirm, formatBytes, timeAgo } from './dom.js';
 import { createClient, describeError, ApiError } from './github.js';
 import { isPersistent } from './idb.js';
-import { net, onNet, setOnline, keepData } from './net.js';
+import { net, onNet, setOnline, keepData, markUpdated } from './net.js';
 import { buildForm } from './fields.js';
 import { previewPane, siteUrl } from './preview.js';
 import { postView } from './post.js';
@@ -527,7 +527,7 @@ async function loadStatus(box) {
     return;
   }
   try {
-    const [commits, deployed] = await Promise.all([app.gh.commits(1), fetchVersion()]);
+    const [commits, deployed] = await Promise.all([app.gh.commits(1), fetchVersion(), adminOutdated()]);
     const last = commits[0];
     const live = deployed && deployed.sha === last.sha;
     const age = (Date.now() - new Date(last.commit.committer.date).getTime()) / 60000;
@@ -557,11 +557,48 @@ async function fetchVersion() {
   }
 }
 
+// The admin this page runs (the build stamps it into admin.html) against the one deployed with
+// it now (the version.json next to this page: the live site's on GitHub Pages, the local build's
+// with npm run dev). An admin older than that may not know everything the site has now: on
+// 24/11/2026 one from before Artistas removed the artists' photos. So it only publishes after
+// a reload, which keeps the drafts. When version.json can't be read, it doesn't hold anything back.
+const ADMIN_VERSION = document.querySelector('meta[name="admin-version"]')?.content || '';
+
+async function adminOutdated() {
+  if (net.updated) return true;
+  if (!ADMIN_VERSION) return false;
+  try {
+    const res = await fetch(new URL(`version.json?t=${Date.now()}`, location.href), { cache: 'no-store' });
+    const deployed = res.ok ? await res.json() : null;
+    if (deployed && deployed.admin && deployed.admin !== ADMIN_VERSION) markUpdated();
+  } catch {
+    // can't tell: don't hold the editor back
+  }
+  return net.updated;
+}
+
+function outdatedDialog() {
+  dialog({
+    title: 'Recarregue o admin para publicar',
+    body: h('div', null,
+      h('p', null, 'Saiu uma versão nova do admin. Esta é mais antiga e pode não conhecer tudo o que o site tem agora, então ela não publica.'),
+      h('p', { class: 'muted' }, 'Recarregue e publique de novo: seus rascunhos continuam aqui.')),
+    actions: (close) => [
+      h('button', { class: 'btn btn-ghost', type: 'button', onclick: () => close() }, 'Agora não'),
+      h('button', { class: 'btn btn-red', type: 'button', onclick: () => { close(); reloadAdmin(); } }, 'Recarregar'),
+    ],
+  });
+}
+
 /* ================= publishing ================= */
 
 async function publishFlow(title) {
   if (!net.online) {
     toast('Sem internet: publique quando a conexão voltar.');
+    return;
+  }
+  if (await adminOutdated()) {
+    outdatedDialog();
     return;
   }
   const problems = store.validateAll();

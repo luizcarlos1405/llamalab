@@ -25,6 +25,14 @@ export function setOnline(online) {
   emit();
 }
 
+// The site says it has a newer admin than the one this page runs (version.json, see
+// adminOutdated() in app.js), even if the worker hasn't noticed yet.
+export function markUpdated() {
+  if (net.updated) return;
+  net.updated = true;
+  emit();
+}
+
 export function startNet() {
   addEventListener('online', () => setOnline(true));
   addEventListener('offline', () => setOnline(false));

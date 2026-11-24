@@ -55,8 +55,9 @@ export async function build({ siteUrl = process.env.SITE_URL || SITE.defaultUrl,
     await fs.writeFile(target, file.html);
   }
   await fs.writeFile(path.join(OUT, '.nojekyll'), '');
-  await fs.writeFile(path.join(OUT, 'version.json'), `${JSON.stringify({ sha: process.env.GITHUB_SHA || 'local', builtAt: new Date().toISOString(), today }, null, 2)}\n`);
   await nameOriginInAdminCsp(siteUrl);
+  const admin = await stampAdminVersion();
+  await fs.writeFile(path.join(OUT, 'version.json'), `${JSON.stringify({ sha: process.env.GITHUB_SHA || 'local', builtAt: new Date().toISOString(), today, admin }, null, 2)}\n`);
   await writeWorker(version);
 
   if (!quiet) {
@@ -176,6 +177,24 @@ async function nameOriginInAdminCsp(siteUrl) {
   if (!meta.test(html)) throw new Error('admin.html: the Content-Security-Policy meta tag is missing');
   const origin = new URL(siteUrl).origin;
   await fs.writeFile(file, html.replace(meta, (_, start, policy) => start + policy.replaceAll("'self'", `'self' ${origin}`)));
+}
+
+// The admin's own version: a hash of what it runs, its page, modules, styles and fonts (the
+// worker's "admin" pack). The admin page carries it, and version.json says which one is on the
+// site, so an admin older than the site's can tell before it publishes (publishFlow in
+// src/admin/app.js). A deploy that only changes content keeps it.
+async function stampAdminVersion() {
+  const hash = crypto.createHash('sha256');
+  for (const file of await listFiles(OUT)) {
+    const runs = file === 'admin.html' || (file.startsWith('src/') && file.endsWith('.js') && file !== 'src/sw.js') || ADMIN.includes(file);
+    if (runs) hash.update(file).update(await fs.readFile(path.join(OUT, file)));
+  }
+  const version = hash.digest('hex').slice(0, 12);
+  const file = path.join(OUT, 'admin.html');
+  const html = await fs.readFile(file, 'utf8');
+  if (!html.includes('<meta charset="utf-8">')) throw new Error('admin.html: the charset meta tag is missing');
+  await fs.writeFile(file, html.replace('<meta charset="utf-8">', `<meta charset="utf-8">\n<meta name="admin-version" content="${version}">`));
+  return version;
 }
 
 // The service worker (src/sw.js) with the files it may keep for offline use, by pack, each
