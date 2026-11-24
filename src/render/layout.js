@@ -1,6 +1,7 @@
 // The HTML shell every public page shares.
 
 import { esc, excerpt } from '../util.js';
+import { MEDIA } from '../config.js';
 import { nav, footer, symbols, radio } from './parts.js';
 
 // The one inline script, before the first paint: marks that JS runs, and applies the
@@ -20,9 +21,10 @@ export const CSP = [
   "default-src 'self'",
   `script-src 'self' ${JS_FLAG_HASH} 'unsafe-eval' https://open.spotify.com https://embed-cdn.spotifycdn.com`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://raw.githubusercontent.com https://i.ytimg.com",
+  `img-src 'self' data: blob: ${new URL(MEDIA.base).origin} https://raw.githubusercontent.com https://i.ytimg.com`,
   "font-src 'self'",
-  "connect-src 'self'",
+  // the photo viewer fetches a photo from the bucket to save it as a JPEG (site.js)
+  `connect-src 'self' ${new URL(MEDIA.base).origin}`,
   'frame-src https://www.youtube-nocookie.com https://open.spotify.com',
   "object-src 'none'",
   "base-uri 'self'",
@@ -45,7 +47,7 @@ export function layout(P, opts) {
   const hero = P.site.hero || {};
   const headline = [hero.title, hero.highlight].map((s) => String(s || '').trim()).filter(Boolean).join(' ');
   const image = opts.image && opts.image.src
-    ? { url: P.abs(opts.image.src), w: opts.image.w, h: opts.image.h, alt: opts.image.alt }
+    ? { url: P.absSrc(opts.image.src), w: opts.image.w, h: opts.image.h, alt: opts.image.alt }
     : { url: P.abs('assets/og.png'), w: 1200, h: 630, alt: `LLama Lab${headline ? ` — ${headline}` : ''} · Dourados, MS` };
   const v = P.version ? `?v=${P.version}` : '';
   const edit = opts.edit ? ` data-edit="${esc(opts.edit)}"` : '';

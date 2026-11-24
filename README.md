@@ -3,18 +3,20 @@
 Site of LLama Lab — Como se LLama, Laboratório Criativo: the agenda, news, interviews and artists of the cultural
 scene of Dourados (MS). Live at <https://luizcarlos1405.github.io/llamalab/>.
 
-It's a static site with no server and no database. The content lives in this repository as JSON and
-WebP files, GitHub Actions renders it into HTML, and GitHub Pages serves it. The team edits the content
-through `/admin`, a small CMS that runs in the browser and publishes each batch of edits as one commit.
+It's a static site with no server and no database. The content lives in this repository as JSON, its images in
+a Cloudflare R2 bucket; GitHub Actions renders it into HTML, and GitHub Pages serves it. The team edits the
+content through `/admin`, a small CMS that runs in the browser and publishes each batch of edits as one commit.
 
 ## How it fits together
 
 ```
-data/*.json, images/  ──>  scripts/build.mjs  ──>  _site/  ──>  GitHub Pages
-        ^                  (GitHub Actions: every push to main, and daily at 00:07 in Dourados)
-        │
+data/*.json  ──>  scripts/build.mjs  ──>  _site/  ──>  GitHub Pages
+     ^            (GitHub Actions: every push to main, and daily at 00:07 in Dourados)
+     │
   /admin: edits are kept in the browser (IndexedDB) until "Publicar",
-  which commits them through the GitHub API
+  which commits them through the GitHub API; images go to the bucket
+     │
+     └──>  Cloudflare R2 (bucket llamalab-fotos)  ──>  the pages show them from there
 ```
 
 - **Content** is one JSON file per type in `data/`: `agenda.json`, `noticias.json` (the Radar Cultural),
@@ -23,8 +25,9 @@ data/*.json, images/  ──>  scripts/build.mjs  ──>  _site/  ──>  GitH
   validation and the build. Long texts use the small Markdown subset in [`src/markdown.js`](src/markdown.js).
   Entrevistas are the team's longer, journalistic pieces about someone; Artistas is a catalog of short profiles
   (background, area, main works, social links). Each type's admin list says which goes where.
-- **Images** live in `images/<type>/` as WebP. The admin resizes every upload to the largest box it's shown in on
-  the site, times 2 for sharp phone screens, before committing it (`IMAGE_SLOTS` in [`src/config.js`](src/config.js)).
+- **Images** live in Cloudflare R2 (see [Images in Cloudflare R2](#images-in-cloudflare-r2)), as WebP, under the same
+  paths the data uses (`images/<type>/…`). The admin resizes every upload to the largest box it's shown in on
+  the site, times 2 for sharp phone screens, before sending it (`IMAGE_SLOTS` in [`src/config.js`](src/config.js)).
   Portraits (interviews and artists) and news photos are cropped to their shape; flyers are kept whole. The cards
   show portraits in wider boxes, cropped around a point the editor taps on the photo in the form, with previews
   of the cards (the image's `focus`; the upper part when there's none).
@@ -34,7 +37,8 @@ data/*.json, images/  ──>  scripts/build.mjs  ──>  _site/  ──>  GitH
 - **Daily rebuild:** the Actions workflow also runs every night, so events that already happened leave the home
   page and the agenda without anyone publishing.
 - **A broken version doesn't go live:** in GitHub Actions, the build fails when the content points to an image
-  that isn't in the repository, and the site keeps its last good version (see [When a deploy fails](#when-a-deploy-fails)).
+  that isn't in the bucket nor in the repository, and the site keeps its last good version (see
+  [When a deploy fails](#when-a-deploy-fails)).
 - **Offline and installable:** a service worker keeps the site readable without internet, and the site and the
   admin can be installed as apps (see [Offline and installing](#offline-and-installing)).
 
@@ -93,6 +97,49 @@ Worth knowing:
 - Spotify publishes the iFrame API as a development build that runs its code through `eval()`, so the pages'
   Content-Security-Policy allows `'unsafe-eval'` (in [`src/render/layout.js`](src/render/layout.js)).
 
+## Images in Cloudflare R2
+
+GitHub Pages sites must stay under 1 GB, and git keeps every file forever: the albums alone (30 to 50 photos an
+event, for good) would have filled the site in about two years. So every image lives in a Cloudflare R2 bucket,
+`llamalab-fotos`, in the team's Cloudflare account: 10 GB free (about 25 years at that pace), then about
+US$ 0.015 per GB a month, with free traffic. The repository only has the data.
+
+- **Paths:** the data keeps repository-style paths, `images/agenda/noite-do-rock-x7k2.webp`, and the same path is
+  the object's key in the bucket. The pages show it from the bucket's public address, `MEDIA.base` in
+  [`src/config.js`](src/config.js) (`mediaUrl()`); the build writes the full addresses. An image still in the
+  repository (an outdated admin can commit one) is served from GitHub Pages instead, so either way it shows.
+- **Names never change:** a new image always gets a new name. So the bucket's files are cached for good
+  (`Cache-Control: immutable`), by browsers and by the service worker.
+- **Uploads go straight from the admin to the bucket,** with no server. The admin signs each request in the browser
+  ([`src/admin/r2.js`](src/admin/r2.js): AWS Signature V4, as a presigned URL, with WebCrypto) and sends it to the
+  bucket's S3 address, `MEDIA.endpoint`; the bucket's CORS policy lets the site's origins (github.io,
+  llamalab.com.br and www, localhost:8080/8081) upload and delete. Each image goes up as soon as it's ready, while
+  the editor goes on editing ([`src/admin/uploads.js`](src/admin/uploads.js): three at a time, two more tries, then
+  "Tentar de novo"; without internet they wait). **Publicar** waits for the last ones, then commits only the data.
+- **The key** is an R2 token with "Object Read & Write" on this bucket only (an account token, so it doesn't stop
+  working when someone leaves the Cloudflare account). It lives in the private repository `llamalab-keys`, as
+  `r2.json` (`{"accessKeyId": …, "secretAccessKey": …}`), and each editor's GitHub token reaches that repository too
+  (see [Tokens](#tokens)). The admin reads it after signing in and keeps it in memory only. Anyone with a token
+  could read it: the worst they could do is fill or empty the bucket; nobody can create Cloudflare keys with it.
+- **Removing an editor:** revoke their GitHub token, then rotate the key, since they could have read it: in
+  Cloudflare, **R2 → Manage API tokens**, create a token like the current one, put its S3 pair in `r2.json` (the
+  repository's README says how), and delete the old token. The other editors pick the new key up on their next load.
+- **A token that doesn't reach `llamalab-keys`** still works for everything but albums: the admin says so in a
+  banner, and the other images go into the repository with the commit, as they did before the bucket (the site
+  serves them from there). Give the token that repository, then move those images with `node scripts/r2.mjs push
+  images` and `git rm -r images` (the next build serves them from the bucket).
+- **Deleting:** when a publish leaves an image unused (replaced, removed, a photo taken out of an album), the admin
+  deletes it from the bucket once the commit is in. It never deletes what a data file it doesn't know points to.
+  An image that failed to go only takes a little room: `node scripts/r2.mjs orphans` lists them.
+- **The CSPs** name the bucket's addresses: `img-src` and `connect-src` in
+  [`src/render/layout.js`](src/render/layout.js) (from `MEDIA`), and admin.html's meta tag, which the build checks.
+- **[`scripts/r2.mjs`](scripts/r2.mjs)** looks after the bucket from your computer: `ls`, `push`, `check` (is every
+  image the content points to there?), `orphans` and `rm`. It reads the key with the GitHub CLI (`gh`), or from
+  `R2_KEY`.
+- **The public address** is the bucket's `r2.dev` one for now. Cloudflare rate-limits it and calls it dev-only, which
+  is fine for this site's traffic. `fotos.llamalab.com.br` needs the domain's DNS in Cloudflare: see
+  [Custom domain](#custom-domain).
+
 ## Offline and installing
 
 The site installs as an app (a PWA), **LLama Lab**, with the admin inside it: editors open it from the red pencil button,
@@ -111,7 +158,9 @@ What it keeps without internet:
 - **In a browser tab:** the CSS, scripts and fonts, the home page and the agenda, and every page and image the visitor
   opens (the last 60 pages and 120 images), the page they arrived on included. That costs nothing extra: they're what the
   visitor already downloaded.
-- **In the installed app:** the whole site, every page, image and `.ics` file (about 4 MB, once). Each deploy then
+- **In the installed app:** the whole site, every page, image and `.ics` file (about 4 MB, once), except the albums'
+  photos, which it keeps once they're seen, like a tab does. The images come from the bucket, and are kept under the
+  site's own address for their path, so an image moving from the repository to the bucket keeps its copy. Each deploy then
   downloads only the files that changed: usually one page; on a day an event ends, about 20 pages and the `.ics` files
   (~0.2 MB), as every event page lists the next ones. When the app hasn't been opened for 30 days (removed from the phone,
   say), it goes back to keeping only the essentials.
@@ -189,7 +238,10 @@ last version that built. The editors find out in the admin: after publishing, an
 card, it says the site wasn't updated and asks them to tell you (see [The admin](#the-admin-admin)).
 
 - **A missing image fails the build in GitHub Actions:** content that points to an image that isn't in the
-  repository, from an image field or from a Markdown text. On 24/11/2026 an outdated admin removed the 18 artists'
+  bucket nor in the repository, from an image field or from a Markdown text. The build asks the bucket for each image
+  that isn't in the repository (a `HEAD` to its public address); only an answer that it isn't there counts, so a
+  bucket that can't be reached is a warning. Album photos aren't asked one by one (there are thousands, and the
+  admin only publishes an album once they're up). On 24/11/2026 an outdated admin removed the 18 artists'
   photos, and the site went live with every one of them broken; a commit like that now stops at the build. The
   build knows it's in Actions from `GITHUB_ACTIONS`, which Actions sets.
 - **Locally it's a warning,** with `npm run dev` and `npm run build`, so work can go on. To check a change the way
@@ -203,9 +255,11 @@ To find and fix it:
 1. Open the failed run: the ✗ next to the commit on GitHub, or the repository's **Actions** tab. Its summary has
    an error for each data file, with each item's id, the field (`photo.src`, `body`, `qa.1.a`) and the image it
    points to, linked to the line of the first one.
-2. Bring the image back from before the commit that removed it, as 740243a did
-   (`git log --diff-filter=D --oneline -- images/…` finds that commit, `git checkout <commit>^ -- images/…`
-   restores the files), or point the item to another image, or to none, in the admin or in the JSON.
+2. Bring the image back, or point the item to another image, or to none, in the admin or in the JSON. Images from
+   before the bucket are in the git history (`git log --diff-filter=D --oneline -- images/…` finds the commit that
+   removed one, `git checkout <commit>^ -- images/…` restores it): put it back in the bucket with
+   `node scripts/r2.mjs push images/…`. The bucket keeps no history: an image deleted from it only comes back from a
+   copy (the photographer's, an editor's device).
 3. Push to `main`. The next run deploys everything, including what came with the failed commit: nothing was lost.
 
 A run that failed for another reason (a step that broke, GitHub having a bad day) shows up the same way. Once the
@@ -239,10 +293,14 @@ While a token is saved, the public pages show a red pencil button in the corner.
   - An item moved to another type in the meantime, with the same id (the artist profiles, from Entrevistas to
     Artistas on 24/11/2026), never goes back where it was. A draft's edits to it go along, for the fields both
     types have, always as a conflict that says where it went and which changes can't go along.
-  - Images that nothing points to any more are deleted in the same commit, which keeps the published site small.
+  - The new images go to the bucket first (most went up while the editor worked); the commit only carries the data.
+    Images that nothing points to any more leave the bucket once the commit is in (see
+    [Images in Cloudflare R2](#images-in-cloudflare-r2)).
   - **No content pointing to an image the site won't have.** Before committing, the admin checks the final version,
     after replaying the edits on what's published now: every image it points to, from an image field or a Markdown
-    text, must be in the published tree or be uploaded in the same commit. When one isn't (someone else removed it,
+    text, must be in the bucket (what's published now points to it, or it's staged and goes up first) or in the
+    published tree. The images of the items being published are also asked of the bucket, so one that disappeared
+    from it is caught too. When one isn't (someone else removed it,
     an outdated admin deleted it, a typo in a Markdown image), nothing is committed and the drafts stay: a dialog
     names the items and fields, with links to them, and asks the editor to swap or remove the image. The build
     wouldn't deploy that version anyway (see [When a deploy fails](#when-a-deploy-fails)). Images that only data
@@ -285,7 +343,9 @@ stops working it tells the editor to ask whoever looks after the site for a new 
 1. Open this pre-filled link: [new fine-grained token](https://github.com/settings/personal-access-tokens/new?name=Admin+do+site+LLama+Lab&description=Publicar+altera%C3%A7%C3%B5es+no+site+pelo+admin+%28luizcarlos1405%2Fllamalab%29&target_name=luizcarlos1405&expires_in=366&contents=write).
    It sets **Contents: Read and write** and a one-year expiration; pick a shorter one if you prefer.
 2. Under **Repository access**, choose **Only select repositories** and pick `llamalab` and `llamalab-keys`.
-   The second one is private and holds the key the admin will use to upload event photos to Cloudflare R2 (#7).
+   The second one is private and holds the key the admin uploads images with (see
+   [Images in Cloudflare R2](#images-in-cloudflare-r2)). An existing token can get it without changing: edit its
+   repository access.
 3. Name it after the editor, so you can revoke one person's access without touching the others.
 
 Only the owner of a personal account's repository can create fine-grained tokens for it, which is why the
@@ -313,6 +373,11 @@ The site is ready to move to `llamalab.com.br`; all internal links are relative.
 2. Set the domain under the repository's **Settings → Pages**, and turn on **Enforce HTTPS** once the
    certificate is ready.
 3. Update `defaultUrl` in [`src/config.js`](src/config.js).
+4. For the images, move the domain's DNS to Cloudflare (the team's account, where the bucket is; on the free plan the
+   whole zone moves, since partial setups are for paid plans), then in **R2 → llamalab-fotos → Settings → Custom
+   Domains** add `fotos.llamalab.com.br`. Put it in `MEDIA.base` ([`src/config.js`](src/config.js)) and in
+   admin.html's Content-Security-Policy, in place of the `r2.dev` address, and add the domain to the bucket's CORS
+   policy if the site's own address changes. Nothing in the data changes: it only has paths.
 
 Browsers keep tokens, drafts, installed apps and offline copies per address, so editors sign in again on the new
 domain, and whoever installed the app installs it again from there. Publish everything before switching.
@@ -325,9 +390,9 @@ GitHub's redirect to the new domain.
 admin.html            the CMS, served at /admin (loads src/admin/main.js)
 assets/               CSS, the public pages' JS (site.js; radio.js for the radio), fonts (Anton, Outfit; Bagel Fat One
                       for the Instagram post), logos, icons (icons/: the app's, drawn by scripts/icons.mjs)
-data/                 the content, as JSON
-images/               the content's images, as WebP
-scripts/build.mjs     static build; scripts/dev.mjs is the local server; scripts/icons.mjs draws the app icons
+data/                 the content, as JSON (its images are in Cloudflare R2)
+scripts/build.mjs     static build; scripts/dev.mjs is the local server; scripts/icons.mjs draws the app icons;
+                      scripts/r2.mjs looks after the bucket
 src/schema.js         content model; src/config.js holds the site settings and image sizes
 src/render/           page templates, shared by the build and the admin preview
 src/sw.js             the service worker (offline copies), completed by the build

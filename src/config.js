@@ -17,6 +17,28 @@ export const REPO = {
   branch: 'main',
 };
 
+// The content's images live in Cloudflare R2 (the bucket llamalab-fotos, in the team's
+// Cloudflare account), not in this repository. The data keeps repository-style paths
+// ("images/agenda/foo.webp"): the same path is the object's key in the bucket, and the
+// pages show it from `base`. Only an image still in the repository (one committed by an
+// outdated admin) is served from GitHub Pages instead (scripts/build.mjs).
+//   base      the bucket's public address. r2.dev until fotos.llamalab.com.br is set up in
+//             Cloudflare (the domain's DNS has to move there first); then change it here and
+//             in admin.html's Content-Security-Policy (the build checks they agree).
+//   endpoint  the S3 address the admin uploads to. It signs each upload in the browser with
+//             the key it reads from the private repository `keys` (src/admin/r2.js).
+export const MEDIA = {
+  base: 'https://pub-4dac19a09b3e4a169bebbed813693cc7.r2.dev',
+  endpoint: 'https://4e487ff700ae0feb41a870029eb76a9d.r2.cloudflarestorage.com',
+  bucket: 'llamalab-fotos',
+  keys: { owner: 'luizcarlos1405', repo: 'llamalab-keys', file: 'r2.json' },
+};
+
+// The public address of an image path ("images/agenda/foo.webp").
+export function mediaUrl(path) {
+  return `${MEDIA.base}/${String(path).split('/').map(encodeURIComponent).join('/')}`;
+}
+
 // Images are resized to the largest box they're shown in on the site, times
 // IMAGE_DPR, and saved as WebP. `cover` slots are cropped to the box's aspect
 // ratio; `contain` slots keep the whole image and only shrink it. `kb` is each

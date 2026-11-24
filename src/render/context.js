@@ -5,6 +5,8 @@ import { isUpcoming } from '../util.js';
 
 // data: { site, sobre, contrate, agenda[], noticias[], entrevistas[], artistas[] }
 // opts: { today, siteUrl, version, preview, assetUrl(path), imageSize(path), buildTime }
+// assetUrl(path) is an image's address when it isn't the page-relative one (the bucket's, a
+// draft's in the admin), or null.
 export function createContext(data, opts) {
   const today = opts.today;
   const events = [...(data.agenda || [])].sort(COLLECTIONS.agenda.sort);
@@ -61,6 +63,12 @@ export function pageContext(ctx, path) {
     return root + s.replace(/^\.?\//, '');
   };
   P.abs = (to = '') => `${ctx.siteUrl}/${to}`;
+  // An image's full address, for link previews and structured data: the bucket's when the
+  // image is there (src/config.js MEDIA), the site's otherwise.
+  P.absSrc = (repoPath) => {
+    const s = P.src(repoPath);
+    return /^https?:/.test(s) ? s : P.abs(repoPath);
+  };
   P.canonical = P.abs(path.replace(/index\.html$/, ''));
   return P;
 }

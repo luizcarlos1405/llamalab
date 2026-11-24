@@ -1,16 +1,19 @@
 // The admin's data: what's published (base, at commit headSha) and the local
 // working copy with every unpublished edit. Edits and staged images are kept
-// in IndexedDB until they're published as one commit.
+// in IndexedDB until they're published as one commit. The images themselves go to the
+// bucket (src/admin/uploads.js) as soon as they're staged; the commit only carries the data.
 //
 // Merging is per item (collections) and per section (singletons): when someone
 // else published in the meantime, local edits are replayed on top of their
 // version, and only the same item edited on both sides is a conflict.
 
 import { COLLECTIONS, SINGLETONS, normalize, validate } from '../schema.js';
-import { REPO } from '../config.js';
+import { REPO, mediaUrl } from '../config.js';
 import { jsonFile, imageRefs, imageRefsAt, slugify, uniqueSlug } from '../util.js';
 import { kv, images as imageStore } from './idb.js';
 import { decodeBase64Text, blobToBase64 } from './github.js';
+import * as r2 from './r2.js';
+import * as uploads from './uploads.js';
 
 export const TYPES = { ...COLLECTIONS, ...SINGLETONS };
 const IMAGE_ROOT = 'images/';
@@ -204,8 +207,21 @@ async function loadStaged() {
   state.staged.clear();
   for (const path of await imageStore.keys()) {
     const rec = await imageStore.get(path);
-    if (rec && rec.blob) state.staged.set(path, { ...rec, url: URL.createObjectURL(rec.blob) });
+    if (rec && rec.blob) addStaged(path, rec);
   }
+}
+
+// A staged image, and its trip to the bucket (or the note that it's there already).
+function addStaged(path, rec) {
+  state.staged.set(path, { ...rec, url: URL.createObjectURL(rec.blob) });
+  uploads.enqueue(path, rec.blob, { type: rec.type, done: rec.uploaded === true, onDone: markUploaded });
+}
+
+async function markUploaded(path) {
+  const staged = state.staged.get(path);
+  if (staged) staged.uploaded = true;
+  const rec = await imageStore.get(path);
+  if (rec) await imageStore.set(path, { ...rec, uploaded: true });
 }
 
 // Re-reads the drafts another tab saved.
@@ -215,7 +231,7 @@ export async function reloadDrafts() {
   for (const path of await imageStore.keys()) {
     if (!state.staged.has(path)) {
       const rec = await imageStore.get(path);
-      if (rec && rec.blob) state.staged.set(path, { ...rec, url: URL.createObjectURL(rec.blob) });
+      if (rec && rec.blob) addStaged(path, rec);
     }
   }
   emit();
@@ -415,24 +431,53 @@ export function singletonChanged(name) {
   return !eq(state.base[name], state.working[name]);
 }
 
-export function imageChanges(data = state.working, paths = state.remotePaths, keep = state.remoteKeep) {
+// What a publish does to the images: `added`, the staged ones the data points to (they go to
+// the bucket before the commit); `removed`, the ones still in the repository that nothing
+// points to (the commit deletes them); `dropped`, the ones in the bucket that the published
+// version pointed to and this one doesn't (deleted once the commit is in). Never an image of a
+// type this admin doesn't know, nor one that another data file points to (`keep`).
+export function imageChanges(data = state.working, paths = state.remotePaths, keep = state.remoteKeep, base = state.base) {
   const refs = imageRefs(data);
+  const ours = (p) => IMAGE_DIRS.some((d) => p.startsWith(d));
   const added = [...state.staged.keys()].filter((p) => refs.has(p) && !paths.has(p));
-  const removed = [...paths].filter((p) => p.startsWith(IMAGE_ROOT) && IMAGE_DIRS.some((d) => p.startsWith(d)) && !refs.has(p) && !keep.has(p));
+  const removed = [...paths].filter((p) => p.startsWith(IMAGE_ROOT) && ours(p) && !refs.has(p) && !keep.has(p));
+  const dropped = base ? [...imageRefs(base)].filter((p) => ours(p) && !refs.has(p) && !keep.has(p) && !paths.has(p)) : [];
   const bytes = added.reduce((sum, p) => sum + (state.staged.get(p).bytes || 0), 0);
-  return { added, removed, bytes };
+  return { added, removed, dropped, bytes };
 }
 
-// Content that would point to an image the site won't have after publishing: neither in the
-// published tree (`paths`) nor staged here, to go out in the same commit. GitHub Actions doesn't
-// deploy a version like that (scripts/build.mjs), so publish() doesn't make it. One entry per
-// item, with the fields that point to the missing images. What only the data files this admin
-// doesn't know point to (state.remoteKeep) is theirs to account for.
-export function missingImages(data = state.working, paths = state.remotePaths) {
+// Content that would point to an image the site won't have after publishing. The images live
+// in the bucket: one is there when the published version (`published`, what's live now)
+// already points to it, or when it's staged here and goes up before the commit. One still in
+// the published tree (`paths`, committed by an outdated admin) counts too. The images of the
+// items this publish changes are also asked of the bucket (album photos aside: the admin only
+// publishes an album once they're up), so one that disappeared from it is caught too; when the
+// bucket can't be reached, they count as there. GitHub Actions doesn't deploy a version with a
+// missing image (scripts/build.mjs), so publish() doesn't make it. One entry per item, with
+// the fields that point to the missing images. What only the data files this admin doesn't
+// know point to (state.remoteKeep) is theirs to account for.
+export async function missingImages(data = state.working, paths = state.remotePaths, published = state.base) {
+  const have = imageRefs(published || {});
+  const before = (type, id) => (COLLECTIONS[type] ? (published[type] || []).find((i) => i.id === id) : published[type]);
+  const ask = new Set();
+  for (const name of Object.keys(TYPES)) {
+    for (const value of COLLECTIONS[name] ? data[name] : [data[name]]) {
+      if (eq(value, before(name, value && value.id))) continue;
+      for (const { src } of imageRefsAt(value)) if (have.has(src) && !paths.has(src) && !state.staged.has(src) && !src.startsWith('images/fotos/')) ask.add(src);
+    }
+  }
+  const gone = new Set();
+  await Promise.all([...ask].map(async (src) => {
+    try {
+      const res = await fetch(mediaUrl(src), { method: 'HEAD', cache: 'no-store' });
+      if (res.status === 404) gone.add(src);
+    } catch { /* can't tell: it counts as there */ }
+  }));
+  const there = (src) => !gone.has(src) && (paths.has(src) || state.staged.has(src) || have.has(src));
   const out = [];
   const check = (type, value, id) => {
     const t = TYPES[type];
-    const missing = imageRefsAt(value).filter((r) => !paths.has(r.src) && !state.staged.has(r.src));
+    const missing = imageRefsAt(value).filter((r) => !there(r.src));
     if (!missing.length) return;
     const label = (at) => (t.fields.find((f) => f.key === at.split('.')[0]) || { label: at }).label;
     out.push({
@@ -451,7 +496,7 @@ export function missingImages(data = state.working, paths = state.remotePaths) {
 export function hasChanges() {
   if (!state.base) return false;
   const img = imageChanges();
-  return changes().length > 0 || img.added.length > 0 || img.removed.length > 0;
+  return changes().length > 0 || img.added.length > 0 || img.removed.length > 0 || img.dropped.length > 0;
 }
 
 export function revert(change) {
@@ -503,18 +548,22 @@ export function saveSingleton(name, value) {
 export async function stageImage(path, rec) {
   const old = state.staged.get(path);
   if (old) URL.revokeObjectURL(old.url);
-  state.staged.set(path, { ...rec, url: URL.createObjectURL(rec.blob) });
-  await imageStore.set(path, { blob: rec.blob, w: rec.w, h: rec.h, bytes: rec.bytes, originalBytes: rec.originalBytes, type: rec.type });
+  const record = { blob: rec.blob, w: rec.w, h: rec.h, bytes: rec.bytes, originalBytes: rec.originalBytes, type: rec.type, uploaded: false };
+  await imageStore.set(path, record);
+  addStaged(path, record);
   emit();
 }
 
+// Where the admin shows an image from: a draft's from this device; one still in the
+// repository from GitHub, pinned to the published commit; the rest from the bucket.
 export function assetUrl(path) {
   const staged = state.staged.get(path);
   if (staged) return staged.url;
-  if (/^images\//.test(path) && state.headSha) {
+  if (!/^images\//.test(path)) return null;
+  if (state.headSha && state.remotePaths.has(path)) {
     return `https://raw.githubusercontent.com/${REPO.owner}/${REPO.name}/${state.headSha}/${path.split('/').map(encodeURIComponent).join('/')}`;
   }
-  return null;
+  return mediaUrl(path);
 }
 
 export function imageSize(path) {
@@ -522,16 +571,28 @@ export function imageSize(path) {
   return staged ? { w: staged.w, h: staged.h } : null;
 }
 
-// Drops staged images nothing points to any more (replaced or removed before
-// publishing).
+// Drops staged images nothing points to any more (replaced or removed before publishing),
+// from this device and, when they had gone up already, from the bucket: nothing published
+// points to them. An image of a form that wasn't saved yet stays (app.js keeps the form in
+// localStorage, under llamalab:form:…): an album's photos go up while it's being filled in.
 export async function pruneStaged() {
   const refs = imageRefs(state.working);
-  for (const [path, rec] of [...state.staged]) {
-    if (!refs.has(path)) {
-      URL.revokeObjectURL(rec.url);
-      state.staged.delete(path);
-      await imageStore.del(path);
+  try {
+    for (let i = 0; i < localStorage.length; i += 1) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('llamalab:form:')) imageRefs(JSON.parse(localStorage.getItem(k)), refs);
     }
+  } catch { /* storage blocked or a form unreadable: only the drafts count */ }
+  const published = imageRefs(state.base || {});
+  for (const [path, rec] of [...state.staged]) {
+    if (refs.has(path)) continue;
+    const job = uploads.status(path);
+    const went = rec.uploaded || (job && (job.state === 'up' || job.state === 'done'));
+    URL.revokeObjectURL(rec.url);
+    state.staged.delete(path);
+    uploads.forget(path);
+    await imageStore.del(path);
+    if (went && r2.hasKey() && !published.has(path) && !state.remoteKeep.has(path)) r2.del(path).catch(() => {});
   }
 }
 
@@ -556,7 +617,8 @@ export function validateAll(data = state.working) {
 export function commitSummary() {
   const list = changes();
   const img = imageChanges();
-  const labels = { agenda: ['evento', 'eventos'], noticias: ['notícia do Radar', 'notícias do Radar'], entrevistas: ['entrevista', 'entrevistas'], artistas: ['artista', 'artistas'] };
+  const gone = img.removed.length + img.dropped.length;
+  const labels = { agenda: ['evento', 'eventos'], noticias: ['notícia do Radar', 'notícias do Radar'], entrevistas: ['entrevista', 'entrevistas'], artistas: ['artista', 'artistas'], fotos: ['álbum', 'álbuns'] };
   const parts = [];
   for (const [type, [one, many]] of Object.entries(labels)) {
     const of = list.filter((c) => c.type === type);
@@ -567,12 +629,12 @@ export function commitSummary() {
     parts.push(`${word} (${counts.map(([k, n]) => `${n} ${kinds[k]}${n > 1 ? 's' : ''}`).join(', ')})`);
   }
   for (const c of list.filter((x) => SINGLETONS[x.type])) parts.push(c.title.toLowerCase());
-  let title = parts.length ? `Atualiza ${parts.join('; ')}` : img.added.length || img.removed.length ? 'Atualiza imagens' : 'Atualiza o site';
+  let title = parts.length ? `Atualiza ${parts.join('; ')}` : img.added.length || gone ? 'Atualiza imagens' : 'Atualiza o site';
   if (title.length > 72) title = `Atualiza ${list.length} itens do site`;
   const sign = { add: '+', edit: '~', remove: '-' };
   const lines = list.map((c) => `${sign[c.kind]} ${TYPES[c.type].label}: ${c.title}${c.fields ? ` (${c.fields.join(', ')})` : ''}`);
   if (img.added.length) lines.push(`+ ${img.added.length} ${img.added.length > 1 ? 'imagens novas' : 'imagem nova'}`);
-  if (img.removed.length) lines.push(`- ${img.removed.length} ${img.removed.length > 1 ? 'imagens sem uso' : 'imagem sem uso'}`);
+  if (gone) lines.push(`- ${gone} ${gone > 1 ? 'imagens sem uso' : 'imagem sem uso'}`);
   return { title, body: lines.join('\n') };
 }
 
@@ -600,7 +662,7 @@ export async function publish(gh, { message, author, onStep = () => {} }) {
     const problems = validateAll(final);
     if (problems.length) return { problems };
     // against what's published now: someone may have removed an image the drafts still use
-    const missing = missingImages(final, remote.paths);
+    const missing = await missingImages(final, remote.paths, remote.data);
     if (missing.length) return { missing };
 
     onStep('Preparando os arquivos…');
@@ -611,11 +673,21 @@ export async function publish(gh, { message, author, onStep = () => {} }) {
       texts[t.file] = text;
       if (text !== remote.texts[t.file]) entries.push({ path: t.file, mode: '100644', type: 'blob', content: text });
     }
-    const { added, removed } = imageChanges(final, remote.paths, remote.keep);
-    for (let i = 0; i < added.length; i += 1) {
-      onStep(`Enviando imagem ${i + 1} de ${added.length}…`);
-      const blob = await gh.createBlob(await blobToBase64(state.staged.get(added[i]).blob), 'base64');
-      entries.push({ path: added[i], mode: '100644', type: 'blob', sha: blob.sha });
+    const { added, removed, dropped } = imageChanges(final, remote.paths, remote.keep, remote.data);
+    // the new images go to the bucket first (most went up while the editor worked): the
+    // commit that points to them only goes in once they're all there
+    if (added.length && (r2.hasKey() || !r2.keyDenied() || added.some((p) => p.startsWith('images/fotos/')))) {
+      onStep(`Enviando as imagens… 0 de ${added.length}`);
+      await uploads.flush(added, (done, total) => onStep(`Enviando as imagens… ${done} de ${total}`));
+    } else if (added.length) {
+      // A token that doesn't reach the bucket's key yet: the images go into the repository, as
+      // they did before the bucket, and the site serves them from there. Albums can't (their
+      // photos are why the bucket exists). scripts/r2.mjs moves those images later.
+      for (let i = 0; i < added.length; i += 1) {
+        onStep(`Enviando imagem ${i + 1} de ${added.length}…`);
+        const blob = await gh.createBlob(await blobToBase64(state.staged.get(added[i]).blob), 'base64');
+        entries.push({ path: added[i], mode: '100644', type: 'blob', sha: blob.sha });
+      }
     }
     for (const path of removed) entries.push({ path, mode: '100644', type: 'blob', sha: null });
     if (!entries.length) {
@@ -644,10 +716,17 @@ export async function publish(gh, { message, author, onStep = () => {} }) {
     for (const [path, rec] of [...state.staged]) {
       URL.revokeObjectURL(rec.url);
       state.staged.delete(path);
+      uploads.forget(path);
       await imageStore.del(path);
     }
     await persist();
     emit();
+    // the images the published version no longer points to leave the bucket; one that
+    // fails to go only takes a little room
+    if (dropped.length) {
+      onStep('Apagando as imagens sem uso…');
+      await Promise.all(dropped.map((path) => r2.del(path).catch(() => {})));
+    }
     return { commit };
   }
   throw new Error('Outras pessoas publicaram ao mesmo tempo várias vezes seguidas. Tente de novo em instantes.');

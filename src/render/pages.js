@@ -249,7 +249,7 @@ export function eventPage(P, ev) {
     eventStatus: 'https://schema.org/EventScheduled',
     eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
     location: { '@type': 'Place', name: ev.venue || ev.city || 'Dourados', address: [ev.address, ev.city || 'Dourados', 'MS'].filter(Boolean).join(', ') },
-    ...(ev.image && ev.image.src ? { image: [P.abs(ev.image.src)] } : {}),
+    ...(ev.image && ev.image.src ? { image: [P.absSrc(ev.image.src)] } : {}),
     description: excerpt(ev.summary || stripMarkdown(ev.description) || eventLine(ev) || ev.title, 300),
     url,
     organizer: { '@type': 'Organization', name: 'LLama Lab', url: P.abs('') },
@@ -305,7 +305,7 @@ export function newsPage(P, n) {
     '@type': 'NewsArticle',
     headline: n.title,
     datePublished: n.date,
-    ...(n.image && n.image.src ? { image: [P.abs(n.image.src)] } : {}),
+    ...(n.image && n.image.src ? { image: [P.absSrc(n.image.src)] } : {}),
     author: n.author ? { '@type': 'Person', name: n.author } : { '@type': 'Organization', name: 'LLama Lab' },
     publisher: { '@type': 'Organization', name: 'LLama Lab' },
   };

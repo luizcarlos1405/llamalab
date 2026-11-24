@@ -13,6 +13,8 @@ import { buildForm } from './fields.js';
 import { previewPane, siteUrl } from './preview.js';
 import { postView } from './post.js';
 import * as store from './store.js';
+import * as r2 from './r2.js';
+import * as uploads from './uploads.js';
 
 const TOKEN_KEY = 'llamalab:token';
 // Developers can point the admin at another branch to test publishing:
@@ -30,7 +32,7 @@ const ls = {
 const editorName = () => ls.get(EDITOR_KEY) || 'você';
 const initial = () => ((ls.get(EDITOR_KEY) || '').trim().charAt(0) || '✺').toUpperCase();
 
-const app = { gh: null, user: null, root: null, view: null, guard: null, lastHash: '' };
+const app = { gh: null, user: null, root: null, view: null, guard: null, lastHash: '', media: 'loading' };
 const clone = (v) => JSON.parse(JSON.stringify(v));
 const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 const TYPE_ICON = { agenda: '✺', noticias: '✎', entrevistas: '❝', artistas: '✦', site: '⌂', sobre: 'i', contrate: '$' };
@@ -85,6 +87,7 @@ async function connect(token) {
     setOnline(false);
   }
   shell();
+  loadMediaKey(token);
   keepData();
   // while offline, try again now and then: a weak signal doesn't always tell the browser
   setInterval(() => {
@@ -121,6 +124,7 @@ function reconnect() {
         else await refreshDrafts();
         app.backOnline = true;
         setOnline(true);
+        if (!r2.hasKey()) loadMediaKey();
         app.showNet();
       } catch (error) {
         if (error.status === 401) {
@@ -135,6 +139,29 @@ function reconnect() {
     })();
   }
   return reconnecting;
+}
+
+// The key the admin uploads images with (src/admin/r2.js), read with the editor's token from
+// the private repository. Without it the editor can still write, but no image goes up:
+// app.media says why ('ok', 'denied', 'offline', 'loading'), and a banner tells them.
+async function loadMediaKey(token = ls.get(TOKEN_KEY)) {
+  if (r2.hasKey()) return;
+  try {
+    await r2.loadKey(token);
+    app.media = 'ok';
+    uploads.pump();
+  } catch (error) {
+    app.media = error.status === 0 ? 'offline' : 'denied';
+  }
+  if (app.showNet) app.showNet();
+}
+
+// What went wrong with the images, for the editors.
+function mediaMessage(error) {
+  if (error.status === 0) return 'Sem conexão. Confira a internet e tente de novo.';
+  if (error.status === 404 && /device/.test(error.message)) return 'Uma imagem destas alterações não está mais neste aparelho. Abra o item, escolha a imagem de novo e publique.';
+  if (error.status === 401 || error.status === 403 || error.status === 404) return 'Seu token ainda não dá acesso às fotos, então o álbum não subiu. Peça a quem cuida do site para liberar o acesso.';
+  return 'Algumas imagens não subiram. Confira a internet e tente de novo; o Painel mostra quais.';
 }
 
 async function refreshDrafts() {
@@ -252,17 +279,19 @@ function shell() {
   const warn = isPersistent() ? null : h('div', { class: 'banner' }, 'Este navegador não deixa guardar rascunhos (janela anônima?). Publique antes de fechar a aba para não perder nada.');
   const test = app.gh.branch !== REPO.branch ? h('div', { class: 'banner' }, `Modo de teste: publicando no branch "${app.gh.branch}", não no site.`) : null;
   const offline = h('div', { class: 'banner net offline', role: 'status', hidden: true }, h('span', { html: WIFI_OFF }), h('p', null, h('b', null, 'Sem internet.'), ' Pode editar à vontade: as alterações ficam guardadas neste aparelho e você publica quando a conexão voltar.'));
+  const noMedia = h('div', { class: 'banner', role: 'status', hidden: true }, h('b', null, 'Seu token ainda não dá acesso às fotos.'), ' Os textos e as imagens de eventos, notícias e entrevistas funcionam, mas os álbuns de fotos não sobem. Peça a quem cuida do site para liberar o acesso.');
   const back = h('div', { class: 'banner back', role: 'status', hidden: true });
   const update = h('div', { class: 'banner net update', role: 'status', hidden: true },
     h('p', null, h('b', null, 'O admin foi atualizado.'), ' Recarregue para usar a versão nova: seus rascunhos continuam aqui.'),
     h('button', { class: 'btn', type: 'button', onclick: reloadAdmin }, 'Recarregar'));
-  add(clear(app.root), top, warn, test, update, offline, back, app.view);
+  add(clear(app.root), top, warn, test, update, offline, noMedia, back, app.view);
   // the connection: offline, back with changes waiting to be published, a new admin
   const showNet = () => {
     chip.hidden = net.online;
     offline.hidden = net.online;
+    noMedia.hidden = app.media !== 'denied';
     update.hidden = !net.updated;
-    const waiting = net.online && app.backOnline ? store.changes().length + store.imageChanges().added.length : 0;
+    const waiting = net.online && app.backOnline ? pendingCount() : 0;
     back.hidden = !waiting;
     if (!waiting) return;
     clear(back);
@@ -280,13 +309,22 @@ function shell() {
   app.showNet = showNet;
   showNet();
   const refresh = () => {
-    const n = store.changes().length + store.imageChanges().added.length;
+    const n = pendingCount();
     pubCount.textContent = n ? String(n) : '';
     pubCount.hidden = !n;
     top.querySelector('.pub').classList.toggle('has', n > 0);
   };
   store.subscribe(refresh);
   refresh();
+}
+
+// What's waiting to be published, counted by item (an album's 40 photos are one change); images
+// only count when nothing else changed.
+function pendingCount() {
+  const n = store.changes().length;
+  if (n) return n;
+  const img = store.imageChanges();
+  return img.added.length + img.removed.length + img.dropped.length;
 }
 
 function setTab(key) {
@@ -462,7 +500,8 @@ function renderPending(box) {
     if (store.state.conflicts.length) {
       box.append(h('div', { class: 'conflict-banner' }, h('b', null, `${store.state.conflicts.length} ${store.state.conflicts.length > 1 ? 'conflitos' : 'conflito'}`), ' com alterações publicadas por outra pessoa. ', h('button', { class: 'btn btn-solid btn-sm', type: 'button', onclick: conflictsDialog }, 'Resolver')));
     }
-    if (!list.length && !img.added.length && !img.removed.length) {
+    const gone = img.removed.length + img.dropped.length;
+    if (!list.length && !img.added.length && !gone) {
       add(box, h('h2', null, 'Tudo publicado ', h('span', { class: 'red' }, '✓')), h('p', { class: 'muted' }, 'O site está igual ao que você vê aqui. Crie ou edite algo e as alterações aparecem nesta lista até você publicar.'));
       return;
     }
@@ -471,7 +510,7 @@ function renderPending(box) {
     lastSummary = summary.title;
     const msg = h('input', { type: 'text', value: typed ?? summary.title, maxlength: '120', 'aria-label': 'Resumo da publicação' });
     add(box,
-      h('h2', null, 'Para publicar ', h('span', { class: 'count' }, String(list.length + img.added.length + img.removed.length))),
+      h('h2', null, 'Para publicar ', h('span', { class: 'count' }, String(list.length || img.added.length + gone))),
       h('p', { class: 'muted' }, net.online ? 'Essas alterações estão guardadas só neste navegador. Publique para que elas vão para o site.' : 'Essas alterações estão guardadas neste aparelho. Assim que a internet voltar, publique para que elas vão para o site.'),
       h('ul', { class: 'changes' }, list.map((c) => h('li', { class: `ch ${c.kind}` },
         h('span', { class: 'sig', title: sign[c.kind][1] }, sign[c.kind][0]),
@@ -483,10 +522,11 @@ function renderPending(box) {
             draw();
           }
         } }, 'Desfazer')))),
-      img.added.length || img.removed.length ? h('p', { class: 'imgs' }, [
+      img.added.length || gone ? h('p', { class: 'imgs' }, [
         img.added.length ? `${img.added.length} ${img.added.length > 1 ? 'imagens novas' : 'imagem nova'} (${formatBytes(img.bytes)})` : '',
-        img.removed.length ? `${img.removed.length} ${img.removed.length > 1 ? 'imagens sem uso serão apagadas' : 'imagem sem uso será apagada'}` : '',
+        gone ? `${gone} ${gone > 1 ? 'imagens sem uso serão apagadas' : 'imagem sem uso será apagada'}` : '',
       ].filter(Boolean).join(' · ')) : null,
+      uploadNote(img.added),
       h('label', { class: 'field msg' }, h('span', { class: 'lbl' }, 'Resumo da publicação'), msg),
       h('div', { class: 'btns' },
         net.online
@@ -508,6 +548,16 @@ function renderPending(box) {
     }
     draw();
   });
+  let soon = null;
+  const unsubUp = uploads.onUploads((job) => {
+    if (!box.isConnected) {
+      unsubUp();
+      return;
+    }
+    if (job.state === 'up' && soon) return;
+    clearTimeout(soon);
+    soon = setTimeout(() => { soon = null; draw(); }, job.state === 'up' ? 700 : 100);
+  });
   const unsubNet = onNet(() => {
     if (!box.isConnected) {
       unsubNet();
@@ -515,6 +565,21 @@ function renderPending(box) {
     }
     draw();
   });
+}
+
+// The new images still on their way to the bucket, and those that didn't go (with a retry).
+function uploadNote(paths) {
+  // without the bucket's key, only albums wait for it (the other images go with the commit)
+  const left = uploads.pending(r2.keyDenied() ? paths.filter((p) => p.startsWith('images/fotos/')) : paths);
+  if (!left.length) return null;
+  const failed = left.filter((j) => j.state === 'err');
+  if (failed.length) {
+    return h('p', { class: 'imgs up-err' }, `${failed.length} ${failed.length > 1 ? 'imagens não subiram' : 'imagem não subiu'}${failed.some((j) => j.error === 'access') ? ' (o token não dá acesso às imagens)' : ''}. `,
+      h('button', { class: 'btn btn-solid btn-sm', type: 'button', onclick: () => uploads.retry(failed.map((j) => j.path)) }, 'Tentar de novo'));
+  }
+  return h('p', { class: 'imgs' }, net.online && r2.hasKey()
+    ? `Enviando as imagens: ${paths.length - left.length} de ${paths.length} já subiram. Pode publicar, que o resto vai junto.`
+    : `${left.length} ${left.length > 1 ? 'imagens esperando' : 'imagem esperando'} para subir.`);
 }
 
 async function loadStatus(box) {
@@ -641,6 +706,7 @@ async function publishFlow(title) {
     return;
   }
   await store.pruneStaged();
+  if (!r2.hasKey()) await loadMediaKey();
   const step = h('p', { class: 'step' }, 'Começando…');
   const bar = h('div', { class: 'progress' }, h('i'));
   const { close } = dialog({ title: 'Publicando', body: h('div', { class: 'publishing' }, h('div', { class: 'eq big', 'aria-hidden': 'true' }, h('i'), h('i'), h('i'), h('i')), step, bar) });
@@ -677,7 +743,7 @@ async function publishFlow(title) {
     close();
     dialog({
       title: 'Não deu para publicar',
-      body: h('div', null, h('p', null, describeError(error)), h('p', { class: 'muted' }, 'Suas alterações continuam guardadas aqui. Nada foi perdido.')),
+      body: h('div', null, h('p', null, error instanceof r2.MediaError ? mediaMessage(error) : describeError(error)), h('p', { class: 'muted' }, 'Suas alterações continuam guardadas aqui. Nada foi perdido.')),
       actions: (c) => [h('button', { class: 'btn btn-k', type: 'button', onclick: () => c() }, 'Ok')],
     });
   }

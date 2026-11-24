@@ -4,14 +4,15 @@
 //
 // It keeps files in packs:
 //   base   every visitor: CSS, scripts, fonts, the offline page, the home page and the agenda
-//   site   the installed app: every page, image and .ics file (site.js asks for it)
+//   site   the installed app: every page, image and .ics file (site.js asks for it), except
+//          the albums' photos, which are only kept once someone sees them
 //   admin  whoever opens the admin: its page, modules and styles (src/admin/net.js asks for it)
 // Pages and images opened along the way are kept too, so what someone saw stays readable.
 //
 // Pages come from the network first, so whoever is online gets the fresh agenda; the saved
 // copy shows when there's no connection, or when the network takes too long.
 
-const BUILD = { version: 'dev', assets: '', files: [] }; // filled in by scripts/build.mjs
+const BUILD = { version: 'dev', assets: '', media: '', files: [] }; // filled in by scripts/build.mjs
 
 const SCOPE = self.registration.scope; // the site's root, ending in "/"
 const ROOT = new URL(SCOPE).pathname;
@@ -27,6 +28,11 @@ const STAY = { site: 30 * DAY, admin: 90 * DAY };
 const WAIT = 3500; // how long a page waits for the network before the saved copy shows
 
 const abs = (u) => new URL(u, SCOPE).href;
+// The images live in a bucket (src/config.js MEDIA), at the same paths: images/agenda/x.webp
+// is BUILD.media + /images/agenda/x.webp. Copies are kept under the site's own address for
+// the path, so an image is the same copy wherever it's served from.
+const MEDIA = BUILD.media ? new URL(`${BUILD.media.replace(/\/+$/, '')}/`) : null;
+const mediaPath = (url) => (MEDIA && url.origin === MEDIA.origin && url.pathname.startsWith(MEDIA.pathname) ? url.pathname.slice(MEDIA.pathname.length) : null);
 const FILES = BUILD.files.map((f) => ({ ...f, key: abs(f.u) }));
 const BY_KEY = new Map(FILES.map((f) => [f.key, f]));
 
@@ -87,6 +93,13 @@ const ADMIN = FILES.filter((f) => f.p === 'admin').map((f) => f.r).join('');
 // Keeps a page or image the browser already has (it was just shown), without downloading it again.
 async function remember(u) {
   const url = new URL(u, SCOPE);
+  const media = mediaPath(url);
+  if (media !== null) {
+    if (!media.startsWith('images/')) return;
+    const res = await fetch(url.href, { mode: 'cors', credentials: 'omit', cache: 'force-cache' });
+    if (res.ok && res.type === 'cors') await keep(IMAGES, abs(media), res, KEEP.images);
+    return;
+  }
   if (!url.href.startsWith(SCOPE)) return;
   const path = url.pathname.slice(ROOT.length);
   const isImage = path.startsWith('images/');
@@ -112,8 +125,15 @@ self.addEventListener('fetch', (event) => {
     else if (BY_KEY.has(abs(path))) event.respondWith(file(event, abs(path)));
     return;
   }
-  // The admin shows published images from GitHub, pinned to a commit. They're the site's own
-  // images, and a path never changes, so they share the site's copies.
+  // The images in the bucket (asked for without CORS by an <img>: fetched with it, so the copy
+  // isn't an opaque one, which browsers count as megabytes of storage each).
+  const media = mediaPath(url);
+  if (media !== null) {
+    if (media.startsWith('images/')) event.respondWith(image(event, abs(media), url.href));
+    return;
+  }
+  // The admin shows images still in the repository from GitHub, pinned to a commit. They're
+  // the site's own images, and a path never changes, so they share the site's copies.
   if (url.origin === 'https://raw.githubusercontent.com') {
     const m = /^\/[^/]+\/[^/]+\/[^/]+\/(images\/.+)$/.exec(url.pathname);
     if (m) event.respondWith(image(event, abs(m[1]), url.href));
@@ -264,7 +284,8 @@ async function fill(packs, { strict = false } = {}) {
     if (have && have.headers.get('x-rev') === f.r) return;
     for (const source of sources) {
       const res = await source.match(f.key);
-      if (res && (res.headers.get('x-rev') === f.r || await digest(await res.clone().arrayBuffer()) === f.r)) {
+      // an image from the bucket never changes: any copy of it is the one
+      if (res && (f.m || res.headers.get('x-rev') === f.r || await digest(await res.clone().arrayBuffer()) === f.r)) {
         await cache.put(f.key, await stamped(res, f.r, res.headers.get('x-saved') || undefined));
         return;
       }
@@ -280,6 +301,11 @@ async function fill(packs, { strict = false } = {}) {
 }
 
 async function download(f) {
+  if (f.m) {
+    const res = await fetch(new URL(f.u, MEDIA).href, { mode: 'cors', credentials: 'omit' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${f.u}`);
+    return stamped(res, f.r);
+  }
   for (const mode of ['no-cache', 'reload']) {
     const res = await fetch(f.key, { cache: mode, credentials: 'same-origin' });
     if (!res.ok) throw new Error(`HTTP ${res.status}: ${f.u}`);
