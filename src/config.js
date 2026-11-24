@@ -32,7 +32,7 @@ export const IMAGE_SLOTS = {
   // usually are). `cards` are the boxes the admin previews, as width / height.
   retrato: {
     w: 480, h: 600, fit: 'cover', label: 'retrato (4:5)', kb: 250, focus: '50% 25%',
-    cards: [{ label: 'Card na capa', ratio: 16 / 9 }, { label: 'Lista de entrevistas', ratio: 4 / 4.2 }],
+    cards: [{ label: 'Card na capa', ratio: 16 / 9 }, { label: 'Lista (Entrevistas e Artistas)', ratio: 4 / 4.2 }],
   },
   pagina: { w: 880, h: 587, fit: 'cover', label: 'foto da página (3:2)', kb: 300 },
   inline: { w: 720, h: 960, fit: 'contain', label: 'imagem no texto', kb: 450 },

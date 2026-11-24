@@ -3,7 +3,7 @@
 import { COLLECTIONS } from '../schema.js';
 import { isUpcoming } from '../util.js';
 
-// data: { site, sobre, contrate, agenda[], noticias[], entrevistas[] }
+// data: { site, sobre, contrate, agenda[], noticias[], entrevistas[], artistas[] }
 // opts: { today, siteUrl, version, preview, assetUrl(path), imageSize(path), buildTime }
 export function createContext(data, opts) {
   const today = opts.today;
@@ -12,6 +12,9 @@ export function createContext(data, opts) {
   const past = events.filter((ev) => !isUpcoming(ev, today)).reverse();
   const news = [...(data.noticias || [])].sort(COLLECTIONS.noticias.sort);
   const interviews = [...(data.entrevistas || [])].sort(COLLECTIONS.entrevistas.sort);
+  // the catalog in its order (alphabetical); the newest profiles first, for the home page
+  const artists = [...(data.artistas || [])].sort(COLLECTIONS.artistas.sort);
+  const artistsNew = [...artists].sort((a, b) => String(b.date).localeCompare(String(a.date)) || COLLECTIONS.artistas.sort(a, b));
   const ivNumber = new Map();
   [...interviews].reverse().forEach((it, i) => ivNumber.set(it.id, i + 1));
   return {
@@ -24,6 +27,8 @@ export function createContext(data, opts) {
     news,
     interviews,
     ivNumber,
+    artists,
+    artistsNew,
     siteUrl: String(opts.siteUrl || '').replace(/\/+$/, ''),
     version: opts.version || '',
     preview: Boolean(opts.preview),

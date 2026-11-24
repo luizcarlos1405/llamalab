@@ -71,20 +71,28 @@ function agendaPanel(P) {
 </section>`;
 }
 
+// Backstage: the interviews (the featured one first), then the newest artists, and at the end
+// of the track a way into each list.
 function backstagePanel(P) {
-  if (!P.interviews.length) return '';
+  if (!P.interviews.length && !P.artists.length) return '';
   const feat = P.interviews.find((it) => it.featured) || P.interviews[0];
-  const rest = P.interviews.filter((it) => it !== feat).slice(0, 5);
+  const others = P.interviews.filter((it) => it !== feat).slice(0, 4);
+  const artists = P.artistsNew.slice(0, 5);
+  const lists = [
+    P.interviews.length && ['Entrevistas', 'Todas as entrevistas', 'entrevistas/'],
+    P.artists.length && ['Artistas', 'Todos os artistas', 'artistas/'],
+  ].filter(Boolean);
   return `<section class="panel dark backstage" id="backstage">
   <div class="pin">
     <div class="bs-head">
-      <div><p class="eyebrow">Entrevistas</p><h2 class="h2 outline" data-split>${split('Backstage')}</h2></div>
-      <p class="bs-sub" data-r>Papo reto com quem faz a cultura de Dourados acontecer — antes, durante e depois do show.</p>
+      <div><p class="eyebrow">${lists.map(([name]) => name).join(' e ')}</p><h2 class="h2 outline" data-split>${split('Backstage')}</h2></div>
+      <div class="bs-side" data-r><p class="bs-sub">Papo reto com quem faz a cultura de Dourados acontecer — antes, durante e depois do show.</p><p class="bs-links">${lists.map(([name, , href]) => `<a class="link" href="${P.href(href)}">${name} →</a>`).join('')}</p></div>
     </div>
     <div class="track" id="track">
-      ${card(P, feat, { feat: true })}
-      ${rest.map((it) => card(P, it)).join('\n      ')}
-      <a class="card end" href="${P.href('entrevistas/')}"><h3>Todas as entrevistas</h3><span class="big" aria-hidden="true">→</span></a>
+      ${feat ? card(P, feat, { feat: true }) : ''}
+      ${others.map((it) => card(P, it)).join('\n      ')}
+      ${artists.map((it) => card(P, it, { artist: true })).join('\n      ')}
+      <div class="card ends">${lists.map(([, label, href]) => `<a href="${P.href(href)}"><h3>${label}</h3><span class="big" aria-hidden="true">→</span></a>`).join('')}</div>
     </div>
     <div class="bar"><i id="bar"></i></div>
   </div>
@@ -362,6 +370,57 @@ export function interviewPage(P, it) {
   ${others.length ? `<div class="wrap" style="margin-top:clamp(70px,8vw,120px)"><div class="more-head"><h2 class="h2 xs">Mais entrevistas</h2><a class="link" href="${P.href('entrevistas/')}">Ver todas →</a></div><div class="cards">${others.map((x, i) => card(P, x, { reveal: true, i })).join('')}</div></div>` : ''}
 </section>`;
   return layout(P, { title: it.title, description: it.summary || it.role || stripMarkdown(it.body), image: it.photo, type: 'article', current: 'entrevistas', main, edit: `entrevistas/${it.id}` });
+}
+
+/* ================= ARTISTAS (the catalog of local artists) ================= */
+
+export function artistsPage(P) {
+  const list = P.artists;
+  const content = list.length
+    ? `${chips(categoriesOf(list, 'area'), 'Filtrar por área')}<div class="cards">${list.map((it, i) => card(P, it, { artist: true, reveal: true, i })).join('')}</div>`
+    : '<div class="empty"><p class="h3">Nenhum artista por enquanto.</p></div>';
+  const main = `${pageHero(P, { crumbs: [['Artistas']], eyebrow: 'Quem faz a cena', title: 'Artistas', lead: 'Música, rap, circo, fotografia e artes visuais: quem faz a cultura de Dourados e região, e o que cada um faz.' })}
+<section class="panel light sec"><div class="wrap">${content}</div></section>`;
+  return layout(P, { title: 'Artistas', description: 'Catálogo dos artistas de Dourados e região: música, rap, circo, fotografia, artes visuais e mais.', current: 'artistas', main, edit: 'artistas' });
+}
+
+// An artist's profile: an interview's page, without what only interviews have. The role alone
+// under the name, and the author without a date.
+export function artistPage(P, it) {
+  const showLede = it.summary && !sameStart(it.summary, it.body);
+  const vid = youtubeId(it.video);
+  // more artists: the same area first, then the ones after this one in the catalog
+  const at = P.artists.findIndex((x) => x.id === it.id);
+  const around = [...P.artists.slice(at + 1), ...P.artists.slice(0, Math.max(0, at))];
+  const others = [...around.filter((x) => it.area && x.area === it.area), ...around.filter((x) => !it.area || x.area !== it.area)].slice(0, 3);
+  const hero = `<section class="phero">
+  ${stage()}
+  <div class="phero-in phero-grid">
+    <div>
+      ${breadcrumbs(P, [['Artistas', P.href('artistas/')], [it.name]])}
+      <div class="tags">${it.area ? `<span class="tag">${esc(it.area)}</span>` : ''}</div>
+      <h1 class="h2 ${titleSize(it.name, 24, 50)}" data-split>${split(it.name)}</h1>
+      ${it.role ? `<p class="lead" data-r style="--d:150ms;margin-top:22px">${esc(it.role)}</p>` : ''}
+      ${it.author ? `<p class="byline">por ${esc(it.author)}</p>` : ''}
+    </div>
+    ${it.photo && it.photo.src ? `<div class="media-glow" data-r style="--d:200ms"><div class="media cover">${img(P, it.photo, { eager: true })}</div></div>` : ''}
+  </div>
+  <div class="noise"></div>
+</section>`;
+  const main = `${hero}
+<section class="panel light sec">
+  <div class="detail">
+    <div>
+      ${showLede ? `<p class="lead" style="font-size:clamp(19px,1.6vw,23px);color:#222;max-width:720px;margin-bottom:1.4em">${esc(it.summary)}</p>` : ''}
+      ${it.body ? `<div class="prose dropcap">${md(P, it.body)}</div>` : ''}
+      ${vid ? `<div class="video"><a class="yt" href="https://www.youtube.com/watch?v=${vid}" data-yt="${vid}" target="_blank" rel="noopener" aria-label="Ver o vídeo: ${esc(it.name)}"><img src="https://i.ytimg.com/vi/${vid}/hqdefault.jpg" alt="" loading="lazy" decoding="async"><span class="yt-play" aria-hidden="true"></span></a></div>` : it.video ? `<p class="linkrow"><a class="btn btn-k" href="${esc(it.video)}" target="_blank" rel="noopener">Assistir ao vídeo <span class="arr">→</span></a></p>` : ''}
+      ${(it.links || []).length ? `<div class="linkrow">${it.links.map((l, i) => `<a class="btn ${i ? 'btn-ghost' : 'btn-k'} btn-sm" href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label)} <span class="arr">↗</span></a>`).join('')}</div>` : ''}
+    </div>
+    <aside class="aside">${shareBox(P, it.name, P.canonical)}<div class="box k"><b>Artistas</b><a href="${P.href('artistas/')}">Todos os artistas →</a></div></aside>
+  </div>
+  ${others.length ? `<div class="wrap" style="margin-top:clamp(70px,8vw,120px)"><div class="more-head"><h2 class="h2 xs">Mais artistas</h2><a class="link" href="${P.href('artistas/')}">Ver todos →</a></div><div class="cards">${others.map((x, i) => card(P, x, { artist: true, reveal: true, i })).join('')}</div></div>` : ''}
+</section>`;
+  return layout(P, { title: it.name, description: it.summary || it.role || stripMarkdown(it.body), image: it.photo, type: 'profile', current: 'artistas', main, edit: `artistas/${it.id}` });
 }
 
 /* ================= SOBRE / CONTRATE / 404 ================= */

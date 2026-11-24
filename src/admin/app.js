@@ -33,7 +33,7 @@ const initial = () => ((ls.get(EDITOR_KEY) || '').trim().charAt(0) || '✺').toU
 const app = { gh: null, user: null, root: null, view: null, guard: null, lastHash: '' };
 const clone = (v) => JSON.parse(JSON.stringify(v));
 const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
-const TYPE_ICON = { agenda: '✺', noticias: '✎', entrevistas: '❝', site: '⌂', sobre: 'i', contrate: '$' };
+const TYPE_ICON = { agenda: '✺', noticias: '✎', entrevistas: '❝', artistas: '✦', site: '⌂', sobre: 'i', contrate: '$' };
 const WIFI_OFF = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 2l20 20M8.5 16.4a5 5 0 0 1 7 0M5 12.9a10 10 0 0 1 5.2-2.8M19 12.9a10 10 0 0 0-2.3-1.6M2 9.4a15 15 0 0 1 4.4-2.8M22 9.4a15 15 0 0 0-11.7-3.8M12 20h.01"/></svg>';
 const WIFI = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.6a10 10 0 0 1 14 0M8.5 16.1a5 5 0 0 1 7 0M2 9a15 15 0 0 1 20 0M12 20h.01"/></svg>';
 const CLOCK = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
@@ -226,6 +226,7 @@ const TABS = [
   ['agenda', 'Agenda'],
   ['noticias', 'Radar Cultural'],
   ['entrevistas', 'Entrevistas'],
+  ['artistas', 'Artistas'],
   ['paginas', 'Páginas'],
 ];
 
@@ -368,7 +369,8 @@ function dashboard() {
   const quick = h('div', { class: 'card quick' }, h('h2', null, 'Criar'),
     h('a', { class: 'btn btn-k', href: '#/agenda/novo' }, '+ Evento'),
     h('a', { class: 'btn btn-k', href: '#/noticias/novo' }, '+ Notícia do Radar'),
-    h('a', { class: 'btn btn-k', href: '#/entrevistas/novo' }, '+ Entrevista'));
+    h('a', { class: 'btn btn-k', href: '#/entrevistas/novo' }, '+ Entrevista'),
+    h('a', { class: 'btn btn-k', href: '#/artistas/novo' }, '+ Artista'));
   const today = todayISO();
   const upcoming = store.state.working.agenda.filter((ev) => isUpcoming(ev, today));
   const next = h('div', { class: 'card next' }, h('h2', null, 'Próximos rolês'),
@@ -692,6 +694,7 @@ function statusBadges(type, item, status) {
 function itemLine(type, item) {
   if (type === 'agenda') return [item.venue, fmtHours(item), item.category, item.price].filter(Boolean).join(' · ');
   if (type === 'noticias') return [item.kicker, fmtShort(item.date)].filter(Boolean).join(' · ');
+  if (type === 'artistas') return [item.area, item.role].filter(Boolean).join(' · ');
   return [item.name !== item.title ? item.name : '', item.area, fmtShort(item.date)].filter(Boolean).join(' · ');
 }
 
@@ -717,13 +720,13 @@ function listView(type) {
   const search = h('input', { type: 'search', placeholder: `Buscar ${t.label.toLowerCase()}…`, 'aria-label': 'Buscar', oninput: () => { query = norm(search.value); draw(); } });
   const filters = type === 'agenda'
     ? [['up', 'Próximos'], ['past', 'Já rolou'], ['all', 'Todos'], ['changed', 'Com alterações']]
-    : [['all', 'Todas'], ['feat', 'Destaques'], ['changed', 'Com alterações']];
+    : [['all', t.allLabel || 'Todas'], ...(t.fields.some((f) => f.key === 'featured') ? [['feat', 'Destaques']] : []), ['changed', 'Com alterações']];
   const chips = h('div', { class: 'chips' }, filters.map(([key, label]) => h('button', { type: 'button', class: `chip${key === filter ? ' on' : ''}`, dataset: { f: key }, onclick: () => { filter = key; sessionStorage.setItem(`filter:${type}`, key); chips.querySelectorAll('.chip').forEach((c) => c.classList.toggle('on', c.dataset.f === key)); draw(); } }, label)));
   const list = h('ol', { class: 'items' });
   const count = h('span', { class: 'count' });
   add(view, h('section', { class: 'list-view' },
     h('div', { class: 'page-head row' },
-      h('div', null, h('p', { class: 'eyebrow' }, 'Conteúdo'), h('h1', null, t.label, ' ', count)),
+      h('div', null, h('p', { class: 'eyebrow' }, 'Conteúdo'), h('h1', null, t.label, ' ', count), t.about ? h('p', { class: 'muted about' }, t.about) : null),
       h('div', { class: 'btns' },
         type === 'agenda' ? h('a', { class: 'btn btn-ghost', href: '#/instagram' }, 'Post para o Instagram') : null,
         h('a', { class: 'btn btn-red', href: `#/${type}/novo` }, `+ ${t.newLabel}`))),
@@ -852,6 +855,7 @@ function itemEditor(type, id, query) {
     if (type === 'agenda' && !item.date) item.date = todayISO();
     if (!item.title && !item.name) item.title = t.newLabel;
     if (type === 'entrevistas' && !item.name) item.name = item.title;
+    if (type === 'artistas' && !item.name) item.name = t.newLabel;
     data[type] = data[type].filter((i) => i.id !== previewId).concat(item).sort(t.sort);
     return data;
   };

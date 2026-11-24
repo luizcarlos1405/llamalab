@@ -1,6 +1,6 @@
 # LLama Lab
 
-Site of LLama Lab — Como se LLama, Laboratório Criativo: the agenda, interviews and news of the cultural
+Site of LLama Lab — Como se LLama, Laboratório Criativo: the agenda, news, interviews and artists of the cultural
 scene of Dourados (MS). Live at <https://luizcarlos1405.github.io/llamalab/>.
 
 It's a static site with no server and no database. The content lives in this repository as JSON and
@@ -17,16 +17,18 @@ data/*.json, images/  ──>  scripts/build.mjs  ──>  _site/  ──>  GitH
   which commits them through the GitHub API
 ```
 
-- **Content** is one JSON file per type in `data/`: `agenda.json`, `noticias.json` and `entrevistas.json`
-  (arrays of items), plus `site.json` (home page, ribbons, footer call to action, contacts, the radio's stations), `sobre.json` and
+- **Content** is one JSON file per type in `data/`: `agenda.json`, `noticias.json` (the Radar Cultural),
+  `entrevistas.json` and `artistas.json` (arrays of items), plus `site.json` (home page, ribbons, footer call to action, contacts, the radio's stations), `sobre.json` and
   `contrate.json`. Fields are defined once in [`src/schema.js`](src/schema.js), which drives the admin forms, the
   validation and the build. Long texts use the small Markdown subset in [`src/markdown.js`](src/markdown.js).
+  Entrevistas are the team's longer, journalistic pieces about someone; Artistas is a catalog of short profiles
+  (background, area, main works, social links). Each type's admin list says which goes where.
 - **Images** live in `images/<type>/` as WebP. The admin resizes every upload to the largest box it's shown in on
   the site, times 2 for sharp phone screens, before committing it (`IMAGE_SLOTS` in [`src/config.js`](src/config.js)).
-  Interview portraits and news photos are cropped to their shape; flyers are kept whole. The interview cards
+  Portraits (interviews and artists) and news photos are cropped to their shape; flyers are kept whole. The cards
   show portraits in wider boxes, cropped around a point the editor taps on the photo in the form, with previews
   of the cards (the image's `focus`; the upper part when there's none).
-- **Pages** are rendered by [`src/render/`](src/render/) at build time, so every event, news item and interview has
+- **Pages** are rendered by [`src/render/`](src/render/) at build time, so every event, news item, interview and artist has
   its own URL, link preview (Open Graph) and structured data. The same render code runs in the admin for the live
   preview. The build also writes `sitemap.xml`, `feed.xml` (RSS), an `.ics` file per event and `version.json`.
 - **Daily rebuild:** the Actions workflow also runs every night, so events that already happened leave the home
@@ -182,7 +184,7 @@ that can be edited.
 
 - **Painel** lists every unpublished change (new, edited, removed) with undo, and publishes all of them
   as one commit with a generated message. The editor's name is the commit author.
-- **Agenda, Radar Cultural, Entrevistas** list, search, filter, create, duplicate (events), edit and remove items.
+- **Agenda, Radar Cultural, Entrevistas, Artistas** list, search, filter, create, duplicate (events), edit and remove items.
   The editor shows a live preview of the real page, at desktop or phone width.
 - **Páginas** edits the home page settings, the radio's stations, contacts, Sobre and Contrate.
 - **Post da agenda** (Agenda → Post para o Instagram) turns the events of a date range into the "Agenda

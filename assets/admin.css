@@ -93,6 +93,7 @@ svg{display:block}
 .view{width:min(1480px,calc(100% - 24px));margin:14px auto 30px;background:var(--w);color:var(--k);border-radius:36px;padding:clamp(22px,3vw,44px);min-height:calc(100vh - 110px)}
 .page-head{margin-bottom:28px}
 .page-head.row{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap}
+.page-head .about{max-width:620px;margin-top:10px;font-size:15px;line-height:1.5}
 h1{font:400 clamp(44px,5.4vw,76px)/.9 var(--disp);text-transform:uppercase;margin-top:10px}
 h1 .count{font-size:.5em;color:#aaa;vertical-align:.5em}
 h2{font:400 clamp(26px,2.4vw,34px)/1 var(--disp);text-transform:uppercase}

@@ -8,8 +8,9 @@ import { IMAGE_SLOTS } from '../config.js';
 
 export const NAV = [
   { href: 'agenda/', label: 'Agenda', key: 'agenda' },
-  { href: 'entrevistas/', label: 'Entrevistas', key: 'entrevistas' },
   { href: 'radar-cultural/', label: 'Radar Cultural', key: 'noticias' },
+  { href: 'entrevistas/', label: 'Entrevistas', key: 'entrevistas' },
+  { href: 'artistas/', label: 'Artistas', key: 'artistas' },
   { href: 'sobre/', label: 'Sobre', key: 'sobre' },
   { href: 'contrate/', label: 'Contrate', key: 'contrate' },
 ];
@@ -287,14 +288,23 @@ export function interviewNo(P, it) {
   return n ? `Nº ${String(n).padStart(2, '0')}` : '';
 }
 
-export function card(P, it, { feat = false, tag = 'h3', reveal = false, i = 0 } = {}) {
+// An interview's card; with `artist`, an artist's (no number, "Ver perfil", to their profile).
+export function card(P, it, { feat = false, tag = 'h3', reveal = false, i = 0, artist = false } = {}) {
   const photo = it.photo && it.photo.src ? img(P, it.photo, { alt: '', focus: IMAGE_SLOTS.retrato.focus }) : llamaFallback();
   const text = it.quote ? `<q>${esc(excerpt(it.quote, 140))}</q>` : `<p class="sum">${esc(excerpt(it.summary || stripMarkdown(it.body), 150))}</p>`;
   const role = [it.area, it.role && excerpt(it.role, 60)].filter(Boolean).join(' · ');
-  return `<a class="card${feat ? ' feat' : ''}" href="${interviewUrl(P, it)}" data-cat="${esc(slugify(it.area || 'papo'))}"${reveal ? ` data-r style="--d:${(i % 3) * 90}ms"` : ''}>
-  <div class="ph">${photo}<span class="num">${esc(interviewNo(P, it))}</span></div>
-  <div class="body"><span class="role">${esc(role)}</span><${tag}>${esc(it.name || it.title)}</${tag}>${text}<span class="more">${it.video ? 'Ver o papo' : 'Ler entrevista'} <i aria-hidden="true">→</i></span></div>
+  const num = artist ? '' : `<span class="num">${esc(interviewNo(P, it))}</span>`;
+  const more = artist ? 'Ver perfil' : it.video ? 'Ver o papo' : 'Ler entrevista';
+  return `<a class="card${feat ? ' feat' : ''}" href="${artist ? artistUrl(P, it) : interviewUrl(P, it)}" data-cat="${esc(slugify(it.area || 'papo'))}"${reveal ? ` data-r style="--d:${(i % 3) * 90}ms"` : ''}>
+  <div class="ph">${photo}${num}</div>
+  <div class="body"><span class="role">${esc(role)}</span><${tag}>${esc(it.name || it.title)}</${tag}>${text}<span class="more">${more} <i aria-hidden="true">→</i></span></div>
 </a>`;
+}
+
+/* ---------- artists ---------- */
+
+export function artistUrl(P, it) {
+  return P.href(`artistas/${it.id}/`);
 }
 
 // The quote with the highlighted word in red.

@@ -293,6 +293,9 @@ main{position:relative;z-index:2}
 .bs-head{display:flex;justify-content:space-between;align-items:flex-end;gap:40px;padding:0 var(--pad);margin-bottom:clamp(26px,4vh,44px)}
 .bs-head .h2{font-size:clamp(64px,10vw,168px)}
 .bs-sub{max-width:380px;color:#bbb;font-size:18px}
+.bs-side{display:flex;flex-direction:column;align-items:flex-start;gap:14px}
+.bs-links{display:flex;gap:20px}
+.bs-links .link{margin-left:0}
 .track{display:flex;gap:24px;padding:0 var(--pad);width:max-content;will-change:transform}
 .card{position:relative;flex:0 0 auto;width:clamp(300px,31vw,470px);height:clamp(420px,58vh,560px);border-radius:30px;background:var(--k2);color:var(--w);border:1px solid var(--line);overflow:hidden;display:flex;flex-direction:column;transition:transform .6s var(--spring)}
 .card:hover,.card:focus-visible{transform:translateY(-10px) rotate(-1deg)}
@@ -311,10 +314,17 @@ main{position:relative;z-index:2}
 .card:hover .more i{transform:rotate(-45deg);background:var(--r);color:var(--w)}
 .card.feat{background:var(--w);color:var(--k);border-color:var(--w)}
 .card.feat q,.card.feat .sum{color:#222}.card.feat .role{color:#6b6b6b}.card.feat .more i{background:var(--k);color:var(--w)}
-.card.end{background:var(--r);border-color:var(--r);justify-content:space-between;padding:30px}
-.card.end h3{font-size:clamp(44px,4.4vw,72px)}
-.card.end .big{width:120px;height:120px;border-radius:50%;background:var(--k);display:grid;place-items:center;font-size:44px;align-self:flex-end;transition:transform .6s var(--spring)}
-.card.end:hover .big{transform:rotate(-45deg) scale(1.08)}
+/* the end of the Backstage track: two cards in one, a way into each list. Red for the
+   interviews, white for the artists, like the white featured card at the start. */
+.card.ends{background:none;border:0;overflow:visible;gap:14px}
+.card.ends:hover{transform:none}
+.ends a{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:space-between;padding:26px 28px 24px;border-radius:30px;background:var(--r);color:var(--w);transition:transform .6s var(--spring)}
+.ends a:last-child{background:var(--w);color:var(--k)}
+.ends a:hover,.ends a:focus-visible{transform:translateY(-8px) rotate(-1deg)}
+.ends h3{font-size:clamp(34px,3.2vw,54px)}
+.ends .big{width:clamp(64px,5.4vw,86px);aspect-ratio:1;border-radius:50%;background:var(--k);color:var(--w);display:grid;place-items:center;font-size:clamp(26px,2.2vw,34px);align-self:flex-end;transition:transform .6s var(--spring)}
+.ends a:last-child .big{background:var(--r2)}
+.ends a:hover .big{transform:rotate(-45deg) scale(1.08)}
 .bar{margin:clamp(24px,4vh,40px) var(--pad) 0;height:3px;background:rgba(255,255,255,.12);border-radius:3px;overflow:hidden}
 .bar i{display:block;height:100%;background:var(--r);transform-origin:0 50%;transform:scaleX(0)}
 .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}

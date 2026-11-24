@@ -430,7 +430,7 @@ export function validateAll(data = state.working) {
 export function commitSummary() {
   const list = changes();
   const img = imageChanges();
-  const labels = { agenda: ['evento', 'eventos'], noticias: ['notícia do Radar', 'notícias do Radar'], entrevistas: ['entrevista', 'entrevistas'] };
+  const labels = { agenda: ['evento', 'eventos'], noticias: ['notícia do Radar', 'notícias do Radar'], entrevistas: ['entrevista', 'entrevistas'], artistas: ['artista', 'artistas'] };
   const parts = [];
   for (const [type, [one, many]] of Object.entries(labels)) {
     const of = list.filter((c) => c.type === type);

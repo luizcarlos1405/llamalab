@@ -4,7 +4,7 @@ import { esc, excerpt, stripMarkdown, isUpcoming, eventEnd, eventStop } from '..
 import { SITE } from '../config.js';
 import { createContext, pageContext } from './context.js';
 import {
-  homePage, agendaPage, eventPage, newsListPage, newsPage, interviewsPage, interviewPage, sobrePage, contratePage, notFoundPage, offlinePage,
+  homePage, agendaPage, eventPage, newsListPage, newsPage, interviewsPage, interviewPage, artistsPage, artistPage, sobrePage, contratePage, notFoundPage, offlinePage,
 } from './pages.js';
 
 // Every page as { path, html }, plus the sitemap, feed and calendar files.
@@ -23,9 +23,16 @@ export function renderSite(data, opts) {
   for (const n of ctx.news) page(`radar-cultural/${n.id}/index.html`, (P) => newsPage(P, n));
   // The section's address before it was called Radar Cultural (24/11/2026): GitHub Pages can't
   // redirect, so a page there sends visitors on. No news was published under the old address.
-  files.push({ path: 'noticias/index.html', html: redirectPage(ctx, 'radar-cultural/', 'Radar Cultural'), redirect: true });
+  files.push({ path: 'noticias/index.html', html: redirectPage(ctx, 'noticias/', 'radar-cultural/', 'Radar Cultural'), redirect: true });
   page('entrevistas/index.html', interviewsPage);
   for (const it of ctx.interviews) page(`entrevistas/${it.id}/index.html`, (P) => interviewPage(P, it));
+  page('artistas/index.html', artistsPage);
+  for (const it of ctx.artists) page(`artistas/${it.id}/index.html`, (P) => artistPage(P, it));
+  // The profiles were interviews until 24/11/2026: their old addresses send visitors on.
+  const interviewIds = new Set(ctx.interviews.map((it) => it.id));
+  for (const it of ctx.artists.filter((a) => !interviewIds.has(a.id))) {
+    files.push({ path: `entrevistas/${it.id}/index.html`, html: redirectPage(ctx, `entrevistas/${it.id}/`, `artistas/${it.id}/`, it.name), redirect: true });
+  }
   page('sobre/index.html', sobrePage);
   page('contrate/index.html', contratePage);
 
@@ -78,8 +85,8 @@ function manifests(ctx) {
 }
 
 // One page for the admin's live preview. `route` is "home", "agenda",
-// "agenda/<id>", "noticias", "noticias/<id>", "entrevistas",
-// "entrevistas/<id>", "sobre" or "contrate". Returns null for unknown ids.
+// "agenda/<id>", "noticias", "noticias/<id>", "entrevistas", "entrevistas/<id>", "artistas",
+// "artistas/<id>", "sobre" or "contrate". Returns null for unknown ids.
 export function renderPreview(data, opts, route) {
   const ctx = createContext(data, { ...opts, preview: true });
   const [type, id] = String(route || 'home').split('/');
@@ -101,16 +108,21 @@ export function renderPreview(data, opts, route) {
       const it = ctx.interviews.find((x) => x.id === id);
       return it ? interviewPage(P, it) : null;
     }
+    case 'artistas': {
+      if (!id) return artistsPage(P);
+      const it = ctx.artists.find((x) => x.id === id);
+      return it ? artistPage(P, it) : null;
+    }
     case 'sobre': return sobrePage(P);
     case 'contrate': return contratePage(P);
     default: return homePage(P);
   }
 }
 
-// A page one folder deep that only sends visitors to another address (`to`, from the site's
-// root). Relative, like every link of the site, so it survives a change of domain.
-function redirectPage(ctx, to, title) {
-  const rel = `../${to}`;
+// A page at `from` that only sends visitors to `to` (both folders, from the site's root).
+// Relative, like every link of the site, so it survives a change of domain.
+function redirectPage(ctx, from, to, title) {
+  const rel = `${'../'.repeat(from.split('/').filter(Boolean).length)}${to}`;
   return `<!doctype html>
 <html lang="pt-BR">
 <head>
