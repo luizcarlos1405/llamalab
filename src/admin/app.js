@@ -408,7 +408,7 @@ function installCard(slot) {
       h('img', { src: 'assets/icons/site-192.png', alt: '', width: '72', height: '72' }),
       h('div', null,
         h('h2', null, matchMedia('(pointer: coarse)').matches ? 'O app no celular' : 'O app no computador'),
-        h('p', { class: 'muted' }, 'Instale o app do LLama Lab: o site e este admin funcionam até sem internet. O admin abre pelo botão Admin, em qualquer página.'),
+        h('p', { class: 'muted' }, 'Instale o app do LLama Lab: o site e este admin funcionam até sem internet. O admin abre pelo botão vermelho de lápis, no canto de qualquer página.'),
         h('div', { class: 'btns' },
           h('button', { class: 'btn btn-k btn-sm', type: 'button', onclick: () => installApp(draw) }, 'Instalar o app'),
           h('button', { class: 'btn btn-ghost btn-sm', type: 'button', onclick: () => { ls.set(INSTALL_KEY, 'no'); draw(); } }, 'Agora não')))));

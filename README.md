@@ -93,7 +93,7 @@ Worth knowing:
 
 ## Offline and installing
 
-The site installs as an app (a PWA), **LLama Lab**, with the admin inside it: editors open it with the Admin button,
+The site installs as an app (a PWA), **LLama Lab**, with the admin inside it: editors open it from the red pencil button,
 which shows on every page once they've signed in. Its manifest is written by the build (`manifest.webmanifest`, linked
 from the pages and the admin), and one service worker, [`src/sw.js`](src/sw.js), keeps both usable offline; the build
 writes it to `_site/sw.js` with the list of files it may keep and a hash of each one.

@@ -56,8 +56,8 @@ export function renderSite(data, opts) {
   return files;
 }
 
-// What makes the site installable. One app, with the admin inside it (editors open it with
-// the Admin button): a second app whose pages sit inside this one's (/admin) can't be
+// What makes the site installable. One app, with the admin inside it (editors open it from
+// the pencil button): a second app whose pages sit inside this one's (/admin) can't be
 // installed on Android, where the installed site claims every address under its scope.
 // Browsers read the id from the domain's root, so it's the site's path: /llamalab/ on
 // github.io, / on its own domain.
