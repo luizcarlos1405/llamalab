@@ -4,13 +4,14 @@
 
 import { esc, fmtShort, fmtHours, WEEKDAYS_SHORT, weekday, parseDate, monthLabel, MONTHS_SHORT, excerpt, stripMarkdown, splitList, waLink, formatPhone, slugify, eventEnd, hash, spotifyPlaylistId } from '../util.js';
 import { symbols, lockup, wordmark, llama, llamaUse, ring } from './svg.js';
-import { IMAGE_SLOTS } from '../config.js';
+import { IMAGE_SLOTS, PHOTOS } from '../config.js';
 
 export const NAV = [
   { href: 'agenda/', label: 'Agenda', key: 'agenda' },
   { href: 'radar-cultural/', label: 'Radar Cultural', key: 'noticias' },
   { href: 'entrevistas/', label: 'Entrevistas', key: 'entrevistas' },
   { href: 'artistas/', label: 'Artistas', key: 'artistas' },
+  { href: 'fotos/', label: 'Fotos', key: 'fotos' },
   { href: 'sobre/', label: 'Sobre', key: 'sobre' },
   { href: 'contrate/', label: 'Contrate', key: 'contrate' },
 ];
@@ -225,15 +226,17 @@ export function eventLine(ev) {
 export function row(P, ev, i = 0, { past = false, tag = 'li' } = {}) {
   const p = parseDate(ev.date);
   const v = hash(ev.id) % 5;
+  // an event that already happened and has its album: the photos, in red, instead of its type
+  const album = past && P.albumOf ? P.albumOf.get(ev.id) : null;
   const until = past ? '' : ` data-until="${esc(eventEnd(ev))}"`;
   const imgAttr = ev.image && ev.image.src ? ` data-img="${esc(P.src(ev.image.src))}"` : '';
   const multi = ev.endDate && ev.endDate > ev.date ? ` → ${parseDate(ev.endDate).d}/${parseDate(ev.endDate).m}` : '';
   const line = eventLine(ev);
-  return `<${tag} data-cat="${esc(slugify(ev.category || 'role'))}"${until}><a class="row${past ? ' past' : ''}" id="ev-${esc(ev.id)}" href="${eventUrl(P, ev)}" data-r style="--d:${(i % 5) * 80}ms" data-v="${v}"${imgAttr}>
+  return `<${tag} data-cat="${esc(slugify(ev.category || 'role'))}"${until}><a class="row${past ? ' past' : ''}${album ? ' ph' : ''}" id="ev-${esc(ev.id)}" href="${eventUrl(P, ev)}" data-r style="--d:${(i % 5) * 80}ms" data-v="${v}"${imgAttr}>
   <div class="d"><b>${String(p.d).padStart(2, '0')}</b><span>${MONTHS_SHORT[p.m - 1].toUpperCase()}<br>${WEEKDAYS_SHORT[weekday(ev.date)].toUpperCase()}${multi}</span></div>
   <div class="t"><h3>${esc(ev.title)}</h3>${line ? `<p>${esc(line)}</p>` : ''}</div>
   <div class="v"><span>${esc(eventWhere(ev) || 'Dourados')}</span><span>${esc(eventInfo(ev) || (past ? 'Já rolou' : ''))}</span></div>
-  <span class="tag">${esc(ev.category || 'Rolê')}</span><span class="go" aria-hidden="true">→</span>
+  ${album ? `<span class="tag ph">${ICON_CAM}${esc(photoCount(album))}</span>` : `<span class="tag">${esc(ev.category || 'Rolê')}</span>`}<span class="go" aria-hidden="true">→</span>
 </a></${tag}>`;
 }
 
@@ -303,6 +306,75 @@ export function card(P, it, { feat = false, tag = 'h3', reveal = false, i = 0, a
   <div class="ph">${photo}${num}</div>
   <div class="body"><span class="role">${esc(role)}</span><${tag}>${esc(it.name || it.title)}</${tag}>${text}<span class="more">${more} <i aria-hidden="true">→</i></span></div>
 </a>`;
+}
+
+/* ---------- albums (Fotos) ---------- */
+
+export const ICON_CAM = '<svg class="ic-cam" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3z"/><circle cx="12" cy="13" r="3.2"/></svg>';
+export const ICON_SAVE = '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg>';
+export const ICON_SHARE = '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7M16 7l-4-4-4 4M12 3v12"/></svg>';
+
+export function albumUrl(P, a) {
+  return P.href(`fotos/${a.id}/`);
+}
+
+export function photoCount(a) {
+  const n = (a.photos || []).length;
+  return `${n} ${n === 1 ? 'foto' : 'fotos'}`;
+}
+
+// The album's cover: the photo the editor picked, or the first.
+export function albumCover(a) {
+  const photos = a.photos || [];
+  return photos.find((p) => p.src === a.cover) || photos[0] || null;
+}
+
+// "@perfil", "perfil" or the profile's address → { handle, url }.
+export function instagramOf(value) {
+  const s = String(value || '').trim();
+  if (!s) return null;
+  const m = /instagram\.com\/([\w.]+)/i.exec(s);
+  const handle = (m ? m[1] : s).replace(/^@/, '').replace(/\/+$/, '');
+  return handle ? { handle, url: `https://instagram.com/${handle}` } : null;
+}
+
+// A pile of prints: the cover on top and two more of the album's photos behind, from its
+// first and second thirds (shots in a row tend to look alike). They fan out on hover.
+export function pile(P, a, { count = true, eager = false } = {}) {
+  const top = albumCover(a);
+  if (!top) return '';
+  const rest = (a.photos || []).filter((p) => p !== top);
+  const back = [rest[Math.floor(rest.length / 3)], rest[Math.floor((rest.length * 2) / 3)]].filter((p, i, all) => p && all.indexOf(p) === i);
+  const im = (p, cls = '') => `<img${cls ? ` class="${cls}"` : ''} src="${esc(P.src(p.thumb))}" alt="" width="${p.w}" height="${p.h}" loading="${eager ? 'eager' : 'lazy'}" decoding="async">`;
+  return `<div class="pile">${back[1] ? im(back[1], 'p3') : ''}${back[0] ? im(back[0], 'p2') : ''}<div class="p1">${im(top)}${count ? `<span class="n">${ICON_CAM}${esc(photoCount(a))}</span>` : ''}</div></div>`;
+}
+
+export function albumCard(P, a) {
+  const p = parseDate(a.date);
+  return `<a class="alb" href="${albumUrl(P, a)}" data-cat="${esc(slugify(a.category || 'role'))}">
+  ${pile(P, a)}
+  <div class="alb-t"><div class="d"><b>${String(p.d).padStart(2, '0')}</b><span>${MONTHS_SHORT[p.m - 1].toUpperCase()}<br>${WEEKDAYS_SHORT[weekday(a.date)].toUpperCase()}</span></div><div><h3><span class="uw">${esc(a.title)}</span></h3>${a.venue || a.category ? `<p>${esc([a.venue, a.category].filter(Boolean).join(' · '))}</p>` : ''}</div></div>
+</a>`;
+}
+
+// The album's photos, whole, in rows of one height (site.css .jg); each opens the viewer
+// (site.js) and, without JavaScript, the photo itself. The viewer reads the album from the
+// data attributes.
+export function photoGrid(P, a) {
+  const ig = instagramOf(a.instagram);
+  const p = parseDate(a.date);
+  const n = (a.photos || []).length;
+  const attrs = [
+    ['album', a.id], ['title', a.title], ['when', `${String(p.d).padStart(2, '0')}/${String(p.m).padStart(2, '0')}`], ['venue', a.venue],
+    ['credit', a.photographer], ['handle', ig && ig.handle], ['mark', PHOTOS.mark ? '1' : ''],
+  ].filter(([, v]) => v).map(([k, v]) => ` data-${k}="${esc(v)}"`).join('');
+  return `<div class="jg"${attrs}>${(a.photos || []).map((ph, i) => `<a href="${esc(P.src(ph.src))}" data-n="${i + 1}" data-w="${ph.w}" data-h="${ph.h}" style="--w:${ph.w || 3};--h:${ph.h || 2}" aria-label="Foto ${i + 1} de ${n}"><img src="${esc(P.src(ph.thumb))}" alt="" width="${ph.w}" height="${ph.h}" loading="lazy" decoding="async"><span class="no">${String(i + 1).padStart(2, '0')}</span><span class="go" aria-hidden="true">↗</span></a>`).join('')}</div>`;
+}
+
+// The end of an album: post and tag the team, and whoever took the photos.
+export function tagMe(a) {
+  const ig = instagramOf(a.instagram);
+  return `<div class="tagme"><div class="badge" aria-hidden="true">${ring}${llamaUse('bh')}</div><div><p class="q">Saiu na foto? <span class="red">Posta e marca a gente.</span></p><p>Salva a foto em JPEG direto daqui e marca <b>@llama.etc</b>${ig ? ` e <b>@${esc(ig.handle)}</b>, que fotografou` : ''}.</p></div><a class="btn btn-solid" href="https://instagram.com/llama.etc" target="_blank" rel="noopener">Abrir o Instagram <span class="arr">↗</span></a></div>`;
 }
 
 /* ---------- artists ---------- */

@@ -4,7 +4,7 @@ import { esc, excerpt, stripMarkdown, isUpcoming, eventEnd, eventStop } from '..
 import { SITE } from '../config.js';
 import { createContext, pageContext } from './context.js';
 import {
-  homePage, agendaPage, eventPage, newsListPage, newsPage, interviewsPage, interviewPage, artistsPage, artistPage, sobrePage, contratePage, notFoundPage, offlinePage,
+  homePage, agendaPage, eventPage, newsListPage, newsPage, interviewsPage, interviewPage, artistsPage, artistPage, photosPage, albumPage, sobrePage, contratePage, notFoundPage, offlinePage,
 } from './pages.js';
 
 // Every page as { path, html }, plus the sitemap, feed and calendar files.
@@ -33,6 +33,8 @@ export function renderSite(data, opts) {
   for (const it of ctx.artists.filter((a) => !interviewIds.has(a.id))) {
     files.push({ path: `entrevistas/${it.id}/index.html`, html: redirectPage(ctx, `entrevistas/${it.id}/`, `artistas/${it.id}/`, it.name), redirect: true });
   }
+  page('fotos/index.html', photosPage);
+  for (const a of ctx.albums) page(`fotos/${a.id}/index.html`, (P) => albumPage(P, a));
   page('sobre/index.html', sobrePage);
   page('contrate/index.html', contratePage);
 
@@ -86,7 +88,7 @@ function manifests(ctx) {
 
 // One page for the admin's live preview. `route` is "home", "agenda",
 // "agenda/<id>", "noticias", "noticias/<id>", "entrevistas", "entrevistas/<id>", "artistas",
-// "artistas/<id>", "sobre" or "contrate". Returns null for unknown ids.
+// "artistas/<id>", "fotos", "fotos/<id>", "sobre" or "contrate". Returns null for unknown ids.
 export function renderPreview(data, opts, route) {
   const ctx = createContext(data, { ...opts, preview: true });
   const [type, id] = String(route || 'home').split('/');
@@ -112,6 +114,11 @@ export function renderPreview(data, opts, route) {
       if (!id) return artistsPage(P);
       const it = ctx.artists.find((x) => x.id === id);
       return it ? artistPage(P, it) : null;
+    }
+    case 'fotos': {
+      if (!id) return photosPage(P);
+      const a = ctx.albums.find((x) => x.id === id);
+      return a ? albumPage(P, a) : null;
     }
     case 'sobre': return sobrePage(P);
     case 'contrate': return contratePage(P);

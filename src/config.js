@@ -39,6 +39,10 @@ export function mediaUrl(path) {
   return `${MEDIA.base}/${String(path).split('/').map(encodeURIComponent).join('/')}`;
 }
 
+// The albums (Fotos). `max` photos per album; `mark`: the JPEG a visitor saves gets the
+// LLama Lab mark and the photographer's credit in a corner (assets/site.js), or not.
+export const PHOTOS = { max: 80, mark: false };
+
 // Images are resized to the largest box they're shown in on the site, times
 // IMAGE_DPR, and saved as WebP. `cover` slots are cropped to the box's aspect
 // ratio; `contain` slots keep the whole image and only shrink it. `kb` is each
@@ -58,6 +62,11 @@ export const IMAGE_SLOTS = {
   },
   pagina: { w: 880, h: 587, fit: 'cover', label: 'foto da página (3:2)', kb: 300 },
   inline: { w: 720, h: 960, fit: 'contain', label: 'imagem no texto', kb: 450 },
+  // An album's photo: 1080 px wide at most, what Instagram shows (a 2:3 portrait goes up to
+  // 1620 px tall), for visitors to save and post. Its small copy fills the album's rows
+  // (about 214 px tall on computers), times 2.
+  foto: { w: 540, h: 810, fit: 'contain', label: 'foto do álbum', kb: 320 },
+  fotoMini: { w: 330, h: 220, fit: 'contain', label: 'miniatura', kb: 70 },
 };
 
 // Pixel size an image should be stored at for a slot, given its source size.

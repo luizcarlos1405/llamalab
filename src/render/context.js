@@ -3,7 +3,7 @@
 import { COLLECTIONS } from '../schema.js';
 import { isUpcoming } from '../util.js';
 
-// data: { site, sobre, contrate, agenda[], noticias[], entrevistas[], artistas[] }
+// data: { site, sobre, contrate, agenda[], noticias[], entrevistas[], artistas[], fotos[] }
 // opts: { today, siteUrl, version, preview, assetUrl(path), imageSize(path), buildTime }
 // assetUrl(path) is an image's address when it isn't the page-relative one (the bucket's, a
 // draft's in the admin), or null.
@@ -17,6 +17,9 @@ export function createContext(data, opts) {
   // the catalog in its order (alphabetical); the newest profiles first, for the home page
   const artists = [...(data.artistas || [])].sort(COLLECTIONS.artistas.sort);
   const artistsNew = [...artists].sort((a, b) => String(b.date).localeCompare(String(a.date)) || COLLECTIONS.artistas.sort(a, b));
+  // the albums, newest first, each with photos; and which event each one covers
+  const albums = [...(data.fotos || [])].filter((a) => (a.photos || []).length).sort(COLLECTIONS.fotos.sort);
+  const albumOf = new Map(albums.filter((a) => a.event).map((a) => [a.event, a]));
   const ivNumber = new Map();
   [...interviews].reverse().forEach((it, i) => ivNumber.set(it.id, i + 1));
   return {
@@ -31,6 +34,8 @@ export function createContext(data, opts) {
     ivNumber,
     artists,
     artistsNew,
+    albums,
+    albumOf,
     siteUrl: String(opts.siteUrl || '').replace(/\/+$/, ''),
     version: opts.version || '',
     preview: Boolean(opts.preview),

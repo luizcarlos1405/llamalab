@@ -7,7 +7,7 @@ import { todayISO, addDays, weekday, eventEnd, parseDate } from '../util.js';
 import { h, add, clear, toast, debounce } from './dom.js';
 import * as store from './store.js';
 import { carousel, paint, dateParts, eventTitle, eventBody, blurb, DEFAULT_LINE, W, H } from './post-draw.js';
-import { zip } from './zip.js';
+import { zip } from '../zip.js';
 
 const MAX_SLIDES = 20; // the most Instagram takes in one post
 const QUALITY = 0.92;

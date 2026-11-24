@@ -12,6 +12,11 @@
 // Text and url fields can also require a `pattern` (a RegExp), explained to the
 // editor by `patternMessage`.
 //
+// Three more types, for the albums (Fotos): `photos` (a list of { src, thumb, w, h }: the
+// photo and its small copy, both repository-style paths of images in the bucket), `event` (an
+// agenda event's id) and `hidden` (a text the form doesn't show; the album's cover, which the
+// photos field picks).
+//
 // Image fields hold null or { src, alt, w, h, credit?, focus? }, where `src` is
 // a repository path such as "images/agenda/noite-do-rock.webp", w/h are the
 // stored pixel size and `focus` is a CSS object-position such as "50% 30%".
@@ -19,6 +24,7 @@
 // ![texto alternativo](images/noticias/foo.webp "legenda").
 
 import { SPOTIFY_PLAYLIST } from './util.js';
+import { PHOTOS } from './config.js';
 
 const EVENT_TYPES = ['Show', 'Festa', 'Festival', 'Teatro', 'Sarau', 'Exposição', 'Feira', 'Oficina', 'Cinema', 'Dança', 'Circo', 'Literatura', 'Encontro'];
 const NEWS_KICKERS = ['Cena', 'Editais', 'Festivais', 'Formação', 'Música', 'Teatro', 'Artes visuais', 'Literatura', 'Cinema', 'Políticas culturais'];
@@ -159,6 +165,38 @@ export const COLLECTIONS = {
       { key: 'author', label: 'Autoria', type: 'text', maxLength: 60 },
     ],
   },
+  // Event coverage (#7, 24/11/2026): one album per event, 30 to 50 photos, for visitors to save
+  // and post on Instagram. They stay for good, as the events do. The photos live in the bucket
+  // (src/config.js MEDIA); this file only lists them.
+  fotos: {
+    name: 'fotos',
+    file: 'data/fotos.json',
+    label: 'Fotos',
+    singular: 'álbum',
+    newLabel: 'Novo álbum',
+    about: 'A cobertura dos rolês: um álbum por evento, com as fotos que o público salva e posta no Instagram. Escolha o evento da agenda e adicione as fotos de uma vez.',
+    allLabel: 'Todos',
+    route: 'fotos',
+    imageDir: 'images/fotos',
+    titleKey: 'title',
+    idFrom: (item) => [item.title, item.date].filter(Boolean).join(' '),
+    sort: (a, b) => cmp(b.date, a.date) || cmp(a.title, b.title),
+    fields: [
+      { key: 'event', label: 'Evento da agenda', type: 'event', group: 'O rolê', hint: 'Puxa o nome, a data e o local. O álbum também aparece na página do evento. Rolê que não está na agenda? Deixe em branco e preencha abaixo.' },
+      { key: 'title', label: 'Nome do álbum', type: 'text', required: true, maxLength: 90, group: 'O rolê', placeholder: 'Baile de Máscaras' },
+      { key: 'date', label: 'Data', type: 'date', required: true, group: 'O rolê' },
+      { key: 'venue', label: 'Local', type: 'text', maxLength: 60, group: 'O rolê', placeholder: 'Galpão 7' },
+      { key: 'category', label: 'Tipo', type: 'text', suggestions: EVENT_TYPES, maxLength: 24, group: 'O rolê', placeholder: 'Show, festa…' },
+      { key: 'photographer', label: 'Nome', type: 'text', maxLength: 60, group: 'Quem fotografou', placeholder: 'Quem fez as fotos' },
+      {
+        key: 'instagram', label: 'Instagram', type: 'text', maxLength: 80, group: 'Quem fotografou', placeholder: '@perfil',
+        pattern: /^(@?[\w.]{1,30}|https?:\/\/(www\.)?instagram\.com\/[\w.]{1,30}\/?)$/i,
+        patternMessage: 'use o @ do perfil, como @llama.etc.',
+      },
+      { key: 'photos', label: 'Fotos', type: 'photos', required: true, max: PHOTOS.max, hint: 'Arraste para mudar a ordem. Toque numa foto para escolher a capa ou tirar do álbum.' },
+      { key: 'cover', label: 'Capa', type: 'hidden' },
+    ],
+  },
 };
 
 export const SINGLETONS = {
@@ -292,6 +330,7 @@ export function emptyValue(field) {
     case 'boolean': return false;
     case 'image': return null;
     case 'strings':
+    case 'photos':
     case 'repeater': return [];
     case 'group': return emptyItem(field.fields);
     default: return '';
@@ -332,6 +371,11 @@ function normalizeValue(field, v) {
       return img;
     }
     case 'strings': return Array.isArray(v) ? v.map((s) => String(s ?? '')) : [];
+    case 'photos': {
+      if (!Array.isArray(v)) return [];
+      return v.filter((p) => p && typeof p === 'object' && p.src)
+        .map((p) => ({ src: String(p.src), thumb: String(p.thumb || p.src), w: Number(p.w) || 0, h: Number(p.h) || 0 }));
+    }
     case 'repeater': return Array.isArray(v) ? v.map((row) => normalize(field.fields, row)) : [];
     case 'group': return normalize(field.fields, v);
     default: return v === undefined || v === null ? '' : String(v);
@@ -356,7 +400,7 @@ export function validate(fields, value, path = '') {
     if (field.type === 'time' && !/^\d{2}:\d{2}$/.test(v)) problems.push({ path: p, field, message: `${field.label}: horário inválido.` });
     if (field.type === 'url' && !/^https?:\/\/\S+$/i.test(v)) problems.push({ path: p, field, message: `${field.label}: use um endereço completo, começando com https://` });
     else if (field.pattern && !field.pattern.test(String(v).trim())) problems.push({ path: p, field, message: `${field.label}: ${field.patternMessage || 'formato inválido.'}` });
-    if (field.type === 'repeater' && field.max && v.length > field.max) problems.push({ path: p, field, message: `${field.label}: no máximo ${field.max}.` });
+    if ((field.type === 'repeater' || field.type === 'photos') && field.max && v.length > field.max) problems.push({ path: p, field, message: `${field.label}: no máximo ${field.max}.` });
     if (field.type === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) problems.push({ path: p, field, message: `${field.label}: e-mail inválido.` });
     if (field.type === 'strings' && field.maxLength) {
       v.forEach((s, i) => {
@@ -372,7 +416,7 @@ export function validate(fields, value, path = '') {
 function isBlank(field, v) {
   if (v === undefined || v === null) return true;
   if (field.type === 'image') return !v.src;
-  if (field.type === 'strings' || field.type === 'repeater') return v.length === 0;
+  if (field.type === 'strings' || field.type === 'repeater' || field.type === 'photos') return v.length === 0;
   if (field.type === 'boolean' || field.type === 'group') return false;
   return String(v).trim() === '';
 }

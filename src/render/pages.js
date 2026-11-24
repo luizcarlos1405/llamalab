@@ -8,6 +8,7 @@ import { layout } from './layout.js';
 import {
   split, ribbons, stage, pageHero, breadcrumbs, img, row, posterFollower, calendar, calendarList, eventUrl, eventLine, card, interviewUrl, interviewNo,
   quoteHtml, newsFeature, newsItem, chips, categoriesOf, shareBox, badge, rolêLink, llama, wordmark, hash,
+  albumUrl, albumCard, albumCover, photoCount, photoGrid, pile, tagMe, instagramOf, ICON_SAVE, ICON_SHARE,
 } from './parts.js';
 
 const md = (P, text) => renderMarkdown(text, { url: P.url, image: (p) => P.imageSize(p) });
@@ -211,6 +212,7 @@ export function eventPage(P, ev) {
     : `<div class="media-glow" data-r style="--d:200ms"><div class="poster on" data-v="${v}" style="position:relative;width:min(100%,380px);height:auto;aspect-ratio:25/33;scale:1;margin:0 auto"><div class="art"></div><div class="pi"><div class="pv">${esc(ev.category || 'Rolê')}</div><div><div class="pd">${String(p.d).padStart(2, '0')}</div><div class="pv" style="margin:8px 0 14px">${esc(MONTHS[p.m - 1].slice(0, 3).toUpperCase())} · ${esc(WEEKDAYS[weekday(ev.date)].slice(0, 3).toUpperCase())}</div><div class="pt">${esc(ev.title)}</div></div><div class="pv">${esc(ev.venue || 'Dourados')}</div></div></div></div>`;
   const others = P.upcoming.filter((e) => e.id !== ev.id).slice(0, 4);
   const url = P.canonical;
+  const album = P.albumOf.get(ev.id);
   const hero = `<section class="phero">
   ${stage()}
   <div class="phero-in phero-grid">
@@ -220,7 +222,8 @@ export function eventPage(P, ev) {
       <h1 class="h2 ${titleSize(ev.title, 20, 40)}" data-split>${split(ev.title)}</h1>
       <div class="when" data-r style="--d:150ms"><b>${String(p.d).padStart(2, '0')}</b><span>${esc(MONTHS[p.m - 1])} · ${p.y}<small>${esc(WEEKDAYS[weekday(ev.date)])}${ev.time ? ` · ${esc(fmtHours(ev))}` : ''}${multi ? ` · até ${esc(fmtShort(ev.endDate, false))}` : ''}</small><small>${esc(ev.venue || ev.city || '')}</small></span></div>
       <div class="btns" data-r style="--d:250ms;margin-top:30px">
-        ${ev.link ? `<a class="btn btn-red" href="${esc(ev.link)}" target="_blank" rel="noopener">${esc(ev.linkLabel || 'Mais informações')} <span class="arr">→</span></a>` : ''}
+        ${album ? `<a class="btn btn-red" href="${albumUrl(P, album)}">Ver as ${esc(photoCount(album))} <span class="arr">→</span></a>` : ''}
+        ${ev.link ? `<a class="btn ${album ? 'btn-ghost' : 'btn-red'}" href="${esc(ev.link)}" target="_blank" rel="noopener">${esc(ev.linkLabel || 'Mais informações')} <span class="arr">→</span></a>` : ''}
         ${past ? '' : `<a class="btn btn-solid" href="${esc(googleCalendarLink(ev))}" target="_blank" rel="noopener">Salvar na agenda <span class="arr">→</span></a>`}
         <button class="btn btn-ghost" type="button" data-share="${esc(url)}" data-title="${esc(ev.title)}">Compartilhar</button>
       </div>
@@ -238,6 +241,7 @@ export function eventPage(P, ev) {
     </div>
     <aside class="aside">${shareBox(P, ev.title, url)}${past ? '' : `<div class="box"><b>Salvar</b><a href="${esc(googleCalendarLink(ev))}" target="_blank" rel="noopener">Google Agenda ↗</a><a href="${P.href(`agenda/${ev.id}/evento.ics`)}" download>Apple, Outlook (.ics)</a></div>`}<div class="box k"><b>Agenda</b><a href="${P.href('agenda/')}">Todos os rolês →</a></div></aside>
   </div>
+  ${album ? eventPhotos(P, album) : ''}
   ${others.length ? `<div class="wrap" style="margin-top:clamp(70px,8vw,120px)"><div class="more-head"><h2 class="h2 xs">Mais rolês</h2><a class="link" href="${P.href('agenda/')}">Agenda completa →</a></div><div class="dates-wrap"><ol class="dates">${others.map((e, i) => row(P, e, i)).join('')}</ol>${posterFollower()}</div></div>` : ''}
 </section>`;
   const ld = {
@@ -263,6 +267,128 @@ export function eventPage(P, ev) {
     main,
     head: jsonLd(ld),
     edit: `agenda/${ev.id}`,
+  });
+}
+
+// The event's album on its page: its first photos, and the rest behind a "+35".
+function eventPhotos(P, a) {
+  const shown = a.photos.slice(0, 5);
+  const more = a.photos.length - shown.length;
+  const ig = instagramOf(a.instagram);
+  return `<div class="ev-photos" data-r><div class="more-head"><h2 class="h2 xs">Fotos do rolê</h2><a class="link" href="${albumUrl(P, a)}">Ver as ${esc(photoCount(a))} →</a></div>
+  <div class="strip">${shown.map((p, i) => `<a href="${albumUrl(P, a)}#foto-${i + 1}" aria-label="Foto ${i + 1} de ${a.photos.length}"><img src="${esc(P.src(p.thumb))}" alt="" width="${p.w}" height="${p.h}" loading="lazy" decoding="async"></a>`).join('')}${more > 0 ? `<a class="more" href="${albumUrl(P, a)}"><b>+${more}</b><span>${a.photographer ? `Fotos: ${esc(a.photographer)}` : ig ? `@${esc(ig.handle)}` : 'Ver todas'}</span><i aria-hidden="true">→</i></a>` : ''}</div></div>`;
+}
+
+/* ================= FOTOS (event coverage, at /fotos/) ================= */
+
+// The albums, newest first, by month: each month a block the type filter can hide whole.
+export function photosPage(P) {
+  const latest = P.albums[0];
+  const lead = 'Os rolês de Dourados pelas lentes da LLama Lab. Se achou? Salva, posta e marca a @llama.etc.';
+  const hero = `<section class="phero">
+  ${stage()}<div class="flash" aria-hidden="true"></div>
+  <div class="phero-in${latest ? ' phero-grid' : ''}">
+    <div>
+      ${breadcrumbs(P, [['Fotos']])}
+      <p class="eyebrow">Cobertura dos rolês</p>
+      <h1 class="h2" data-split>${split('Fotos')}</h1>
+      <p class="lead" data-r style="--d:200ms">${esc(lead)}</p>
+      ${latest ? latestPill(P, latest) : ''}
+    </div>
+    ${latest ? `<a class="media-glow" href="${albumUrl(P, latest)}" aria-label="${esc(`${latest.title}, ${photoCount(latest)}`)}" data-r style="--d:200ms">${pile(P, latest, { count: false, eager: true })}</a>` : ''}
+  </div>
+  <div class="noise"></div>
+</section>`;
+  const months = new Map();
+  for (const a of P.albums) {
+    const key = a.date.slice(0, 7);
+    if (!months.has(key)) months.set(key, []);
+    months.get(key).push(a);
+  }
+  const blocks = [...months.entries()].map(([key, list]) => {
+    const [y, m] = key.split('-').map(Number);
+    return `<div class="month-block fm"><div class="month-h"><h2>${esc(MONTHS[m - 1])}</h2><span>${y}</span></div><div class="albs">${list.map((a) => albumCard(P, a)).join('')}</div></div>`;
+  }).join('');
+  const foot = `<div class="fotos-foot"><p><b>Teve rolê e quer cobertura?</b> A LLama Lab fotografa shows, festas e festivais de Dourados e região.</p><a class="btn btn-k" href="${P.href('contrate/')}">Chamar a LLama <span class="arr">→</span></a></div>`;
+  const content = P.albums.length
+    ? `${chips(categoriesOf(P.albums, 'category'), 'Filtrar por tipo de rolê')}${blocks}${foot}`
+    : `<div class="empty"><p class="h3">Nenhum álbum por enquanto.</p><p>As fotos dos rolês que a LLama Lab cobre chegam aqui, para você achar a sua, salvar e postar.</p><a class="btn btn-k" href="${P.href('contrate/')}">Quero cobertura no meu rolê <span class="arr">→</span></a></div>`;
+  const main = `${hero}
+<section class="panel light sec"><div class="wrap">${content}</div></section>`;
+  return layout(P, {
+    title: 'Fotos',
+    description: 'Fotos dos rolês de Dourados e região: shows, festas e festivais, pelas lentes da LLama Lab. Salve, poste e marque a @llama.etc.',
+    image: latest ? albumImage(latest) : null,
+    current: 'fotos',
+    main,
+    edit: 'fotos',
+  });
+}
+
+function latestPill(P, a) {
+  const p = parseDate(a.date);
+  return `<a class="next" href="${albumUrl(P, a)}"><b>${String(p.d).padStart(2, '0')}</b><span><small>Último álbum · ${esc(WEEKDAYS[weekday(a.date)].split('-')[0])} ${p.d}/${p.m}</small><em>${esc(a.title)} · ${esc(photoCount(a))}</em></span></a>`;
+}
+
+// The cover, full size, for link previews.
+function albumImage(a) {
+  const c = albumCover(a);
+  return c ? { src: c.src, w: c.w, h: c.h, alt: `${a.title}: uma das fotos` } : null;
+}
+
+export function albumPage(P, a) {
+  const p = parseDate(a.date);
+  const ev = a.event ? P.events.find((e) => e.id === a.event) : null;
+  const ig = instagramOf(a.instagram);
+  const more = P.albums.filter((x) => x.id !== a.id).slice(0, 3);
+  const when = `${esc(MONTHS[p.m - 1])} · ${p.y}<small>${esc(WEEKDAYS[weekday(a.date)])}${ev && ev.time && ev.date === a.date ? ` · ${esc(fmtTime(ev.time))}` : ''}</small>${a.venue ? `<small>${esc(a.venue)}</small>` : ''}`;
+  const credit = a.photographer || ig
+    ? `<p class="byline">Fotos${a.photographer ? `: ${esc(a.photographer)}` : ''}${ig ? ` · <a href="${esc(ig.url)}" target="_blank" rel="noopener">@${esc(ig.handle)}</a>` : ''}</p>`
+    : '';
+  const hero = `<section class="phero">
+  ${stage()}<div class="flash" aria-hidden="true" style="--fx:74%;--fy:38%"></div>
+  <div class="phero-in phero-grid">
+    <div>
+      ${breadcrumbs(P, [['Fotos', P.href('fotos/')], [excerpt(a.title, 40)]])}
+      <div class="tags">${a.category ? `<span class="tag">${esc(a.category)}</span>` : ''}<span class="tag r">${esc(photoCount(a))}</span></div>
+      <h1 class="h2 ${titleSize(a.title, 20, 40)}" data-split>${split(a.title)}</h1>
+      <div class="when" data-r style="--d:150ms"><b>${String(p.d).padStart(2, '0')}</b><span>${when}</span></div>
+      ${credit}
+      <div class="btns" data-r style="--d:250ms;margin-top:28px">
+        <a class="btn btn-solid" href="#fotos">Ver as fotos <span class="arr">↓</span></a>
+        ${ev ? `<a class="btn btn-ghost" href="${eventUrl(P, ev)}">O evento</a>` : ''}
+        <button class="btn btn-ghost sh" type="button" data-share="${esc(P.canonical)}" data-title="${esc(a.title)}" aria-label="Compartilhar o álbum">${ICON_SHARE}<span>Compartilhar</span></button>
+      </div>
+    </div>
+    <div class="media-glow" data-r style="--d:200ms">${pile(P, a, { count: false, eager: true })}</div>
+  </div>
+  <div class="noise"></div>
+</section>`;
+  const main = `${hero}
+<section class="panel light sec" id="fotos"><div class="wrap">
+  <div class="ph-head"><div><h2 class="h2 xs">${esc(photoCount(a))}</h2><p>Toque numa foto para ver grande e salvar.</p></div><button class="btn btn-ghost btn-sm dl" type="button" data-zip hidden>${ICON_SAVE} Baixar todas (.zip)</button></div>
+  ${photoGrid(P, a)}
+  ${tagMe(a)}
+  ${more.length ? `<div class="more-fotos"><div class="more-head"><h2 class="h2 xs">Mais fotos</h2><a class="link" href="${P.href('fotos/')}">Todos os álbuns →</a></div><div class="albs row-x">${more.map((x) => albumCard(P, x)).join('')}</div></div>` : ''}
+</div></section>`;
+  const ld = {
+    '@context': 'https://schema.org',
+    '@type': 'ImageGallery',
+    name: a.title,
+    datePublished: a.date,
+    ...(albumCover(a) ? { image: [P.absSrc(albumCover(a).src)] } : {}),
+    ...(a.photographer ? { author: { '@type': 'Person', name: a.photographer } } : {}),
+    publisher: { '@type': 'Organization', name: 'LLama Lab' },
+  };
+  return layout(P, {
+    title: `Fotos: ${a.title}`,
+    description: `${a.title}: ${photoCount(a)}${a.venue ? `, em ${a.venue}` : ''}, ${p.d}/${p.m}/${p.y}${a.photographer ? `, por ${a.photographer}` : ''}. Salve, poste e marque a @llama.etc.`,
+    image: albumImage(a),
+    type: 'article',
+    current: 'fotos',
+    main,
+    head: jsonLd(ld),
+    edit: `fotos/${a.id}`,
   });
 }
 

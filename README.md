@@ -20,7 +20,7 @@ data/*.json  ──>  scripts/build.mjs  ──>  _site/  ──>  GitHub Pages
 ```
 
 - **Content** is one JSON file per type in `data/`: `agenda.json`, `noticias.json` (the Radar Cultural),
-  `entrevistas.json` and `artistas.json` (arrays of items), plus `site.json` (home page, ribbons, the footer's call to action and text, contacts, the radio's stations), `sobre.json` and
+  `entrevistas.json`, `artistas.json` and `fotos.json` (the albums; arrays of items), plus `site.json` (home page, ribbons, the footer's call to action and text, contacts, the radio's stations), `sobre.json` and
   `contrate.json`. Fields are defined once in [`src/schema.js`](src/schema.js), which drives the admin forms, the
   validation and the build. Long texts use the small Markdown subset in [`src/markdown.js`](src/markdown.js).
   Entrevistas are the team's longer, journalistic pieces about someone; Artistas is a catalog of short profiles
@@ -36,6 +36,8 @@ data/*.json  ──>  scripts/build.mjs  ──>  _site/  ──>  GitHub Pages
   preview. The build also writes `sitemap.xml`, `feed.xml` (RSS), an `.ics` file per event and `version.json`.
 - **Daily rebuild:** the Actions workflow also runs every night, so events that already happened leave the home
   page and the agenda without anyone publishing.
+- **Fotos:** albums of the events the team covers, with a viewer that saves each photo as a JPEG for Instagram
+  (see [Fotos](#fotos)).
 - **A broken version doesn't go live:** in GitHub Actions, the build fails when the content points to an image
   that isn't in the bucket nor in the repository, and the site keeps its last good version (see
   [When a deploy fails](#when-a-deploy-fails)).
@@ -139,6 +141,36 @@ US$ 0.015 per GB a month, with free traffic. The repository only has the data.
 - **The public address** is the bucket's `r2.dev` one for now. Cloudflare rate-limits it and calls it dev-only, which
   is fine for this site's traffic. `fotos.llamalab.com.br` needs the domain's DNS in Cloudflare: see
   [Custom domain](#custom-domain).
+
+## Fotos
+
+The team's coverage of the events, one album per event (30 to 50 photos), for the public to find themselves,
+save the photos and post them on Instagram. Albums stay on the site for good, like the events.
+
+- **`/fotos/`:** the albums, newest first, by month, with a filter by type of event. Each album is a pile of three of
+  its photos (the cover on top) that fans out on hover. On top, the latest album; a camera flash goes off on the
+  stage now and then (opacity only, off in the light version and with reduced motion).
+- **`/fotos/<album>/`:** every photo whole, in rows of one height, in the order they were taken, with its number on
+  hover ("a 23 sou eu"). The album's event, date and place, and who took the photos with their Instagram. At the end,
+  an invitation to post and tag @llama.etc and the photographer, and more albums.
+- **The viewer** ([`assets/site.js`](assets/site.js)): the photo large, on black. On phones a swipe goes to the
+  next one, and the neighbours peek at the edges; on computers the arrows, the keyboard and a strip of small photos.
+  The address follows it (`#foto-12`), so a photo can be linked to, and the back button closes it.
+  - **Salvar foto** makes a JPEG of the photo in the browser (phones and Instagram handle it best): on iPhone it goes
+    to the share sheet, the only way into Photos ("Salvar imagem"); on Android and computers it downloads.
+  - **Compartilhar** sends the file to Instagram or WhatsApp, where the browser can share files, or the photo's link.
+  - **Baixar todas** (computers): a .zip of the album as JPEGs, for the artists of the night.
+  - `PHOTOS.mark` in [`src/config.js`](src/config.js) puts a small LLama Lab mark and the photographer's credit in
+    a corner of the saved JPEG. Off for now; the files in the bucket never change either way.
+- **On the event's page:** "Ver as 40 fotos" leads its buttons, and a strip of the first photos sits before "Mais
+  rolês". In the agenda's "Já rolou", an event with an album shows its photo count, in red.
+- **Sizes:** each photo is saved 1080 px wide at most (what Instagram shows; a 2:3 portrait goes to 1620 px tall),
+  about 100 to 300 KB as WebP, plus a small copy (440 px tall) for the rows: about 6 to 15 MB an album.
+- **In the admin:** the Fotos tab. Picking the event from the agenda fills in the album's name, date, place and type.
+  The photos go in at once (up to 80, `PHOTOS.max`), in the order of their file names; each is resized on the
+  device and goes up while the editor fills in the rest, with how it's doing on its square (up, going up, waiting,
+  or failed with a retry). Dragging reorders them (the arrows too, on phones); a tap picks the cover or takes one
+  out. An album only publishes once its photos are up, and needs the bucket (see above).
 
 ## Offline and installing
 
@@ -398,5 +430,6 @@ src/render/           page templates, shared by the build and the admin preview
 src/sw.js             the service worker (offline copies), completed by the build
 src/admin/            the CMS: GitHub client, drafts store, forms, image processing, the Instagram post, the
                       connection (net.js)
+src/zip.js            the .zip writer (an album's photos, the Instagram post's slides)
 .github/workflows/    build and deploy to Pages
 ```

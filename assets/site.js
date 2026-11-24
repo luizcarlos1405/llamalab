@@ -190,7 +190,334 @@
     }
   });
 
+
+  /* The photo viewer, on an album's page (/fotos/<album>/): the photos large, on black. On
+     phones a swipe goes to the next one (its neighbours peek at the edges); on computers the
+     arrows, the keyboard and a strip of small photos. The address follows it (#foto-12), so a
+     photo can be linked to, and the back button closes it. "Salvar foto" turns the photo into
+     a JPEG, what phones and Instagram handle best: on iPhone it goes to the share sheet ("Salvar
+     imagem", Instagram), the only way into Photos; elsewhere it downloads. Without JavaScript
+     each photo is a link to itself. */
+  const ICON_SAVE = '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg>';
+  const ICON_SEND = '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7M16 7l-4-4-4 4M12 3v12"/></svg>';
+  const vw = { el: null, album: null, items: [], i: 0, pushed: false, back: null, closing: false };
+  let offHash = null;
+  const nn = (n) => String(n).padStart(2, '0');
+  const fileName = (album, n) => `llamalab-${album.album || 'foto'}-${nn(n)}.jpg`;
+
+  // The photo as a JPEG (a File, ready to share or download), with the LLama Lab mark when the
+  // site asks for it (src/config.js PHOTOS.mark).
+  async function jpeg(item, album) {
+    const res = await fetch(item.full, { mode: 'cors', credentials: 'omit' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const blob = await res.blob();
+    let pic;
+    try {
+      pic = await createImageBitmap(blob);
+    } catch {
+      pic = new Image();
+      pic.src = URL.createObjectURL(blob);
+      await pic.decode();
+    }
+    const canvas = d.createElement('canvas');
+    canvas.width = pic.naturalWidth || pic.width;
+    canvas.height = pic.naturalHeight || pic.height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(pic, 0, 0);
+    if (pic.close) pic.close();
+    else URL.revokeObjectURL(pic.src);
+    if (album.mark) await mark(ctx, canvas.width, canvas.height, album);
+    const out = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.92));
+    return new File([out], fileName(album, item.n), { type: 'image/jpeg' });
+  }
+
+  // The mark: the llama and "LLama Lab · @llama.etc", small, at the bottom left, with whoever
+  // took the photo.
+  async function mark(ctx, w, h, album) {
+    const sym = d.getElementById('ll-sym');
+    const u = Math.max(w, h) / 1080;
+    const x = Math.round(28 * u);
+    const y = h - Math.round(30 * u);
+    if (sym) {
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${sym.getAttribute('viewBox')}">${sym.innerHTML}</svg>`;
+      const img = new Image();
+      img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+      await img.decode().catch(() => {});
+      const lh = 62 * u;
+      ctx.save();
+      ctx.shadowColor = 'rgba(0,0,0,.5)';
+      ctx.shadowBlur = 10 * u;
+      if (img.naturalWidth) ctx.drawImage(img, x, y - lh, lh * (119.9 / 193), lh);
+      ctx.restore();
+    }
+    await Promise.all([d.fonts.load(`${Math.round(30 * u)}px Anton`), d.fonts.load(`600 ${Math.round(15 * u)}px Outfit`)]).catch(() => {});
+    ctx.save();
+    ctx.fillStyle = '#fff';
+    ctx.shadowColor = 'rgba(0,0,0,.6)';
+    ctx.shadowBlur = 8 * u;
+    const tx = x + (sym ? 48 * u : 0);
+    ctx.font = `${Math.round(30 * u)}px Anton, Impact, sans-serif`;
+    ctx.fillText('LLAMA LAB', tx, y - 26 * u);
+    ctx.font = `600 ${Math.round(15 * u)}px Outfit, sans-serif`;
+    ctx.fillText(`@LLAMA.ETC${album.credit ? ` · FOTO ${album.credit.toUpperCase()}` : ''}`, tx, y - 4 * u);
+    ctx.restore();
+  }
+
+  function download(file) {
+    const a = d.createElement('a');
+    a.href = URL.createObjectURL(file);
+    a.download = file.name;
+    d.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 30000);
+  }
+
+  const canShareFile = (file) => Boolean(navigator.canShare && navigator.share && navigator.canShare({ files: [file] }));
+
+  async function busy(btn, fn) {
+    if (btn.classList.contains('busy')) return;
+    btn.classList.add('busy');
+    try {
+      await fn();
+    } catch (error) {
+      if (!error || error.name !== 'AbortError') toast(navigator.onLine ? 'Não deu para preparar a foto. Tente de novo.' : 'Sem internet: a foto não veio.');
+    } finally {
+      btn.classList.remove('busy');
+    }
+  }
+
+  function buildViewer() {
+    const el = d.createElement('div');
+    el.className = 'vw';
+    el.hidden = true;
+    el.setAttribute('role', 'dialog');
+    el.setAttribute('aria-modal', 'true');
+    el.innerHTML = `<div class="vw-top"><p class="vw-n" aria-live="polite"><b></b><span></span></p><button class="vw-x" type="button" aria-label="Fechar">×</button></div>
+  <div class="vw-stage"><div class="vw-track"></div><button class="vw-prev" type="button" aria-label="Foto anterior">←</button><button class="vw-next" type="button" aria-label="Próxima foto">→</button><p class="vw-msg" role="status" hidden></p></div>
+  <div class="vw-foot"><div class="vw-cred"></div><div class="vw-film" aria-hidden="true"></div><div class="vw-act"><button class="btn btn-solid" type="button" data-save>${ICON_SAVE} Salvar foto</button><button class="btn btn-ghost" type="button" data-send>${ICON_SEND} Compartilhar</button></div></div>`;
+    d.body.append(el);
+    $('.vw-x', el).addEventListener('click', () => closeViewer());
+    $('.vw-prev', el).addEventListener('click', () => show(vw.i - 1));
+    $('.vw-next', el).addEventListener('click', () => show(vw.i + 1));
+    $('.vw-film', el).addEventListener('click', (e) => {
+      const t = e.target.closest('[data-n]');
+      if (t) show(+t.dataset.n - 1);
+    });
+    $('[data-save]', el).addEventListener('click', (e) => busy(e.currentTarget, async () => {
+      const file = await jpeg(vw.items[vw.i], vw.album);
+      if (IOS && canShareFile(file)) await navigator.share({ files: [file] });
+      else {
+        download(file);
+        toast('Foto salva ✺');
+      }
+    }));
+    $('[data-send]', el).addEventListener('click', (e) => busy(e.currentTarget, async () => {
+      const url = location.href;
+      if (navigator.share) {
+        const file = await jpeg(vw.items[vw.i], vw.album).catch(() => null);
+        if (file && canShareFile(file)) {
+          await navigator.share({ files: [file], title: vw.album.title || d.title });
+          return;
+        }
+        await navigator.share({ title: vw.album.title || d.title, url });
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      toast('Link da foto copiado ✺');
+    }));
+    // a swipe: the photos follow the finger, and past a third of a photo (or a quick flick) the
+    // next one comes; pinching still zooms
+    const stage = $('.vw-stage', el);
+    const track = $('.vw-track', el);
+    let drag = null;
+    stage.addEventListener('pointerdown', (e) => {
+      if (e.pointerType === 'mouse' || e.target.closest('button')) return;
+      drag = { x: e.clientX, y: e.clientY, t: Date.now(), id: e.pointerId, dx: 0, on: false };
+    });
+    stage.addEventListener('pointermove', (e) => {
+      if (!drag || e.pointerId !== drag.id) return;
+      const dx = e.clientX - drag.x;
+      if (!drag.on && Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(e.clientY - drag.y)) {
+        drag.on = true;
+        track.classList.add('drag');
+        stage.setPointerCapture(e.pointerId);
+      }
+      if (drag.on) {
+        drag.dx = dx;
+        track.style.setProperty('--dx', `${dx}px`);
+      }
+    });
+    const end = () => {
+      if (!drag) return;
+      const { dx, t, on } = drag;
+      drag = null;
+      track.classList.remove('drag');
+      track.style.setProperty('--dx', '0px');
+      if (!on) return;
+      const quick = Math.abs(dx) > 30 && Date.now() - t < 280;
+      if (Math.abs(dx) > stage.clientWidth / 3 || quick) show(vw.i + (dx < 0 ? 1 : -1));
+    };
+    stage.addEventListener('pointerup', end);
+    stage.addEventListener('pointercancel', end);
+    // keyboard: arrows, Esc, and Tab stays inside (wherever the focus is while it's open)
+    d.addEventListener('keydown', (e) => {
+      if (!viewerOpen() || e.altKey || e.ctrlKey || e.metaKey) return;
+      if (e.key === 'ArrowRight') show(vw.i + 1);
+      else if (e.key === 'ArrowLeft') show(vw.i - 1);
+      else if (e.key === 'Escape') closeViewer();
+      else if (e.key === 'Tab') {
+        const focusable = $$('button,a[href]', el).filter((b) => b.offsetParent !== null);
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && d.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && d.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      } else return;
+      e.stopPropagation();
+    }, true);
+    return el;
+  }
+
+  // The photos near the one in sight get their large version (the small one shows meanwhile).
+  function load(i) {
+    const fig = vw.el && $$('.vw-track figure', vw.el)[i];
+    const item = vw.items[i];
+    if (!fig || !item) return;
+    const img = $('img', fig);
+    if (!img.src) img.src = item.thumb;
+    if (fig.dataset.full) return;
+    fig.dataset.full = '1';
+    const big = new Image();
+    big.onload = () => {
+      img.src = item.full;
+    };
+    big.src = item.full;
+  }
+
+  function show(i, { first = false } = {}) {
+    const n = vw.items.length;
+    if (!n) return;
+    vw.i = Math.max(0, Math.min(n - 1, i));
+    const { el, album } = vw;
+    const item = vw.items[vw.i];
+    const figs = $$('.vw-track figure', el);
+    figs.forEach((f, k) => f.classList.toggle('on', k === vw.i));
+    $('.vw-track', el).style.setProperty('--i', vw.i);
+    $('.vw-n b', el).textContent = item.n;
+    $('.vw-n span', el).textContent = `de ${n}${album.title ? ` · ${album.title}` : ''}`;
+    $('.vw-prev', el).disabled = vw.i === 0;
+    $('.vw-next', el).disabled = vw.i === n - 1;
+    for (const k of [vw.i, vw.i + 1, vw.i - 1, vw.i + 2]) load(k);
+    const from = Math.max(0, Math.min(vw.i - 5, n - 11));
+    $('.vw-film', el).innerHTML = vw.items.slice(from, from + 11).map((it) => `<i data-n="${it.n}"${it === item ? ' class="on"' : ''} style="background-image:url('${it.thumb.replace(/'/g, '%27')}')"></i>`).join('');
+    if (!first) history.replaceState(history.state, '', `#foto-${item.n}`);
+  }
+
+  function openViewer(album, items, i, from, { push = true } = {}) {
+    if (!vw.el) vw.el = buildViewer();
+    const { el } = vw;
+    vw.album = album;
+    vw.items = items;
+    vw.back = from;
+    el.setAttribute('aria-label', `Fotos: ${album.title || ''}`);
+    $('.vw-track', el).innerHTML = items.map((it) => `<figure><img alt="Foto ${it.n} de ${items.length}" width="${it.w}" height="${it.h}" decoding="async"></figure>`).join('');
+    const ig = album.handle ? ` · <a href="https://instagram.com/${encodeURIComponent(album.handle)}" target="_blank" rel="noopener">@${escHtml(album.handle)}</a>` : '';
+    $('.vw-cred', el).innerHTML = `${album.credit || ig ? `<b>Foto${album.credit ? `: ${escHtml(album.credit)}` : ''}${ig}</b>` : ''}${escHtml([album.title, album.when, album.venue].filter(Boolean).join(' · '))}<p class="vw-tip">Postou? Marca a @llama.etc <span class="st">✺</span></p>`;
+    el.hidden = false;
+    html.classList.add('vw-open');
+    if (push) {
+      history.pushState({ ...(history.state || {}), vw: true }, '', `#foto-${items[i].n}`);
+      vw.pushed = true;
+    } else {
+      vw.pushed = false;
+    }
+    show(i, { first: true });
+    $('.vw-x', el).focus({ preventScroll: true });
+  }
+
+  // fromHistory: the back button closed it (the address is already the page's).
+  function closeViewer({ fromHistory = false } = {}) {
+    if (!vw.el || vw.el.hidden) return;
+    vw.el.hidden = true;
+    html.classList.remove('vw-open');
+    if (!fromHistory) {
+      if (vw.pushed) {
+        vw.closing = true; // the popstate this causes isn't a page change
+        history.back();
+      } else history.replaceState(history.state, '', location.pathname + location.search);
+    }
+    vw.pushed = false;
+    // back to the photo that was in sight, on the page
+    const at = vw.items[vw.i] && $(`.jg a[data-n="${vw.items[vw.i].n}"]`);
+    const target = at || vw.back;
+    if (target) {
+      target.focus({ preventScroll: true });
+      if (at) at.scrollIntoView({ block: 'nearest' });
+    }
+  }
+  const viewerOpen = () => Boolean(vw.el && !vw.el.hidden);
+  const escHtml = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  // The album on the page: its photos open the viewer; "Baixar todas" makes a .zip of them as
+  // JPEGs, on computers.
+  function setupAlbum() {
+    if (offHash) removeEventListener('hashchange', offHash);
+    offHash = null;
+    const grid = $('.jg');
+    if (!grid) return;
+    const items = $$('a[data-n]', grid).map((a) => ({ full: a.href, thumb: $('img', a).getAttribute('src'), w: +a.dataset.w || 3, h: +a.dataset.h || 2, n: +a.dataset.n }));
+    const album = { ...grid.dataset };
+    grid.addEventListener('click', (e) => {
+      const a = e.target.closest('a[data-n]');
+      if (!a || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button) return;
+      e.preventDefault();
+      openViewer(album, items, +a.dataset.n - 1, a);
+    });
+    const fromHash = () => {
+      const m = /^#foto-(\d+)$/.exec(location.hash);
+      if (m && items[+m[1] - 1] && !viewerOpen()) openViewer(album, items, +m[1] - 1, null, { push: false });
+    };
+    fromHash();
+    // a link to one of the photos from the same page
+    offHash = fromHash;
+    addEventListener('hashchange', fromHash);
+    const zipBtn = $('[data-zip]');
+    if (zipBtn && items.length > 1 && matchMedia('(pointer: fine)').matches) {
+      zipBtn.hidden = false;
+      const label = zipBtn.innerHTML;
+      zipBtn.addEventListener('click', async () => {
+        if (zipBtn.classList.contains('busy')) return;
+        zipBtn.classList.add('busy');
+        try {
+          const { zip } = await import(new URL('src/zip.js', new URL(root(), location.href)).href);
+          const files = [];
+          for (const item of items) {
+            zipBtn.textContent = `Preparando ${files.length + 1} de ${items.length}…`;
+            const file = await jpeg(item, album);
+            files.push({ name: file.name, blob: file });
+          }
+          download(new File([await zip(files)], `llamalab-${album.album || 'fotos'}.zip`, { type: 'application/zip' }));
+          toast('Fotos baixadas ✺');
+        } catch {
+          toast(navigator.onLine ? 'Não deu para juntar as fotos. Tente de novo.' : 'Sem internet: as fotos não vieram.');
+        } finally {
+          zipBtn.innerHTML = label;
+          zipBtn.classList.remove('busy');
+        }
+      });
+    }
+  }
+
   function mount() {
+    // a page swapped in (the radio's): the viewer belonged to the old one
+    if (viewerOpen()) closeViewer({ fromHistory: true });
+    setupAlbum();
+
     /* events that already ended (the daily rebuild also moves them) */
     $$('[data-until]').forEach((el) => {
       if (el.dataset.until < today) el.remove();
@@ -814,6 +1141,16 @@
     go(url, { push: url.href !== location.href });
   });
   addEventListener('popstate', (e) => {
+    // the back button closes the photo viewer, and stays on the page
+    if (vw.closing) {
+      vw.closing = false;
+      return;
+    }
+    if (viewerOpen()) {
+      closeViewer({ fromHistory: true });
+      return;
+    }
+    if (e.state && e.state.vw) return;
     if (e.state && e.state.ll) go(new URL(location.href), { push: false, y: e.state.y || 0 });
   });
   if ('scrollRestoration' in history) {

@@ -1,4 +1,5 @@
-// A minimal ZIP writer, to download the post's images in one file. Files are
+// A minimal ZIP writer, to download several images in one file (the admin's Instagram post,
+// an album's photos on the site). Files are
 // stored as they are, without compression: JPEGs don't get any smaller.
 
 const CRC_TABLE = (() => {
