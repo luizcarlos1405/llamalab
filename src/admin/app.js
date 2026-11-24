@@ -367,7 +367,7 @@ function dashboard() {
   const status = h('div', { class: 'card status' }, h('h2', null, 'Site no ar'), h('p', { class: 'muted' }, 'Carregando…'));
   const quick = h('div', { class: 'card quick' }, h('h2', null, 'Criar'),
     h('a', { class: 'btn btn-k', href: '#/agenda/novo' }, '+ Evento'),
-    h('a', { class: 'btn btn-k', href: '#/noticias/novo' }, '+ Notícia'),
+    h('a', { class: 'btn btn-k', href: '#/noticias/novo' }, '+ Notícia do Radar'),
     h('a', { class: 'btn btn-k', href: '#/entrevistas/novo' }, '+ Entrevista'));
   const today = todayISO();
   const upcoming = store.state.working.agenda.filter((ev) => isUpcoming(ev, today));
