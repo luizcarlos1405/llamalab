@@ -8,7 +8,7 @@
 
 import { COLLECTIONS, SINGLETONS, normalize, validate } from '../schema.js';
 import { REPO } from '../config.js';
-import { jsonFile, imageRefs, slugify, uniqueSlug } from '../util.js';
+import { jsonFile, imageRefs, imageRefsAt, slugify, uniqueSlug } from '../util.js';
 import { kv, images as imageStore } from './idb.js';
 import { decodeBase64Text, blobToBase64 } from './github.js';
 
@@ -423,6 +423,31 @@ export function imageChanges(data = state.working, paths = state.remotePaths, ke
   return { added, removed, bytes };
 }
 
+// Content that would point to an image the site won't have after publishing: neither in the
+// published tree (`paths`) nor staged here, to go out in the same commit. GitHub Actions doesn't
+// deploy a version like that (scripts/build.mjs), so publish() doesn't make it. One entry per
+// item, with the fields that point to the missing images. What only the data files this admin
+// doesn't know point to (state.remoteKeep) is theirs to account for.
+export function missingImages(data = state.working, paths = state.remotePaths) {
+  const out = [];
+  const check = (type, value, id) => {
+    const t = TYPES[type];
+    const missing = imageRefsAt(value).filter((r) => !paths.has(r.src) && !state.staged.has(r.src));
+    if (!missing.length) return;
+    const label = (at) => (t.fields.find((f) => f.key === at.split('.')[0]) || { label: at }).label;
+    out.push({
+      type,
+      id,
+      title: id ? titleOf(type, value) : t.label,
+      fields: [...new Set(missing.map((r) => label(r.at)))],
+      images: new Set(missing.map((r) => r.src)).size,
+    });
+  };
+  for (const name of Object.keys(COLLECTIONS)) for (const item of data[name]) check(name, item, item.id);
+  for (const name of Object.keys(SINGLETONS)) check(name, data[name], null);
+  return out;
+}
+
 export function hasChanges() {
   if (!state.base) return false;
   const img = imageChanges();
@@ -553,7 +578,8 @@ export function commitSummary() {
 
 // One commit with every change. Returns { commit } on success, { conflicts }
 // when someone else changed the same items, { problems } when something is
-// invalid, or { nothing: true }.
+// invalid, { missing } when the content would point to images the site won't
+// have (missingImages), or { nothing: true }.
 export async function publish(gh, { message, author, onStep = () => {} }) {
   for (let attempt = 1; attempt <= 3; attempt += 1) {
     onStep('Conferindo a versão publicada…');
@@ -573,6 +599,9 @@ export async function publish(gh, { message, author, onStep = () => {} }) {
     }
     const problems = validateAll(final);
     if (problems.length) return { problems };
+    // against what's published now: someone may have removed an image the drafts still use
+    const missing = missingImages(final, remote.paths);
+    if (missing.length) return { missing };
 
     onStep('Preparando os arquivos…');
     const entries = [];

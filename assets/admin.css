@@ -334,6 +334,7 @@ input:focus,textarea:focus{outline:0;border-color:var(--k);box-shadow:0 0 0 4px 
 .published .deploy{margin:6px 0 12px}
 .problems{margin-top:12px;padding-left:18px;display:flex;flex-direction:column;gap:8px}
 .problems a{color:var(--k)}
+.problems+p{margin-top:14px}
 .conflicts{display:flex;flex-direction:column;gap:12px}
 .conflict{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px;border-radius:16px;background:var(--p)}
 .conflict .moved{margin-top:4px;font-size:14px;line-height:1.4;color:#555}

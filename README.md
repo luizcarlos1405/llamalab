@@ -239,6 +239,13 @@ While a token is saved, the public pages show a red pencil button in the corner.
     Artistas on 24/11/2026), never goes back where it was. A draft's edits to it go along, for the fields both
     types have, always as a conflict that says where it went and which changes can't go along.
   - Images that nothing points to any more are deleted in the same commit, which keeps the published site small.
+  - **No content pointing to an image the site won't have.** Before committing, the admin checks the final version,
+    after replaying the edits on what's published now: every image it points to, from an image field or a Markdown
+    text, must be in the published tree or be uploaded in the same commit. When one isn't (someone else removed it,
+    an outdated admin deleted it, a typo in a Markdown image), nothing is committed and the drafts stay: a dialog
+    names the items and fields, with links to them, and asks the editor to swap or remove the image. The build
+    wouldn't deploy that version anyway (see [When a deploy fails](#when-a-deploy-fails)). Images that only data
+    files this admin doesn't know point to aren't its concern.
   - After a publish, the admin polls `version.json` until the new version is live (usually under a minute).
 
 ### The Instagram post

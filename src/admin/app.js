@@ -603,12 +603,7 @@ async function publishFlow(title) {
   }
   const problems = store.validateAll();
   if (problems.length) {
-    dialog({
-      title: 'Falta arrumar algumas coisas',
-      body: h('div', null, h('p', null, 'Corrija estes itens antes de publicar:'),
-        h('ul', { class: 'problems' }, problems.map((p) => h('li', null, h('a', { href: p.id ? `#/${p.type}/${p.id}` : `#/${p.type}`, onclick: () => document.querySelector('dialog.dlg')?.close() }, h('b', null, p.title), ' — ', p.message))))),
-      actions: (close) => [h('button', { class: 'btn btn-k', type: 'button', onclick: () => close() }, 'Entendi')],
-    });
+    fixDialog({ title: 'Falta arrumar algumas coisas', intro: 'Corrija estes itens antes de publicar:', items: problems });
     return;
   }
   await store.pruneStaged();
@@ -633,6 +628,10 @@ async function publishFlow(title) {
       publishFlow(title);
       return;
     }
+    if (result.missing) {
+      missingImagesDialog(result.missing);
+      return;
+    }
     if (result.nothing) {
       toast('Nada para publicar: o site já está assim.');
       return;
@@ -648,6 +647,32 @@ async function publishFlow(title) {
       actions: (c) => [h('button', { class: 'btn btn-k', type: 'button', onclick: () => c() }, 'Ok')],
     });
   }
+}
+
+// Items to fix before publishing, each a link to its form.
+function fixDialog({ title, intro, items, note }) {
+  let close = () => {};
+  const body = h('div', null,
+    h('p', null, intro),
+    h('ul', { class: 'problems' }, items.map((p) => h('li', null, h('a', { href: p.id ? `#/${p.type}/${p.id}` : `#/${p.type}`, onclick: () => close() }, h('b', null, p.title), ' — ', p.message)))),
+    note ? h('p', { class: 'muted' }, note) : null);
+  ({ close } = dialog({ title, body, actions: (c) => [h('button', { class: 'btn btn-k', type: 'button', onclick: () => c() }, 'Entendi')] }));
+}
+
+// The drafts point to images the site won't have (store.missingImages). A version like that
+// doesn't go live, so nothing was published: the editor swaps or removes those images first.
+// When they disappeared on their own (someone else's publish, an outdated admin), whoever looks
+// after the site may need to bring them back.
+function missingImagesDialog(list) {
+  const images = list.reduce((n, m) => n + m.images, 0);
+  fixDialog({
+    title: images > 1 ? 'Faltam imagens' : 'Falta uma imagem',
+    intro: images > 1
+      ? `${list.length > 1 ? 'Estes itens usam' : 'Este item usa'} imagens que não estão no site. Troque ou remova cada uma e publique de novo:`
+      : 'Este item usa uma imagem que não está no site. Troque ou remova a imagem e publique de novo:',
+    items: list.map((m) => ({ ...m, message: m.fields.join(', ') })),
+    note: `Nada foi publicado e seus rascunhos continuam aqui. Se não foi você quem tirou ${images > 1 ? 'essas imagens' : 'essa imagem'}, avise quem cuida do site.`,
+  });
 }
 
 function publishedDialog(commit) {
