@@ -1,18 +1,22 @@
 {
   "title": "Contrate a LLama",
-  "lead": "Divulgação cultural feita por quem vive a cena. A gente ajuda teu evento, teu projeto ou tua arte a chegar em quem precisa ver.",
+  "lead": "Publicidade para marcas, eventos, projetos, empresas ou artistas, feita por quem vive e consome cultura.",
   "services": [
     {
-      "title": "Divulgação de eventos",
-      "text": "Planejamento e execução da divulgação do teu show, festa, peça ou feira: agenda, redes sociais e imprensa."
+      "title": "redes sociais",
+      "text": "Identidade visual, planejamento de conteúdos estratégicos, vídeos, artes publicitárias e calendário de publicações para marcas, empresas, artistas, coletivos e espaços culturais. \n"
     },
     {
-      "title": "Conteúdo e entrevistas",
-      "text": "Perfis, entrevistas e textos sobre artistas e projetos, para o site, as redes e materiais de imprensa."
+      "title": "divulgação de eventos",
+      "text": "Planejamento e execução da divulgação de shows, festas, peças teatrais, festivais ou feiras: Identidade visual, redes sociais, tráfego pago, registro fotográfico e imprensa.\n"
     },
     {
-      "title": "Redes sociais",
-      "text": "Posts, vídeos curtos e calendário de publicações para artistas, coletivos e espaços culturais."
+      "title": "posicionamento de marca",
+      "text": "Identidade visual, posicionamento estratégico, comunicação visual (adesivos de parede ou vitrine, banners, cartazes, fachadas, totens, plotagem de veículos e displays de balcão, entre outros) para marcas, empresas, coletivos e espaços culturais."
+    },
+    {
+      "title": "assessoria de imprensa",
+      "text": "Perfis, entrevistas e textos sobre artistas, shows, feiras, peças teatrais e demais projetos para o site, as redes sociais e materiais de imprensa."
     }
   ],
   "body": "",
