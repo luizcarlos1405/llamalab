@@ -27,7 +27,7 @@
     "highlight": "A gente espalha.",
     "text": "Somos um laboratório criativo de divulgação cultural. Entrevistas, cobertura, agenda e redes — pra sua arte ser ouvida em Dourados e além.",
     "eventLabel": "Divulgue seu evento",
-    "eventMessage": "Oi, LLama! Quero divulgar um evento: ",
+    "eventMessage": "Oi, LLama! Quero divulgar um evento na agenda cultural: ",
     "interviewLabel": "Quero dar entrevista",
     "interviewMessage": "Oi, LLama! Quero contar minha história numa entrevista: "
   },
@@ -77,15 +77,11 @@
       {
         "name": "Rolêzinhos",
         "url": "https://open.spotify.com/playlist/31LeuPTJHhBNRwkJpOIuyC"
-      },
-      {
-        "name": "CSL 2025",
-        "url": "https://open.spotify.com/playlist/0WHunC777LQ1OmPM3l9Zt3"
       }
     ]
   },
   "seo": {
-    "title": "LLama Lab",
+    "title": "LLamaLab — cultura que faz barulho em Dourados",
     "description": "Agenda cultural, entrevistas e notícias de quem faz a cultura acontecer em Dourados (MS): shows, teatro, saraus, feiras e festivais."
   }
 }
