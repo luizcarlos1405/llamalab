@@ -216,6 +216,8 @@ main{position:relative;z-index:2}
 .link{font:600 14px/1 var(--sans);margin-left:12px;border-bottom:1.5px solid currentColor;padding-bottom:4px}
 .link:hover{color:var(--r)}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:clamp(24px,3vw,40px)}
+/* what a filter chip leaves out (site.js sets hidden; the cards' own display would win over it) */
+[data-cat][hidden]{display:none}
 .dates-wrap{position:relative}.dates{list-style:none;border-bottom:1.5px solid var(--k)}
 .row{position:relative;display:grid;grid-template-columns:minmax(150px,1.1fr) 3.4fr 2fr 110px 60px;align-items:center;gap:24px;padding:26px 22px;border-top:1.5px solid var(--k);isolation:isolate}
 .row::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--k);border-radius:22px;transform:scaleY(0);transform-origin:50% 100%;transition:transform .55s var(--ease),border-radius .55s var(--ease)}
