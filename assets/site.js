@@ -504,6 +504,12 @@
       };
       closeFab = () => set(false);
       btn.addEventListener('click', () => set(list.hidden));
+      // Esc on a shortcut takes the focus back to the pencil, and the document's Esc handler
+      // then closes the menu: hidden with it, the shortcut would drop the focus on the page,
+      // and the next Tab would start again from the top
+      list.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') btn.focus();
+      });
     }
 
     const hero = $('.hero');
