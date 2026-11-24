@@ -1,5 +1,8 @@
 name: Site
 
+# The admin reads this workflow's runs by this file's name, to tell editors when what they
+# published didn't go live (deployRun in src/admin/github.js): rename both together.
+
 on:
   push:
     branches: [main]

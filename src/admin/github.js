@@ -80,6 +80,27 @@ export function createClient(token, { branch: defaultBranch = REPO.branch } = {}
   };
 }
 
+// The workflow that builds and deploys the site, by its file's name (.github/workflows/site.yml).
+const DEPLOY_WORKFLOW = 'site.yml';
+
+// The latest run of the site's deploy for a commit, or null when it has none (yet). Read without
+// the token: the editors' tokens only reach the repository's contents, and the repository is
+// public, so the API answers this to anyone, 60 times an hour per address (deployFailed in app.js
+// asks sparingly). A request that fails throws an ApiError with the time the limit resets, in ms.
+export async function deployRun(sha) {
+  const url = `${API}/repos/${REPO.owner}/${REPO.name}/actions/workflows/${DEPLOY_WORKFLOW}/runs?head_sha=${encodeURIComponent(sha)}&per_page=1&t=${Date.now()}`;
+  let res;
+  try {
+    // no Authorization, and only a header CORS allows as it is: no preflight request
+    res = await fetch(url, { headers: { Accept: 'application/vnd.github+json' }, credentials: 'omit' });
+  } catch {
+    throw new ApiError('network', 0);
+  }
+  const data = await res.json().catch(() => null);
+  if (!res.ok) throw new ApiError((data && data.message) || `${res.status} ${res.statusText}`, res.status, { reset: Number(res.headers.get('x-ratelimit-reset')) * 1000 || 0 });
+  return (data && Array.isArray(data.workflow_runs) && data.workflow_runs[0]) || null;
+}
+
 export function decodeBase64Text(b64) {
   const binary = atob(String(b64).replace(/\s/g, ''));
   const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));

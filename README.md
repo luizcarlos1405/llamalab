@@ -185,7 +185,8 @@ npm run build          # just build into _site/
 
 Every push to `main`, and the daily rebuild, runs [`.github/workflows/site.yml`](.github/workflows/site.yml): it
 builds the site, then deploys it. When the build fails, the deploy doesn't run and GitHub Pages keeps serving the
-last version that built.
+last version that built. The editors find out in the admin: after publishing, and on the dashboard's "Site no ar"
+card, it says the site wasn't updated and asks them to tell you (see [The admin](#the-admin-admin)).
 
 - **A missing image fails the build in GitHub Actions:** content that points to an image that isn't in the
   repository, from an image field or from a Markdown text. On 24/11/2026 an outdated admin removed the 18 artists'
@@ -246,7 +247,16 @@ While a token is saved, the public pages show a red pencil button in the corner.
     names the items and fields, with links to them, and asks the editor to swap or remove the image. The build
     wouldn't deploy that version anyway (see [When a deploy fails](#when-a-deploy-fails)). Images that only data
     files this admin doesn't know point to aren't its concern.
-  - After a publish, the admin polls `version.json` until the new version is live (usually under a minute).
+  - After a publish, the admin polls `version.json` until the new version is live (usually under a minute). It also
+    reads the deploy's workflow run every 20 s: when the run fails, the dialog says the site wasn't updated and still
+    shows the previous version, and asks the editor to tell whoever looks after the site. The dashboard's "Site no
+    ar" card does the same for the last commit while it isn't live, instead of "Publicando…" or, after 10 minutes,
+    "ainda não apareceu".
+  - The runs are read without the editor's token, which only reaches the repository's contents: the repository is
+    public, and GitHub answers anyone, but only 60 times an hour per address (everyone on the same network shares
+    them). So the admin asks at most 8 times per commit, remembers a finished run, and after any error (offline,
+    that limit) stops asking for a while; the messages are then as they were before. A cancelled run isn't a
+    failure: a later push took its place in the queue, and its deploy carries the cancelled one's changes too.
 
 ### The Instagram post
 
@@ -267,7 +277,8 @@ image, as 1080 × 1350 JPEGs. Nothing is saved or published.
 
 ### Tokens
 
-The admin talks to `api.github.com` with a personal access token, which you create and send to each editor.
+The admin talks to `api.github.com` with a personal access token, which you create and send to each editor (the
+deploy's runs, which tell it when a publish didn't go live, need none).
 The admin never mentions GitHub: the sign-in screen asks for a "token de acesso", and when one expires or
 stops working it tells the editor to ask whoever looks after the site for a new one.
 

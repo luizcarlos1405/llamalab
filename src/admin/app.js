@@ -6,7 +6,7 @@ import { REPO } from '../config.js';
 import { todayISO, parseDate, MONTHS_SHORT, fmtHours, fmtShort, isUpcoming } from '../util.js';
 import { lockup, symbols } from '../render/svg.js';
 import { h, add, $, clear, toast, dialog, confirm, formatBytes, timeAgo } from './dom.js';
-import { createClient, describeError, ApiError } from './github.js';
+import { createClient, describeError, ApiError, deployRun } from './github.js';
 import { isPersistent } from './idb.js';
 import { net, onNet, setOnline, keepData, markUpdated } from './net.js';
 import { buildForm } from './fields.js';
@@ -530,14 +530,20 @@ async function loadStatus(box) {
     const [commits, deployed] = await Promise.all([app.gh.commits(1), fetchVersion(), adminOutdated()]);
     const last = commits[0];
     const live = deployed && deployed.sha === last.sha;
+    // a deploy that failed never shows up: say so rather than wait for it
+    const failed = !live && await deployFailed(last.sha);
     const age = (Date.now() - new Date(last.commit.committer.date).getTime()) / 60000;
+    const [kind, text] = live ? ['ok', '● Atualizado']
+      : failed ? ['warn', '● A última publicação não entrou no ar: o site continua com a versão anterior. Avise quem cuida do site.']
+        : age < 10 ? ['busy', '● Publicando… leva cerca de 1 minuto']
+          : ['warn', '● A última publicação ainda não apareceu no site. Se continuar assim, avise quem cuida do site.'];
     clear(box);
     add(box,
       h('h2', null, 'Site no ar'),
-      h('p', { class: `deploy ${live ? 'ok' : age < 10 ? 'busy' : 'warn'}` }, live ? '● Atualizado' : age < 10 ? '● Publicando… leva cerca de 1 minuto' : '● A última publicação ainda não apareceu no site. Se continuar assim, avise quem cuida do site.'),
+      h('p', { class: `deploy ${kind}` }, text),
       h('p', { class: 'muted' }, `Última publicação ${timeAgo(last.commit.author.date)}, por ${last.commit.author.name}.`),
       h('div', { class: 'btns' }, h('a', { class: 'btn btn-ghost btn-sm', href: siteUrl(), target: '_blank', rel: 'noopener' }, 'Ver o site ↗')));
-    if (!live && age < 10) setTimeout(() => box.isConnected && loadStatus(box), 8000);
+    if (kind === 'busy') setTimeout(() => box.isConnected && loadStatus(box), 8000);
   } catch (error) {
     if (error.status === 0) {
       setOnline(false);
@@ -555,6 +561,34 @@ async function fetchVersion() {
   } catch {
     return null;
   }
+}
+
+// Whether the deploy of a commit failed, from its run (deployRun, read without the token). The
+// API answers that 60 times an hour per address, shared by everyone on the same network, so the
+// admin asks sparingly: a finished run is remembered, one still going is asked about again after
+// 20 s at the earliest and at most 8 times per commit, and after any error (offline, the hourly
+// limit) the admin stops asking for a while. What it can't tell counts as not failed, and the
+// messages are then what they were without it. A cancelled run isn't a failure: a later push
+// took its place in the queue, and that one's deploy carries this commit's changes too.
+const RUN_FAILED = new Set(['failure', 'timed_out', 'startup_failure']);
+const runs = new Map();
+let runsPausedUntil = 0;
+
+async function deployFailed(sha) {
+  let seen = runs.get(sha);
+  if (!seen) runs.set(sha, (seen = { run: null, at: 0, asked: 0 }));
+  const now = Date.now();
+  const finished = seen.run && seen.run.status === 'completed';
+  if (!finished && seen.asked < 8 && now - seen.at >= 20000 && now >= runsPausedUntil) {
+    seen.asked += 1;
+    seen.at = now;
+    try {
+      seen.run = await withTimeout(deployRun(sha), 8000);
+    } catch (error) {
+      runsPausedUntil = Math.max(now + 10 * 60000, (error.data && error.data.reset) || 0);
+    }
+  }
+  return Boolean(seen.run && seen.run.status === 'completed' && RUN_FAILED.has(seen.run.conclusion));
 }
 
 // The admin this page runs (the build stamps it into admin.html) against the one deployed with
@@ -677,30 +711,50 @@ function missingImagesDialog(list) {
 
 function publishedDialog(commit) {
   const status = h('p', { class: 'deploy busy' }, '● Atualizando o site… costuma levar 1 minuto.');
+  const note = h('p', { class: 'muted' }, 'Se uma página ainda aparecer antiga, recarregue: o navegador pode guardar a versão anterior por alguns minutos.');
   const started = Date.now();
   let stop = false;
+  const settle = (state, text, after = '') => {
+    stop = true;
+    status.className = `deploy ${state}`;
+    status.textContent = text;
+    if (after) note.textContent = after;
+  };
+  const live = () => settle('ok', '● No ar! Já dá para ver no site.');
   const poll = async () => {
     if (stop) return;
     const v = await fetchVersion();
+    if (stop) return;
     if (v && v.sha === commit.sha) {
-      status.className = 'deploy ok';
-      status.textContent = '● No ar! Já dá para ver no site.';
+      live();
       return;
     }
     if (Date.now() - started > 5 * 60000) {
-      status.className = 'deploy warn';
-      status.textContent = '● Está demorando mais que o normal. Se não aparecer em alguns minutos, avise quem cuida do site.';
+      settle('warn', '● Está demorando mais que o normal. Se não aparecer em alguns minutos, avise quem cuida do site.');
       return;
     }
     setTimeout(poll, 5000);
   };
+  // A build that fails never changes version.json: its run says so (deployFailed).
+  const watch = async () => {
+    if (stop) return;
+    if (await deployFailed(commit.sha)) {
+      const v = await fetchVersion();
+      if (stop) return;
+      if (v && v.sha === commit.sha) live();
+      else settle('warn', '● O site não foi atualizado e continua com a versão anterior. Avise quem cuida do site.', 'Suas alterações não se perderam: elas entram no ar assim que isso for resolvido.');
+      return;
+    }
+    setTimeout(watch, 20000);
+  };
   setTimeout(poll, 15000);
+  setTimeout(watch, 20000);
   dialog({
     title: 'Publicado ✺',
     body: h('div', { class: 'published' },
       h('p', { class: 'big' }, 'Suas alterações foram enviadas para o site.'),
       status,
-      h('p', { class: 'muted' }, 'Se uma página ainda aparecer antiga, recarregue: o navegador pode guardar a versão anterior por alguns minutos.')),
+      note),
     onClose: () => { stop = true; route(); },
     actions: (close) => [
       h('a', { class: 'btn btn-ghost', href: siteUrl(), target: '_blank', rel: 'noopener' }, 'Abrir o site ↗'),
