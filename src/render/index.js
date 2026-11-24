@@ -19,8 +19,11 @@ export function renderSite(data, opts) {
     page(`agenda/${ev.id}/index.html`, (P) => eventPage(P, ev));
     files.push({ path: `agenda/${ev.id}/evento.ics`, html: ics(ctx, ev) });
   }
-  page('noticias/index.html', newsListPage);
-  for (const n of ctx.news) page(`noticias/${n.id}/index.html`, (P) => newsPage(P, n));
+  page('radar-cultural/index.html', newsListPage);
+  for (const n of ctx.news) page(`radar-cultural/${n.id}/index.html`, (P) => newsPage(P, n));
+  // The section's address before it was called Radar Cultural (24/11/2026): GitHub Pages can't
+  // redirect, so a page there sends visitors on. No news was published under the old address.
+  files.push({ path: 'noticias/index.html', html: redirectPage(ctx, 'radar-cultural/', 'Radar Cultural'), redirect: true });
   page('entrevistas/index.html', interviewsPage);
   for (const it of ctx.interviews) page(`entrevistas/${it.id}/index.html`, (P) => interviewPage(P, it));
   page('sobre/index.html', sobrePage);
@@ -104,9 +107,29 @@ export function renderPreview(data, opts, route) {
   }
 }
 
+// A page one folder deep that only sends visitors to another address (`to`, from the site's
+// root). Relative, like every link of the site, so it survives a change of domain.
+function redirectPage(ctx, to, title) {
+  const rel = `../${to}`;
+  return `<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>${esc(title)} — ${esc(SITE.name)}</title>
+<meta name="robots" content="noindex">
+<link rel="canonical" href="${esc(`${ctx.siteUrl}/${to}`)}">
+<meta http-equiv="refresh" content="0; url=${esc(rel)}">
+</head>
+<body>
+<p><a href="${esc(rel)}">${esc(title)}</a></p>
+</body>
+</html>
+`;
+}
+
 function sitemap(ctx, files) {
   const urls = files
-    .filter((f) => f.path.endsWith('index.html'))
+    .filter((f) => f.path.endsWith('index.html') && !f.redirect)
     .map((f) => `${ctx.siteUrl}/${f.path.replace(/index\.html$/, '')}`);
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -121,7 +144,7 @@ function rfc822(iso) {
 
 function feed(ctx) {
   const items = [
-    ...ctx.news.map((n) => ({ title: n.title, path: `noticias/${n.id}/`, date: n.date, text: n.summary || stripMarkdown(n.body), cat: n.kicker || 'Notícias' })),
+    ...ctx.news.map((n) => ({ title: n.title, path: `radar-cultural/${n.id}/`, date: n.date, text: n.summary || stripMarkdown(n.body), cat: n.kicker || 'Radar Cultural' })),
     ...ctx.interviews.map((it) => ({ title: it.title, path: `entrevistas/${it.id}/`, date: it.date, text: it.summary || it.role, cat: 'Entrevistas' })),
   ].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 40);
   return `<?xml version="1.0" encoding="UTF-8"?>

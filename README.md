@@ -182,7 +182,7 @@ that can be edited.
 
 - **Painel** lists every unpublished change (new, edited, removed) with undo, and publishes all of them
   as one commit with a generated message. The editor's name is the commit author.
-- **Agenda, Notícias, Entrevistas** list, search, filter, create, duplicate (events), edit and remove items.
+- **Agenda, Radar Cultural, Entrevistas** list, search, filter, create, duplicate (events), edit and remove items.
   The editor shows a live preview of the real page, at desktop or phone width.
 - **Páginas** edits the home page settings, the radio's stations, contacts, Sobre and Contrate.
 - **Post da agenda** (Agenda → Post para o Instagram) turns the events of a date range into the "Agenda

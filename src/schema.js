@@ -62,7 +62,7 @@ export const COLLECTIONS = {
   noticias: {
     name: 'noticias',
     file: 'data/noticias.json',
-    label: 'Notícias',
+    label: 'Radar Cultural',
     singular: 'notícia',
     newLabel: 'Nova notícia',
     route: 'noticias',
@@ -78,7 +78,7 @@ export const COLLECTIONS = {
       { key: 'image', label: 'Foto', type: 'image', slot: 'noticia' },
       { key: 'body', label: 'Texto', type: 'markdown', required: true },
       { key: 'author', label: 'Autoria', type: 'text', maxLength: 60 },
-      { key: 'featured', label: 'Manchete da capa', type: 'boolean', hint: 'A notícia destacada mais recente abre o Plantão.' },
+      { key: 'featured', label: 'Manchete da capa', type: 'boolean', hint: 'A notícia destacada mais recente abre o Radar Cultural na capa.' },
     ],
   },
 

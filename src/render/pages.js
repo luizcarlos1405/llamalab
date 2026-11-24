@@ -95,14 +95,14 @@ function newsPanel(P) {
   if (!P.news.length) return '';
   const lead = P.news.find((n) => n.featured) || P.news[0];
   const rest = P.news.filter((n) => n !== lead).slice(0, 3);
-  return `<section class="panel light sec" id="noticias">
+  return `<section class="panel light sec" id="radar-cultural">
   <div class="sec-head">
-    <div><p class="eyebrow">Últimas do rolê</p><h2 class="h2" data-split>${split('Notícias')}</h2></div>
+    <div><p class="eyebrow">Últimas do rolê</p><h2 class="h2" data-split>${split('Radar Cultural')}</h2></div>
     <div class="news-head-r" data-r>${badge()}</div>
   </div>
   <div class="news-grid">
     ${newsFeature(P, lead, { fresh: lead.date >= addDays(P.today, -7) })}
-    <div class="nl">${rest.map((n, i) => newsItem(P, n, i)).join('')}${P.news.length > 4 ? `<a class="link" href="${P.href('noticias/')}" style="margin:24px 0 0;align-self:flex-start">Todas as notícias →</a>` : ''}</div>
+    <div class="nl">${rest.map((n, i) => newsItem(P, n, i)).join('')}${P.news.length > 4 ? `<a class="link" href="${P.href('radar-cultural/')}" style="margin:24px 0 0;align-self:flex-start">Tudo no Radar →</a>` : ''}</div>
   </div>
 </section>`;
 }
@@ -258,7 +258,7 @@ export function eventPage(P, ev) {
   });
 }
 
-/* ================= NOTÍCIAS ================= */
+/* ================= RADAR CULTURAL (the news, at /radar-cultural/) ================= */
 
 export function newsListPage(P) {
   const lead = P.news.find((n) => n.featured) || P.news[0];
@@ -268,17 +268,17 @@ export function newsListPage(P) {
   const content = P.news.length
     ? `<div class="news-grid">${newsFeature(P, lead, { fresh: lead.date >= addDays(P.today, -7), tag: 'h2' })}<div class="nl">${side.map((n, i) => newsItem(P, n, i)).join('')}</div></div>
       ${more.length ? `<div class="ncards">${more.map((n) => newsFeature(P, n)).join('')}</div>` : ''}`
-    : `<div class="empty"><p class="h3">Nenhuma notícia por enquanto.</p><p>Edital, festival, estreia, inscrições abertas: a LLama Lab conta tudo por aqui. Tem uma pauta? Manda pra gente.</p><a class="btn btn-k" href="${esc(rolêLink(P))}" target="_blank" rel="noopener">Sugerir pauta <span class="arr">→</span></a></div>`;
-  const main = `${pageHero(P, { crumbs: [['Notícias']], eyebrow: 'Últimas do rolê', title: 'Notícias', lead: 'Editais, festivais, estreias e oportunidades da cena cultural de Dourados.' })}
+    : `<div class="empty"><p class="h3">Nada no radar por enquanto.</p><p>Edital, festival, estreia, inscrições abertas: a LLama Lab conta tudo por aqui. Tem uma pauta? Manda pra gente.</p><a class="btn btn-k" href="${esc(rolêLink(P))}" target="_blank" rel="noopener">Sugerir pauta <span class="arr">→</span></a></div>`;
+  const main = `${pageHero(P, { crumbs: [['Radar Cultural']], eyebrow: 'Últimas do rolê', title: 'Radar Cultural', lead: 'Editais, festivais, estreias e oportunidades da cena cultural de Dourados.' })}
 <section class="panel light sec"><div class="wrap">${content}</div></section>`;
-  return layout(P, { title: 'Notícias', description: 'Notícias da cena cultural de Dourados: editais, festivais, estreias e oportunidades.', current: 'noticias', main, edit: 'noticias' });
+  return layout(P, { title: 'Radar Cultural', description: 'Radar Cultural da LLama Lab: editais, festivais, estreias e oportunidades da cena cultural de Dourados.', current: 'noticias', main, edit: 'noticias' });
 }
 
 export function newsPage(P, n) {
   const others = P.news.filter((x) => x.id !== n.id).slice(0, 3);
   const showLede = n.summary && !sameStart(n.summary, n.body);
   const main = `${pageHero(P, {
-    crumbs: [['Notícias', P.href('noticias/')], [excerpt(n.title, 40)]],
+    crumbs: [['Radar Cultural', P.href('radar-cultural/')], [excerpt(n.title, 40)]],
     eyebrow: [n.kicker, fmtLong(n.date), n.author && `por ${n.author}`].filter(Boolean).join(' · '),
     title: n.title,
     titleClass: titleSize(n.title, 40, 80),
@@ -288,9 +288,9 @@ export function newsPage(P, n) {
   ${n.image && n.image.src ? `<figure class="wrap" style="max-width:1040px;margin:0 auto clamp(40px,5vw,70px)"><div class="media wide">${img(P, n.image, { eager: true })}</div>${n.image.credit || n.image.alt ? `<figcaption style="margin-top:14px;font-size:14px;color:#6b6b6b">${esc([n.image.alt, n.image.credit && `Foto: ${n.image.credit}`].filter(Boolean).join(' · '))}</figcaption>` : ''}</figure>` : ''}
   <div class="detail">
     <div class="prose dropcap">${md(P, n.body)}</div>
-    <aside class="aside">${shareBox(P, n.title, P.canonical)}<div class="box k"><b>Notícias</b><a href="${P.href('noticias/')}">Todas as notícias →</a></div></aside>
+    <aside class="aside">${shareBox(P, n.title, P.canonical)}<div class="box k"><b>Radar Cultural</b><a href="${P.href('radar-cultural/')}">Tudo no Radar →</a></div></aside>
   </div>
-  ${others.length ? `<div class="wrap" style="margin-top:clamp(70px,8vw,120px)"><div class="more-head"><h2 class="h2 xs">Mais notícias</h2><a class="link" href="${P.href('noticias/')}">Ver todas →</a></div><div class="ncards" style="margin-top:0">${others.map((x) => newsFeature(P, x)).join('')}</div></div>` : ''}
+  ${others.length ? `<div class="wrap" style="margin-top:clamp(70px,8vw,120px)"><div class="more-head"><h2 class="h2 xs">Mais do Radar</h2><a class="link" href="${P.href('radar-cultural/')}">Ver tudo →</a></div><div class="ncards" style="margin-top:0">${others.map((x) => newsFeature(P, x)).join('')}</div></div>` : ''}
 </section>`;
   const ld = {
     '@context': 'https://schema.org',

@@ -224,7 +224,7 @@ async function logout() {
 const TABS = [
   ['', 'Painel'],
   ['agenda', 'Agenda'],
-  ['noticias', 'Notícias'],
+  ['noticias', 'Radar Cultural'],
   ['entrevistas', 'Entrevistas'],
   ['paginas', 'Páginas'],
 ];

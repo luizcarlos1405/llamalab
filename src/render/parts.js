@@ -9,7 +9,7 @@ import { IMAGE_SLOTS } from '../config.js';
 export const NAV = [
   { href: 'agenda/', label: 'Agenda', key: 'agenda' },
   { href: 'entrevistas/', label: 'Entrevistas', key: 'entrevistas' },
-  { href: 'noticias/', label: 'Notícias', key: 'noticias' },
+  { href: 'radar-cultural/', label: 'Radar Cultural', key: 'noticias' },
   { href: 'sobre/', label: 'Sobre', key: 'sobre' },
   { href: 'contrate/', label: 'Contrate', key: 'contrate' },
 ];
@@ -309,7 +309,7 @@ export function quoteHtml(quote, highlight) {
 /* ---------- news ---------- */
 
 export function newsUrl(P, n) {
-  return P.href(`noticias/${n.id}/`);
+  return P.href(`radar-cultural/${n.id}/`);
 }
 
 export function newsImage(P, n, { stamp = '' } = {}) {
