@@ -38,7 +38,7 @@ export const CSP = [
 // skip the `js` class, so the entrance animations don't replay on every edit.
 export function layout(P, opts) {
   const seo = P.site.seo || {};
-  const siteTitle = seo.title || 'LLama Lab';
+  const siteTitle = String(seo.title || '').trim() || 'LLama Lab';
   const title = opts.title ? `${opts.title} — LLama Lab` : siteTitle;
   const description = excerpt(opts.description || seo.description || '', 200);
   const image = opts.image && opts.image.src
