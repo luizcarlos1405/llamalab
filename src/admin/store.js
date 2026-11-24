@@ -186,8 +186,15 @@ export async function refresh(gh) {
   const { result, conflicts } = merge(state.base, state.working, remote.data);
   adopt(remote);
   state.working = result;
-  const known = new Set(state.conflicts.map((c) => `${c.type}/${c.id || c.key}`));
-  state.conflicts = [...state.conflicts, ...conflicts.filter((c) => !known.has(`${c.type}/${c.id || c.key}`))];
+  // A conflict found again takes the version published now, which "Usar a publicada" puts back,
+  // and keeps the rest (where a moved item came from: this merge sees it where it is now). It
+  // stays the same object, so a dialog that's already open still resolves it.
+  const key = (c) => `${c.type}/${c.id || c.key}`;
+  const waiting = new Map(state.conflicts.map((c) => [key(c), c]));
+  for (const c of conflicts) {
+    if (waiting.has(key(c))) Object.assign(waiting.get(key(c)), { title: c.title, mine: c.mine, theirs: c.theirs });
+  }
+  state.conflicts = [...state.conflicts, ...conflicts.filter((c) => !waiting.has(key(c)))];
   changed();
   return conflicts;
 }
