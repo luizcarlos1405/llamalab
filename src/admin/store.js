@@ -14,6 +14,9 @@ import { decodeBase64Text, blobToBase64 } from './github.js';
 
 export const TYPES = { ...COLLECTIONS, ...SINGLETONS };
 const IMAGE_ROOT = 'images/';
+// The only folders this admin ever removes unused images from: its own types' (not images of a
+// type added to the site after this copy of the admin was loaded).
+const IMAGE_DIRS = [...new Set(Object.values(TYPES).map((t) => t.imageDir).filter(Boolean))].map((d) => `${d}/`);
 const clone = (v) => (v === undefined ? undefined : JSON.parse(JSON.stringify(v)));
 const eq = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
 
@@ -23,6 +26,7 @@ export const state = {
   base: null,
   baseText: {},
   remotePaths: new Set(),
+  remoteKeep: new Set(),
   working: null,
   staged: new Map(),
   conflicts: [],
@@ -110,7 +114,19 @@ export async function loadRemote(gh) {
       throw new Error(`Não consegui ler o conteúdo de "${t.label}". Avise quem cuida do site.`);
     }
   }));
-  return { headSha, treeSha: commit.tree.sha, data: normalizeData(raw), texts, paths: new Set(files.keys()) };
+  // Images that a data file this admin doesn't know points to (a type added to the site after it
+  // was loaded) are never taken for unused. On 24/11/2026 an admin from before Artistas removed
+  // the artists' photos that way.
+  const known = new Set(Object.values(TYPES).map((t) => t.file));
+  const keep = new Set();
+  await Promise.all([...files].filter(([path]) => /^data\/.+\.json$/.test(path) && !known.has(path)).map(async ([, sha]) => {
+    try {
+      for (const ref of imageRefs(JSON.parse(await cachedBlob(gh, sha)))) keep.add(ref);
+    } catch {
+      // not readable as JSON: it points to nothing
+    }
+  }));
+  return { headSha, treeSha: commit.tree.sha, data: normalizeData(raw), texts, paths: new Set(files.keys()), keep };
 }
 
 function adopt(remote) {
@@ -119,6 +135,7 @@ function adopt(remote) {
   state.base = remote.data;
   state.baseText = remote.texts;
   state.remotePaths = remote.paths;
+  state.remoteKeep = remote.keep || state.remoteKeep;
   state.loadedAt = new Date().toISOString();
 }
 
@@ -314,10 +331,10 @@ export function singletonChanged(name) {
   return !eq(state.base[name], state.working[name]);
 }
 
-export function imageChanges(data = state.working, paths = state.remotePaths) {
+export function imageChanges(data = state.working, paths = state.remotePaths, keep = state.remoteKeep) {
   const refs = imageRefs(data);
   const added = [...state.staged.keys()].filter((p) => refs.has(p) && !paths.has(p));
-  const removed = [...paths].filter((p) => p.startsWith(IMAGE_ROOT) && !refs.has(p));
+  const removed = [...paths].filter((p) => p.startsWith(IMAGE_ROOT) && IMAGE_DIRS.some((d) => p.startsWith(d)) && !refs.has(p) && !keep.has(p));
   const bytes = added.reduce((sum, p) => sum + (state.staged.get(p).bytes || 0), 0);
   return { added, removed, bytes };
 }
@@ -481,7 +498,7 @@ export async function publish(gh, { message, author, onStep = () => {} }) {
       texts[t.file] = text;
       if (text !== remote.texts[t.file]) entries.push({ path: t.file, mode: '100644', type: 'blob', content: text });
     }
-    const { added, removed } = imageChanges(final, remote.paths);
+    const { added, removed } = imageChanges(final, remote.paths, remote.keep);
     for (let i = 0; i < added.length; i += 1) {
       onStep(`Enviando imagem ${i + 1} de ${added.length}…`);
       const blob = await gh.createBlob(await blobToBase64(state.staged.get(added[i]).blob), 'base64');
@@ -508,7 +525,7 @@ export async function publish(gh, { message, author, onStep = () => {} }) {
       if (e.sha === null) paths.delete(e.path);
       else paths.add(e.path);
     }
-    adopt({ headSha: commit.sha, treeSha: tree.sha, data: clone(final), texts, paths });
+    adopt({ headSha: commit.sha, treeSha: tree.sha, data: clone(final), texts, paths, keep: remote.keep });
     state.working = clone(final);
     state.conflicts = [];
     for (const [path, rec] of [...state.staged]) {
