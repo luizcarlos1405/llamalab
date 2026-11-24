@@ -18,6 +18,10 @@
   const today = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 
   // What the animation loop and the global handlers need from the current page.
+  // the editors' shortcut's icons (Lucide's pencil, x and layout-grid)
+  const ICON_PEN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.17 6.81a1 1 0 0 0-3.99-3.98L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5zM15 5l4 4"/></svg>';
+  const ICON_X = '<svg class="x" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+  const ICON_GRID = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>';
   let page = {};
   let io = null;
   let rest = null;
@@ -456,28 +460,50 @@
       render();
     }
 
-    /* admin shortcut, only for people who saved a token in the admin */
-    $$('.admin-fab').forEach((el) => el.remove());
+    /* the editors' shortcut, only for people who saved a token in the admin: a pencil button
+       that opens "Editar esta página" (on pages that can be edited) and "Admin" */
+    $$('.fab').forEach((el) => el.remove());
     let token = null;
     try {
       token = localStorage.getItem('llamalab:token');
     } catch {
       token = null;
     }
+    let closeFab = null;
     if (token && !html.hasAttribute('data-preview')) {
-      const fab = d.createElement('a');
-      fab.className = 'admin-fab';
-      fab.href = `${root()}admin`;
-      fab.innerHTML = '<span>✺</span> Admin';
-      d.body.append(fab);
+      const fab = d.createElement('div');
+      fab.className = 'fab';
+      const btn = d.createElement('button');
+      btn.className = 'fab-btn';
+      btn.type = 'button';
+      btn.setAttribute('aria-expanded', 'false');
+      btn.setAttribute('aria-controls', 'fab-menu');
+      btn.setAttribute('aria-label', 'Atalhos da equipe');
+      btn.innerHTML = ICON_PEN.replace('<svg', '<svg class="pen"') + ICON_X;
+      const list = d.createElement('div');
+      list.className = 'fab-menu';
+      list.id = 'fab-menu';
+      list.hidden = true;
+      const link = (href, icon, label, cls) => {
+        const a = d.createElement('a');
+        a.href = href;
+        if (cls) a.className = cls;
+        a.innerHTML = icon;
+        a.append(` ${label}`);
+        list.append(a);
+      };
       const edit = html.dataset.edit;
-      if (edit) {
-        const e = d.createElement('a');
-        e.className = 'admin-fab';
-        e.href = `${root()}admin#/${edit}`;
-        e.innerHTML = '<span>✎</span> Editar esta página';
-        d.body.append(e);
-      }
+      if (edit) link(`${root()}admin#/${edit}`, ICON_PEN, 'Editar esta página', 'edit');
+      link(`${root()}admin`, ICON_GRID, 'Admin');
+      fab.append(btn, list);
+      d.body.append(fab);
+      const set = (open) => {
+        fab.classList.toggle('open', open);
+        list.hidden = !open;
+        btn.setAttribute('aria-expanded', String(open));
+      };
+      closeFab = () => set(false);
+      btn.addEventListener('click', () => set(list.hidden));
     }
 
     const hero = $('.hero');
@@ -503,6 +529,7 @@
       followers,
       menu,
       closeMenu,
+      closeFab,
     };
     if (tps.length) measure();
     offlineNote();
@@ -516,7 +543,13 @@
   // the ribbons' letters change size at the phone breakpoint (site.css), e.g. when a phone turns
   matchMedia('(max-width: 760px)').addEventListener('change', () => page.tps.length && page.measure());
   d.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && page.menu && !page.menu.hidden) page.closeMenu();
+    if (e.key !== 'Escape') return;
+    if (page.menu && !page.menu.hidden) page.closeMenu();
+    if (page.closeFab) page.closeFab();
+  });
+  // a tap anywhere but the editors' shortcut closes it
+  d.addEventListener('click', (e) => {
+    if (page.closeFab && !e.target.closest('.fab')) page.closeFab();
   });
 
   /* headbang while scrolling */

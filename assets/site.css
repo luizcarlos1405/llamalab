@@ -523,18 +523,33 @@ a:hover .uw{background-size:100% 3px}
 .ios-tip .btn{width:100%}
 .toast{position:fixed;left:50%;bottom:24px;z-index:150;transform:translate(-50%,30px);opacity:0;background:var(--w);color:var(--k);padding:14px 22px;border-radius:999px;font:600 14px/1.2 var(--sans);box-shadow:0 20px 40px -10px rgba(0,0,0,.5);transition:transform .4s var(--spring),opacity .2s;pointer-events:none}
 .toast.on{transform:translate(-50%,0);opacity:1}
-.admin-fab{position:fixed;left:16px;bottom:16px;z-index:140;display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:0 20px;border-radius:999px;background:var(--w);color:var(--k);font:600 15px/1 var(--sans);box-shadow:0 14px 30px -8px rgba(0,0,0,.5);transition:transform .5s var(--spring),background .3s,color .3s}
-.admin-fab:hover{transform:translateY(-3px);background:var(--r);color:var(--w)}
-.admin-fab span{color:var(--r)}.admin-fab:hover span{color:var(--w)}
-.admin-fab+.admin-fab{left:auto;right:16px;background:var(--r);color:var(--w)}
-.admin-fab+.admin-fab span{color:var(--w)}
-.admin-fab+.admin-fab:hover{background:var(--w);color:var(--k)}
+/* the editors' shortcut (site.js, only with a token saved in the admin): a red pencil button
+   in the corner; it opens "Editar esta página" (nearest) and "Admin" above it, and turns into
+   an x. The button comes first in the page, so Tab goes from it to the shortcuts. */
+.fab{position:fixed;right:16px;bottom:calc(16px + var(--radio-space,0px));z-index:140;display:flex;flex-direction:column-reverse;align-items:flex-end;gap:10px}
+.fab-btn{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:var(--r2);color:var(--w);border:1px solid var(--r2);box-shadow:0 14px 30px -10px rgba(0,0,0,.6);transition:transform .45s var(--spring),background .3s,color .3s,border-color .3s}
+.fab-btn:hover{transform:translateY(-3px);background:var(--w);color:var(--k);border-color:var(--w)}
+.fab-btn svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.fab-btn .x{display:none}
+.fab.open .fab-btn{background:var(--w);color:var(--k);border-color:var(--w)}
+.fab.open .fab-btn .pen{display:none}
+.fab.open .fab-btn .x{display:block}
+.fab-menu{display:flex;flex-direction:column-reverse;align-items:flex-end;gap:8px}
+.fab-menu[hidden]{display:none}
+.fab-menu a{display:inline-flex;align-items:center;gap:10px;min-height:46px;padding:0 20px 0 16px;border-radius:999px;background:var(--w);color:var(--k);font:600 15px/1 var(--sans);white-space:nowrap;box-shadow:0 14px 30px -10px rgba(0,0,0,.55);transition:transform .4s var(--spring)}
+.fab-menu a:hover{transform:translateX(-3px)}
+.fab-menu svg{width:18px;height:18px;fill:none;stroke:var(--r2);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.fab-menu a.edit{background:var(--r2);color:var(--w)}
+.fab-menu a.edit svg{stroke:var(--w)}
+/* opening: the shortcuts rise from the button, the nearest first */
+.fab.open .fab-menu a{animation:fab-in .45s var(--spring) both}
+.fab.open .fab-menu a:nth-child(2){animation-delay:.05s}
+@keyframes fab-in{from{opacity:0;transform:translateY(14px) scale(.9)}}
 
 /* RADIO: playlists on a dial, docked at the bottom (radio.js). --radio-space is the room it
    takes at the bottom of the screen, kept free at the end of the page. */
 main{padding-bottom:var(--radio-space,0px)}
 .toast{bottom:calc(24px + var(--radio-space,0px))}
-.admin-fab{bottom:calc(16px + var(--radio-space,0px))}
 
 /* nav: play/pause next to the bars */
 .som{position:relative;isolation:isolate;display:none;align-items:center;gap:11px;height:46px;padding:4px 15px 4px 4px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.05)}

@@ -179,8 +179,8 @@ npm run build          # just build into _site/
 ## The admin (`/admin`)
 
 Each editor signs in once with their name and the token you sent them. Both stay in that browser's `localStorage`.
-While a token is saved, the public pages show an **Admin** button, plus **Editar esta página** on pages
-that can be edited.
+While a token is saved, the public pages show a red pencil button in the corner. It opens **Editar esta página**
+(on pages that can be edited) and **Admin**.
 
 - **Painel** lists every unpublished change (new, edited, removed) with undo, and publishes all of them
   as one commit with a generated message. The editor's name is the commit author.
