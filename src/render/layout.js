@@ -32,7 +32,9 @@ export const CSP = [
 // opts: { title, description, image, type, current, bodyClass, main, cta, edit, head }
 // Admin previews leave out the page's own CSP: Firefox doesn't match 'self'
 // inside an iframe srcdoc and would block the stylesheets. The preview still
-// runs under the admin page's CSP, which the srcdoc inherits. Previews also
+// runs under the admin page's CSP, which the srcdoc inherits (with the site's
+// origin named next to 'self', for the same reason: see nameOriginInAdminCsp
+// in scripts/build.mjs). Previews also
 // skip the `js` class, so the entrance animations don't replay on every edit.
 export function layout(P, opts) {
   const seo = P.site.seo || {};

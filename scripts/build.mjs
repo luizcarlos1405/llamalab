@@ -56,6 +56,7 @@ export async function build({ siteUrl = process.env.SITE_URL || SITE.defaultUrl,
   }
   await fs.writeFile(path.join(OUT, '.nojekyll'), '');
   await fs.writeFile(path.join(OUT, 'version.json'), `${JSON.stringify({ sha: process.env.GITHUB_SHA || 'local', builtAt: new Date().toISOString(), today }, null, 2)}\n`);
+  await nameOriginInAdminCsp(siteUrl);
   await writeWorker(version);
 
   if (!quiet) {
@@ -161,6 +162,20 @@ export function readImageSize(buf) {
     }
   }
   return null;
+}
+
+// The admin's live preview is an iframe srcdoc, and Firefox (148) blocks the requests from one
+// that the service worker answers when the page's Content-Security-Policy allows them only as
+// 'self': the preview showed without its stylesheet, scripts and fonts. The site's origin,
+// named next to each 'self' in admin.html's policy, matches there. For everything else it
+// changes nothing: it's the address 'self' already stands for.
+async function nameOriginInAdminCsp(siteUrl) {
+  const file = path.join(OUT, 'admin.html');
+  const html = await fs.readFile(file, 'utf8');
+  const meta = /(<meta http-equiv="Content-Security-Policy" content=")([^"]*)/;
+  if (!meta.test(html)) throw new Error('admin.html: the Content-Security-Policy meta tag is missing');
+  const origin = new URL(siteUrl).origin;
+  await fs.writeFile(file, html.replace(meta, (_, start, policy) => start + policy.replaceAll("'self'", `'self' ${origin}`)));
 }
 
 // The service worker (src/sw.js) with the files it may keep for offline use, by pack, each

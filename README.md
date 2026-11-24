@@ -135,6 +135,9 @@ For developers:
 - `?sw=off` in the address removes the worker and what it saved, in that browser, until `?sw=on`.
 - With `npm run dev`, every rebuild is a new version of the worker: a page may need a second reload to show a change,
   and the admin offers to reload. `?sw=off` avoids that while working on the site.
+- The build names the site's origin next to each `'self'` in the admin's Content-Security-Policy (the meta tag in
+  `admin.html`). Firefox blocks the requests of the live preview (an iframe `srcdoc`) that the worker answers when the
+  policy allows them only as `'self'`, and the preview then shows without its styles.
 - The icons are drawn from the llama in `assets/favicon.svg` by `node scripts/icons.mjs` (needs `rsvg-convert`), into
   `assets/icons/`. Run it again when the llama changes.
 - If the worker ever misbehaves on visitors' devices, publish a `src/sw.js` that removes itself (keep the `BUILD` line,
