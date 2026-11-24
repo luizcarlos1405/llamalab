@@ -273,7 +273,7 @@ main{position:relative;z-index:2}
 .bs-head .h2{font-size:clamp(64px,10vw,168px)}
 .bs-sub{max-width:380px;color:#bbb;font-size:18px}
 .track{display:flex;gap:24px;padding:0 var(--pad);width:max-content;will-change:transform}
-.card{position:relative;flex:0 0 auto;width:clamp(300px,31vw,470px);height:clamp(420px,58vh,560px);border-radius:30px;background:var(--k2);border:1px solid var(--line);overflow:hidden;display:flex;flex-direction:column;transition:transform .6s var(--spring)}
+.card{position:relative;flex:0 0 auto;width:clamp(300px,31vw,470px);height:clamp(420px,58vh,560px);border-radius:30px;background:var(--k2);color:var(--w);border:1px solid var(--line);overflow:hidden;display:flex;flex-direction:column;transition:transform .6s var(--spring)}
 .card:hover,.card:focus-visible{transform:translateY(-10px) rotate(-1deg)}
 .card .ph{position:relative;flex:1;min-height:0;overflow:hidden;background:#1e1e1e}
 .card .ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .8s var(--ease)}
