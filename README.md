@@ -29,7 +29,7 @@ data/*.json, images/  ──>  scripts/build.mjs  ──>  _site/  ──>  GitH
   show portraits in wider boxes, cropped around a point the editor taps on the photo in the form, with previews
   of the cards (the image's `focus`; the upper part when there's none).
 - **Pages** are rendered by [`src/render/`](src/render/) at build time, so every event, news item, interview and artist has
-  its own URL, link preview (Open Graph) and structured data. The same render code runs in the admin for the live
+  its own URL and link preview (Open Graph); events and news items also carry structured data. The same render code runs in the admin for the live
   preview. The build also writes `sitemap.xml`, `feed.xml` (RSS), an `.ics` file per event and `version.json`.
 - **Daily rebuild:** the Actions workflow also runs every night, so events that already happened leave the home
   page and the agenda without anyone publishing.
@@ -223,7 +223,8 @@ stops working it tells the editor to ask whoever looks after the site for a new 
 
 1. Open this pre-filled link: [new fine-grained token](https://github.com/settings/personal-access-tokens/new?name=Admin+do+site+LLama+Lab&description=Publicar+altera%C3%A7%C3%B5es+no+site+pelo+admin+%28luizcarlos1405%2Fllamalab%29&target_name=luizcarlos1405&expires_in=366&contents=write).
    It sets **Contents: Read and write** and a one-year expiration; pick a shorter one if you prefer.
-2. Under **Repository access**, choose **Only select repositories** and pick `llamalab`.
+2. Under **Repository access**, choose **Only select repositories** and pick `llamalab` and `llamalab-keys`.
+   The second one is private and holds the key the admin will use to upload event photos to Cloudflare R2 (#7).
 3. Name it after the editor, so you can revoke one person's access without touching the others.
 
 Only the owner of a personal account's repository can create fine-grained tokens for it, which is why the
