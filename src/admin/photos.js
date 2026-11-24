@@ -132,6 +132,8 @@ export function photosField(field, get, set, ctx) {
   const preparing = [];
   let working = false;
   const failed = [];
+  // the editor saves only once every photo chosen is ready (app.js asks)
+  ctx.busy = () => preparing.length > 0;
 
   // new photos: in the order of their file names (a camera's order), after the ones there
   const take = (files) => {
@@ -154,6 +156,11 @@ export function photosField(field, get, set, ctx) {
     if (working) return;
     working = true;
     while (preparing.length) {
+      // the form was left (cancelled, another page): the rest isn't prepared
+      if (!el.isConnected && el.dataset.shown) {
+        preparing.length = 0;
+        break;
+      }
       const file = preparing[0];
       try {
         const { full, mini } = await processPhoto(file);
@@ -312,6 +319,7 @@ export function photosField(field, get, set, ctx) {
   };
 
   function draw() {
+    if (el.isConnected) el.dataset.shown = '1';
     count.textContent = String(photos().length);
     const nodes = photos().map(tile);
     for (let k = 0; k < preparing.length; k += 1) nodes.push(h('div', { class: 'mp-t prep', 'aria-hidden': 'true' }, h('span', { class: 'ring spin' }), h('span', { class: 'st' }, k ? 'Na fila' : 'Preparando')));

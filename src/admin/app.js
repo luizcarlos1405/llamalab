@@ -102,7 +102,8 @@ async function connect(token) {
   });
   store.onOtherTab(async () => {
     if (app.guard && app.guard()) return;
-    await store.reloadDrafts();
+    const moved = await store.reloadDrafts();
+    if (moved && net.online) await refreshDrafts().catch(() => {});
     route();
   });
   route();
@@ -702,6 +703,11 @@ async function publishFlow(title) {
     outdatedDialog();
     return;
   }
+  // conflicts left for later must be decided first (store.publish says why)
+  if (store.state.conflicts.length) {
+    conflictsDialog();
+    return;
+  }
   const problems = store.validateAll();
   if (problems.length) {
     fixDialog({ title: 'Falta arrumar algumas coisas', intro: 'Corrija estes itens antes de publicar:', items: problems });
@@ -1081,6 +1087,11 @@ function itemEditor(type, id, query) {
   const status = existing ? store.itemStatus(type, existing.id) : 'add';
   const published = existing && store.findBase(type, existing.id);
   const save = async () => {
+    // an album's photos still being prepared would be left out (photos.js)
+    if (ctx.busy && ctx.busy()) {
+      toast('Ainda estou preparando algumas fotos. Espere terminar para salvar.', 'error');
+      return;
+    }
     const item = normalize(t.fields, model);
     const problems = validate(t.fields, item);
     if (problems.length) {

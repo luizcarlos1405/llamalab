@@ -209,7 +209,7 @@
   // site asks for it (src/config.js PHOTOS.mark).
   async function jpeg(item, album) {
     const res = await fetch(item.full, { mode: 'cors', credentials: 'omit' });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (!res.ok || !/^image\/(?!svg)/.test(res.headers.get('content-type') || '')) throw new Error(`HTTP ${res.status}`);
     const blob = await res.blob();
     let pic;
     try {
@@ -390,11 +390,14 @@
     if (!fig || !item) return;
     const img = $('img', fig);
     if (!img.src) img.src = item.thumb;
-    if (fig.dataset.full) return;
+    if (fig.dataset.full || !navigator.onLine) return;
     fig.dataset.full = '1';
     const big = new Image();
     big.onload = () => {
-      img.src = item.full;
+      if (big.naturalWidth > 1) img.src = item.full;
+    };
+    big.onerror = () => {
+      delete fig.dataset.full;
     };
     big.src = item.full;
   }
@@ -1147,8 +1150,11 @@
       return;
     }
     if (viewerOpen()) {
+      // the step the viewer added: only the viewer closes; one opened by the address (a link to
+      // a photo, which may have swapped the page in): the page goes back too
+      const own = vw.pushed;
       closeViewer({ fromHistory: true });
-      return;
+      if (own) return;
     }
     if (e.state && e.state.vw) return;
     if (e.state && e.state.ll) go(new URL(location.href), { push: false, y: e.state.y || 0 });

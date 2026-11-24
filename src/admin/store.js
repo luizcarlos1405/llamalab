@@ -224,17 +224,27 @@ async function markUploaded(path) {
   if (rec) await imageStore.set(path, { ...rec, uploaded: true });
 }
 
-// Re-reads the drafts another tab saved.
+// Re-reads the drafts another tab saved. Images that tab published (their records are gone)
+// stop being staged here too. Returns whether it published meanwhile: then what's published
+// has to be loaded again (app.js does), or this tab would take its images for unused.
 export async function reloadDrafts() {
   const draft = await kv.get('draft');
   if (draft && draft.headSha === state.headSha) state.working = normalizeData(draft.working);
-  for (const path of await imageStore.keys()) {
+  const keys = new Set(await imageStore.keys());
+  for (const [path, rec] of [...state.staged]) {
+    if (keys.has(path)) continue;
+    URL.revokeObjectURL(rec.url);
+    state.staged.delete(path);
+    uploads.forget(path);
+  }
+  for (const path of keys) {
     if (!state.staged.has(path)) {
       const rec = await imageStore.get(path);
       if (rec && rec.blob) addStaged(path, rec);
     }
   }
   emit();
+  return Boolean(draft && draft.headSha && draft.headSha !== state.headSha);
 }
 
 let persistTimer = null;
@@ -588,11 +598,14 @@ export async function pruneStaged() {
     if (refs.has(path)) continue;
     const job = uploads.status(path);
     const went = rec.uploaded || (job && (job.state === 'up' || job.state === 'done'));
+    // its record gone means another tab published it (it deletes the records it publishes):
+    // it's on the site now, whatever this tab's copy of the published version says
+    const mine = Boolean(await imageStore.get(path));
     URL.revokeObjectURL(rec.url);
     state.staged.delete(path);
     uploads.forget(path);
     await imageStore.del(path);
-    if (went && r2.hasKey() && !published.has(path) && !state.remoteKeep.has(path)) r2.del(path).catch(() => {});
+    if (went && mine && r2.hasKey() && !published.has(path) && !state.remoteKeep.has(path)) r2.del(path).catch(() => {});
   }
 }
 
@@ -643,6 +656,9 @@ export function commitSummary() {
 // invalid, { missing } when the content would point to images the site won't
 // have (missingImages), or { nothing: true }.
 export async function publish(gh, { message, author, onStep = () => {} }) {
+  // Conflicts left for later: publishing now would keep this editor's version of those items
+  // without anyone choosing, and delete for good the images only the other one used.
+  if (state.conflicts.length) return { conflicts: state.conflicts };
   for (let attempt = 1; attempt <= 3; attempt += 1) {
     onStep('Conferindo a versão publicada…');
     const remote = await loadRemote(gh);
@@ -713,7 +729,10 @@ export async function publish(gh, { message, author, onStep = () => {} }) {
     adopt({ headSha: commit.sha, treeSha: tree.sha, data: clone(final), texts, paths, keep: remote.keep });
     state.working = clone(final);
     state.conflicts = [];
+    // what went out stops being a draft; the images of a form not saved yet stay, and keep going up
+    const out = imageRefs(final);
     for (const [path, rec] of [...state.staged]) {
+      if (!out.has(path)) continue;
       URL.revokeObjectURL(rec.url);
       state.staged.delete(path);
       uploads.forget(path);

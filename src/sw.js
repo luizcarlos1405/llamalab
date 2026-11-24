@@ -249,7 +249,9 @@ async function image(event, key, remote = null) {
     const res = await (remote ? fetch(remote, { mode: 'cors', credentials: 'omit' }) : fetch(event.request));
     if (res.ok && (res.type === 'basic' || res.type === 'cors')) event.waitUntil(keep(IMAGES, key, res.clone(), KEEP.images));
     return res;
-  } catch {
+  } catch (error) {
+    // what a script asked for (the photo viewer saving a JPEG) gets the failure, not a picture
+    if (event.request.destination !== 'image') throw error;
     return new Response(PLACEHOLDER, { headers: { 'content-type': 'image/svg+xml', 'cache-control': 'no-store' } });
   }
 }
