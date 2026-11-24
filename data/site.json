@@ -31,6 +31,9 @@
     "interviewLabel": "Quero dar entrevista",
     "interviewMessage": "Oi, LLama! Quero contar minha história numa entrevista: "
   },
+  "footer": {
+    "text": "Laboratório criativo de divulgação cultural. Agenda, entrevistas e notícias de quem faz a cultura acontecer em Dourados — MS."
+  },
   "contact": {
     "whatsapp": "5567992475409",
     "email": "contato@llamalab.com",

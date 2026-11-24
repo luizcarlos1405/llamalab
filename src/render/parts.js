@@ -146,6 +146,10 @@ export function breadcrumbs(P, items) {
   return `<nav class="crumbs" aria-label="Caminho"><a href="${P.href('')}">Capa</a>${items.map(([label, href]) => `<span aria-hidden="true">/</span>${href ? `<a href="${href}">${esc(label)}</a>` : `<span>${esc(label)}</span>`}`).join('')}</nav>`;
 }
 
+// The text under the name in the footer, editable in the admin (Capa e contatos → Rodapé).
+// This is what it said before it was, and what it says if it's ever left empty.
+const FOOTER_TEXT = 'Laboratório criativo de divulgação cultural. Agenda, entrevistas e notícias de quem faz a cultura acontecer em Dourados — MS.';
+
 export function footer(P, { withCta = true } = {}) {
   const c = P.site.contact || {};
   const cta = P.site.cta || {};
@@ -170,7 +174,7 @@ export function footer(P, { withCta = true } = {}) {
   return `<section class="panel dark foot" id="contato">
   ${ctaHtml}
   <div class="fgrid">
-    <div><h2>LLama Lab</h2><p>Laboratório criativo de divulgação cultural. Agenda, entrevistas e notícias de quem faz a cultura acontecer em Dourados — MS.</p><div class="btns">${c.whatsapp ? `<a class="btn btn-red btn-sm" href="${esc(waLink(c.whatsapp))}" target="_blank" rel="noopener">Chama no WhatsApp <span class="arr">→</span></a>` : ''}${installButton(' data-install hidden')}</div></div>
+    <div><h2>LLama Lab</h2><p>${esc((P.site.footer || {}).text || FOOTER_TEXT)}</p><div class="btns">${c.whatsapp ? `<a class="btn btn-red btn-sm" href="${esc(waLink(c.whatsapp))}" target="_blank" rel="noopener">Chama no WhatsApp <span class="arr">→</span></a>` : ''}${installButton(' data-install hidden')}</div></div>
     <div><h2>Navegue</h2>${NAV.map((n) => `<a href="${P.href(n.href)}">${n.label}</a>`).join('')}</div>
     ${social.length ? `<div><h2>Redes</h2>${social.map(([name, url]) => `<a href="${esc(url)}" target="_blank" rel="noopener">${name}</a>`).join('')}</div>` : ''}
     <div><h2>Contato</h2>${c.email ? `<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>` : ''}${c.whatsapp ? `<a href="${esc(waLink(c.whatsapp))}" target="_blank" rel="noopener">${esc(formatPhone(c.whatsapp))}</a>` : ''}<a href="${P.href('sobre/')}">Dourados — MS</a></div>

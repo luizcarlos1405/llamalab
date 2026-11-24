@@ -18,7 +18,7 @@ data/*.json, images/  ──>  scripts/build.mjs  ──>  _site/  ──>  GitH
 ```
 
 - **Content** is one JSON file per type in `data/`: `agenda.json`, `noticias.json` (the Radar Cultural),
-  `entrevistas.json` and `artistas.json` (arrays of items), plus `site.json` (home page, ribbons, footer call to action, contacts, the radio's stations), `sobre.json` and
+  `entrevistas.json` and `artistas.json` (arrays of items), plus `site.json` (home page, ribbons, the footer's call to action and text, contacts, the radio's stations), `sobre.json` and
   `contrate.json`. Fields are defined once in [`src/schema.js`](src/schema.js), which drives the admin forms, the
   validation and the build. Long texts use the small Markdown subset in [`src/markdown.js`](src/markdown.js).
   Entrevistas are the team's longer, journalistic pieces about someone; Artistas is a catalog of short profiles

@@ -939,7 +939,7 @@ function pagesView() {
     h('span', { class: 'ic' }, TYPE_ICON[s.name]),
     h('h2', null, s.label),
     h('p', null, {
-      site: 'Abertura da capa, faixas, chamada do rodapé, contatos e redes.',
+      site: 'Abertura da capa, faixas, chamada e texto do rodapé, contatos e redes.',
       sobre: 'A página Sobre: quem é a LLama.',
       contrate: 'Serviços e chamada para contratar a LLama.',
     }[s.name]),

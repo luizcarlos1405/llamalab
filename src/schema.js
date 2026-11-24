@@ -198,6 +198,12 @@ export const SINGLETONS = {
         ],
       },
       {
+        key: 'footer', label: 'Rodapé', type: 'group',
+        fields: [
+          { key: 'text', label: 'Texto embaixo do nome', type: 'textarea', maxLength: 220, hint: 'Aparece no rodapé de todas as páginas, embaixo de "LLama Lab".' },
+        ],
+      },
+      {
         key: 'contact', label: 'Contatos e redes', type: 'group',
         fields: [
           { key: 'whatsapp', label: 'WhatsApp', type: 'text', maxLength: 20, hint: 'Só números, com DDI e DDD: 5567999999999.' },
