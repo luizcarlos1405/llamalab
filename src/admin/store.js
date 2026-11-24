@@ -238,20 +238,97 @@ function changed() {
 
 /* ---------- merging ---------- */
 
+// Items the site moved from one collection to another, keeping their ids: in A here (base),
+// gone from A on the site (theirs), and in B there but not here. On 24/11/2026 the 18 artist
+// profiles moved from Entrevistas to Artistas that way, and a draft from before that which had
+// edited one put it back in Entrevistas, next to the artist. Each move comes with the item as it
+// was here (`was`) and as the draft has it (`now`; none if the draft removed it).
+function movesOf(base, mine, theirs) {
+  const has = (data, name, id) => (data[name] || []).some((item) => item.id === id);
+  const names = Object.keys(COLLECTIONS);
+  const moves = [];
+  for (const from of names) {
+    for (const was of base[from] || []) {
+      if (has(theirs, from, was.id)) continue;
+      const to = names.find((name) => name !== from && has(theirs, name, was.id) && !has(base, name, was.id));
+      if (to) moves.push({ from, to, id: was.id, was, now: (mine[from] || []).find((item) => item.id === was.id) });
+    }
+  }
+  return moves;
+}
+
+// Fields that hold the same kind of value in two types: the same type and, in groups and
+// repeaters, the same fields.
+function sameShape(f, g) {
+  if (f.type !== g.type) return false;
+  if (!f.fields || !g.fields) return !f.fields && !g.fields;
+  return f.fields.length === g.fields.length && f.fields.every((sub) => {
+    const other = g.fields.find((x) => x.key === sub.key);
+    return Boolean(other) && sameShape(sub, other);
+  });
+}
+
+// A moved item as the site has it now (`theirs`), with the changes the draft made to it where it
+// was: each field the editor changed takes their value, when the new type has the same field
+// (same key, same kind of value). The other changed fields can't go along: `left` lists their
+// labels, for the conflicts dialog.
+function carryOver(move, theirs) {
+  const fields = new Map(COLLECTIONS[move.to].fields.map((f) => [f.key, f]));
+  const item = clone(theirs);
+  const left = [];
+  for (const f of COLLECTIONS[move.from].fields) {
+    const b = move.was[f.key];
+    const m = move.now[f.key];
+    if (eq(b, m)) continue;
+    const to = fields.get(f.key);
+    if (!to || !sameShape(f, to)) {
+      left.push(f.label);
+    } else if (f.type === 'image' && b && m && m.src === b.src) {
+      // The same photo with a new description, credit or framing: those go on the photo where
+      // it is now, since moving it changed its src. A photo the site removed since takes none.
+      if (!item[f.key]) continue;
+      for (const k of new Set([...Object.keys(b), ...Object.keys(m)])) {
+        if (k === 'src' || k === 'w' || k === 'h' || eq(b[k], m[k])) continue;
+        if (m[k] === undefined) delete item[f.key][k];
+        else item[f.key][k] = m[k];
+      }
+    } else {
+      // the editor's value; a new photo, or none, comes whole
+      item[f.key] = clone(m);
+    }
+  }
+  return { item: normalize(COLLECTIONS[move.to].fields, item), left };
+}
+
 export function merge(base, mine, theirs) {
   const result = {};
   const conflicts = [];
+  const moves = movesOf(base, mine, theirs);
   for (const [name, t] of Object.entries(COLLECTIONS)) {
     const B = byId(base[name]);
     const M = byId(mine[name]);
     const T = byId(theirs[name]);
     const out = [];
     for (const id of new Set([...B.keys(), ...M.keys(), ...T.keys()])) {
+      // a moved item never comes back where it was: the draft's edits go along with it
+      if (moves.some((x) => x.from === name && x.id === id)) continue;
       const b = B.get(id);
       const m = M.get(id);
       const th = T.get(id);
+      // (a draft that has an item of its own under this id here merges it as usual)
+      const move = !m && moves.find((x) => x.to === name && x.id === id);
       let pick;
-      if (eq(b, m)) pick = th;
+      if (move) {
+        // It moved here on the site. A draft that edited it where it was brings the edits, always
+        // as a conflict that says where it came from and what can't come along (the dialog
+        // explains). A draft that removed it leaves it here as published.
+        pick = th;
+        if (move.now && !eq(move.was, move.now)) {
+          const { item, left } = carryOver(move, th);
+          conflicts.push({ type: name, id, title: titleOf(name, item), mine: clone(item), theirs: clone(th), from: move.from, left });
+          pick = item;
+        }
+      } else if (eq(b, m)) pick = th;
       else if (eq(b, th) || eq(m, th)) pick = m;
       else {
         conflicts.push({ type: name, id, title: titleOf(name, m || th || b), mine: clone(m), theirs: clone(th) });
