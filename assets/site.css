@@ -66,9 +66,14 @@ img{max-width:100%}
 .menu-top{display:flex;justify-content:space-between;align-items:center;padding:9px 9px 9px 8px}
 .menu .close{width:46px;height:46px;border-radius:50%;background:var(--w);color:var(--k);font:600 22px/1 var(--sans)}
 .menu nav{display:flex;flex-direction:column;margin:36px 0 30px}
-.menu nav a{font:400 clamp(56px,16vw,96px)/1 var(--disp);text-transform:uppercase;padding:2px 0;transition:color .2s,transform .4s var(--ease)}
+/* sized so the longest item, "Radar Cultural", fits one line on a phone */
+.menu nav a{font:400 clamp(48px,13.4vw,96px)/1 var(--disp);text-transform:uppercase;padding:2px 0;transition:color .2s,transform .4s var(--ease)}
 .menu nav a:hover,.menu nav a[aria-current]{color:var(--r);transform:translateX(8px)}
 .menu .btn{align-self:flex-start}
+/* "Divulgue seu evento" sits at the bottom, within the thumb's reach; the invitation to
+   install, when there is one, right under it */
+.menu>.btn{margin-top:auto}
+.menu>.btn~.menu-app{margin-top:16px}
 
 /* HERO (home) */
 /* The stage fits the window like a poster. Its unit --u is the window's width (1vw), unless the
