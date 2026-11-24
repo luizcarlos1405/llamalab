@@ -7,7 +7,7 @@
 
 :root{--r2:#dd3119;--k:#0a0a0a;--k2:#151515;--w:#fff;--r:#ee3c23;--g:#9b9b9b;--line:rgba(255,255,255,.14);--lineK:rgba(10,10,10,.14);
 --disp:'Anton',Impact,'Arial Narrow',sans-serif;--sans:'Outfit',system-ui,sans-serif;--ease:cubic-bezier(.16,1,.3,1);--spring:cubic-bezier(.34,1.56,.64,1);
---pad:clamp(18px,3vw,44px);--rad:clamp(28px,4vw,60px);--maxw:1360px}
+--pad:clamp(18px,3vw,44px);--rad:clamp(28px,4vw,60px);--maxw:1360px;--u:1vw}
 *{box-sizing:border-box;margin:0;padding:0}
 html{background:var(--k);-webkit-text-size-adjust:100%;scroll-padding-top:100px}
 body{background:var(--k);color:var(--w);font:400 17px/1.5 var(--sans);overflow-x:hidden;-webkit-font-smoothing:antialiased}
@@ -71,7 +71,14 @@ img{max-width:100%}
 .menu .btn{align-self:flex-start}
 
 /* HERO (home) */
-.hero{position:sticky;top:0;height:100vh;min-height:620px;overflow:hidden;isolation:isolate;background:var(--k)}
+/* The stage fits the window like a poster. Its unit --u is the window's width (1vw), unless the
+   window is too short for the wordmark, the text and the ribbons: then the size that fits its
+   height, and the stage centres while its light and ribbons still run edge to edge. --x is the
+   height left once the fixed parts are counted; the second term applies once the title is at
+   its largest. At 16:10 or taller, and on phones, --u is 1vw: the stage is as it always was. */
+.hero{position:sticky;top:0;height:100vh;min-height:620px;overflow:hidden;isolation:isolate;background:var(--k);
+  --x:calc(max(100vh,620px) - 24px - clamp(92px,13vh,128px) - clamp(24px,5vh,56px) - 131px + .39*var(--pad));
+  --u:max(7px,min(1vw,max(calc(var(--x) / 41.3),calc((var(--x) - 140px) / 32.3))))}
 .hero-in{position:absolute;inset:0;transform-origin:50% 0;will-change:transform,opacity}
 .hero.off .hero-in{visibility:hidden}
 /* Scrolling shrinks and dims the stage under the page. Where the browser can tie an
@@ -96,11 +103,11 @@ img{max-width:100%}
 @keyframes swL{from{transform:rotate(-30deg)}to{transform:rotate(-8deg)}}
 @keyframes swR{from{transform:rotate(30deg)}to{transform:rotate(6deg)}}
 @keyframes swC{from{transform:rotate(-14deg)}to{transform:rotate(14deg)}}
-.hero-wm{position:absolute;z-index:1;left:var(--pad);right:var(--pad);top:clamp(92px,13vh,128px);color:var(--w)}
+.hero-wm{position:absolute;z-index:1;left:calc(50% - 50*var(--u) + var(--pad));right:calc(50% - 50*var(--u) + var(--pad));top:clamp(92px,13vh,128px);color:var(--w)}
 .hero-wm svg{width:100%;height:auto;overflow:hidden}
 .js .hero-wm .ch{transform:translateY(112%);transition:transform 1.3s var(--ease);transition-delay:calc(var(--i)*80ms + 200ms)}
 .js.ready .hero-wm .ch{transform:none}
-.hero-llama{position:absolute;z-index:3;left:50%;bottom:3vh;height:min(70vh,660px);aspect-ratio:120/193;transform:translateX(-50%)}
+.hero-llama{position:absolute;z-index:3;left:50%;bottom:3vh;height:min(70vh,660px,43.75*var(--u));aspect-ratio:120/193;transform:translateX(-50%)}
 .hero-llama .rise{width:100%;height:100%}
 .js .hero-llama .rise{transform:translateY(55%) scale(.8);opacity:0;transition:transform 1.6s var(--spring) .75s,opacity .6s ease .75s}
 .js.ready .hero-llama .rise{transform:none;opacity:1}
@@ -133,12 +140,17 @@ img{max-width:100%}
 .llama .ll-ears{transform-box:fill-box;transform-origin:50% 100%}
 .llama.bang .ll-ears{animation:ears .46s ease-in-out infinite}
 @keyframes ears{42%{transform:scale(1.04,.95)}}
-.hero-l,.hero-r{position:absolute;z-index:4;top:calc(clamp(92px,13vh,128px) + (100vw - 2*var(--pad))*.195 + clamp(24px,5vh,56px))}
-.hero-l{left:var(--pad);width:min(30vw,440px)}
-.hero-r{right:var(--pad);width:min(27vw,380px);display:flex;flex-direction:column;gap:22px}
-.h1{margin-top:16px;font:400 clamp(40px,5vw,78px)/.9 var(--disp);text-transform:uppercase;letter-spacing:.005em}
+.hero-l,.hero-r{position:absolute;z-index:4;top:calc(clamp(92px,13vh,128px) + (100*var(--u) - 2*var(--pad))*.195 + clamp(24px,5vh,56px));container-type:inline-size}
+/* the text columns reach up to 20px from the llama */
+.hero-l{left:calc(50% - 50*var(--u) + var(--pad));width:min(36*var(--u) - var(--pad) - 20px,440px)}
+.hero-r{right:calc(50% - 50*var(--u) + var(--pad));width:min(36*var(--u) - var(--pad) - 20px,380px);display:flex;flex-direction:column;gap:22px}
+/* narrow columns (small laptops): the buttons stay on one line, and the eyebrow too */
+@container (max-width:310px){.hero-r .btn{min-height:44px;padding:0 16px;font-size:14px}}
+@container (max-width:330px){.hero .eyebrow{letter-spacing:.16em}}
+@container (max-width:300px){.hero .eyebrow{letter-spacing:.12em;font-size:11px}}
+.h1{margin-top:16px;font:400 clamp(40px,5*var(--u),78px)/.9 var(--disp);text-transform:uppercase;letter-spacing:.005em}
 .red{color:var(--r)}
-.lead{font:400 clamp(16px,1.25vw,19px)/1.5 var(--sans);color:#cfcfcf}
+.lead{font:400 clamp(16px,1.25*var(--u),19px)/1.5 var(--sans);color:#cfcfcf}
 .light .lead{color:#444}
 .js .hero-l,.js .hero-r{opacity:0;transform:translateY(30px);transition:opacity 1s ease 1.2s,transform 1.2s var(--ease) 1.2s}
 .js.ready .hero-l,.js.ready .hero-r{opacity:1;transform:none}
@@ -149,7 +161,9 @@ img{max-width:100%}
 .next small{font:600 11px/1 var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--g)}
 .next em{font-style:normal;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ribbons{position:absolute;z-index:5;left:0;right:0;bottom:-1px;pointer-events:none}
-.ribbons svg{width:100%;height:auto;overflow:visible}
+/* as tall as the stage's proportions ask; the SVG covers the width and keeps its middle, which
+   on a 16:10 window is exactly the 1440 units of the original ribbons (see ribbons() in parts.js) */
+.ribbons svg{width:100%;height:calc(16*var(--u));overflow:visible}
 .rb-band{fill:none;stroke-width:58;stroke-linecap:butt}
 .rb-a .rb-band{stroke:var(--w)}
 .rb-b .rb-band{stroke:#1d1d1d}
@@ -659,12 +673,13 @@ main{padding-bottom:var(--radio-space,0px)}
   .next{background:rgba(24,24,24,.9);-webkit-backdrop-filter:none;backdrop-filter:none}
   body{font-size:16px}
   .nav{padding:8px 8px 8px 16px}.nav .btn,.eq{display:none}.lockup{height:34px}
-  .hero{min-height:680px}
-  .hero-wm{top:96px}
+  .hero{min-height:680px;--u:1vw}
+  .hero-wm{top:96px;left:var(--pad);right:var(--pad)}
   .hero-llama{height:min(44vh,380px);bottom:118px}
-  .hero-l{top:calc(96px + (100vw - 2*var(--pad))*.2 + 14px);width:auto;right:var(--pad)}.hero-l .h1{font-size:46px}
+  .hero-l{top:calc(96px + (100vw - 2*var(--pad))*.2 + 14px);left:var(--pad);width:auto;right:var(--pad)}.hero-l .h1{font-size:46px}
   .hero-r{display:none}
-  .ribbons svg{width:250%;margin-left:-75%}
+  /* the middle of the ribbons, zoomed: what 250% of the original 1440 units showed */
+  .ribbons svg{height:40vw}
   .rb-band{stroke-width:70}.rb-text{font-size:38px}
   .sec-head{flex-direction:column;align-items:flex-start}
   .months{justify-content:flex-start}

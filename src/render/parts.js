@@ -94,20 +94,29 @@ export function radio(P) {
 </div>`;
 }
 
+// The two ribbons at the bottom of the home stage. Between x = 0 and 1440 they're the original
+// waves; they go on to x = -520 and 1980 for windows wider than 16:10, where the stage scales to
+// the window's height and the SVG (slice) shows more of their length. Each repeats its phrase
+// enough times to fill the path even after site.js shifts it back by one phrase to make it flow
+// (about 14.5 units a letter at 30px; phones use bigger letters, so more than enough), and says
+// how many times in data-n.
 export function ribbons(top, bottom) {
-  const line = (words, times) => {
+  const PATH = 2600; // each path's length, in units (2561 and 2563)
+  const line = (words, path) => {
     const list = (words || []).map((w) => String(w).trim()).filter(Boolean);
     const unit = list.map((w) => `${esc(w)} <tspan class="st">✺</tspan> `).join('');
-    return unit.repeat(times);
+    const letters = list.reduce((n, w) => n + w.length + 3, 0) || 1;
+    const times = Math.max(4, Math.ceil(PATH / (letters * 15)) + 1);
+    return `<textPath href="#${path}" data-n="${times}">${unit.repeat(times)}</textPath>`;
   };
   return `<div class="ribbons" aria-hidden="true">
-  <svg viewBox="0 0 1440 230">
+  <svg viewBox="-720 0 2880 230" preserveAspectRatio="xMidYMax slice">
     <defs>
-      <path id="rpa" d="M-80 150C240 40 520 60 760 140S1220 230 1540 70"/>
-      <path id="rpb" d="M-80 70C260 200 640 210 940 120S1320 30 1540 150"/>
+      <path id="rpa" d="M-520 114C-362.6 148.5-196.3 190-80 150C240 40 520 60 760 140S1220 230 1540 70C1620 30 1800 20 1980 90"/>
+      <path id="rpb" d="M-520 143.1C-337.1 104.4-144.8 45.2-80 70C260 200 640 210 940 120S1320 30 1540 150C1628.8 198.4 1808.7 227.3 1980 199.9"/>
     </defs>
-    <g class="rb-b"><use href="#rpb" class="rb-band"/><text class="rb-text"><textPath href="#rpb">${line(bottom, 4)}</textPath></text></g>
-    <g class="rb-a"><use href="#rpa" class="rb-band"/><text class="rb-text"><textPath href="#rpa">${line(top, 4)}</textPath></text></g>
+    <g class="rb-b"><use href="#rpb" class="rb-band"/><text class="rb-text">${line(bottom, 'rpb')}</text></g>
+    <g class="rb-a"><use href="#rpa" class="rb-band"/><text class="rb-text">${line(top, 'rpa')}</text></g>
   </svg>
 </div>`;
 }

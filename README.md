@@ -34,6 +34,17 @@ data/*.json, images/  ──>  scripts/build.mjs  ──>  _site/  ──>  GitH
 - **Offline and installable:** a service worker keeps the site readable without internet, and the site and the
   admin can be installed as apps (see [Offline and installing](#offline-and-installing)).
 
+## The home page's stage
+
+The stage fits the window like a poster: the wordmark, the text, the llama and the ribbons always
+fit one screen, without the ribbons covering the text. They're sized by `--u` in
+[`assets/site.css`](assets/site.css), which is the window's width (`1vw`) unless the window is too
+short for them. On windows wider than 16:10, then, everything follows the window's height and
+centres, while the light and the ribbons still run edge to edge. The ribbons are longer than the
+1440 units a 16:10 window shows for that (`ribbons()` in [`src/render/parts.js`](src/render/parts.js)),
+and repeat their phrase as many times as their length needs (`data-n`, read by `site.js`). At 16:10
+or taller, and on phones, the stage is as it always was.
+
 ## Motion on slower phones
 
 The stage (beams, grain, the swaying llama, the flowing ribbons) is built to move without

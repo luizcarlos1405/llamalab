@@ -252,9 +252,9 @@
       l.addEventListener('pointerleave', () => l.classList.remove('bang'));
     });
 
-    /* ribbons: each repeats its phrase 4 times and loops by one phrase's length, measured
-       on a straight, hidden copy of the text: on the curve, Firefox only counts the letters
-       that fit, and its getSubStringLength() is off. */
+    /* ribbons: each repeats its phrase data-n times (parts.js) and loops by one phrase's length,
+       measured on a straight, hidden copy of the text: on the curve, Firefox only counts the
+       letters that fit, and its getSubStringLength() is off. */
     const tps = $$('.ribbons textPath');
     const measure = () => {
       page.unit = tps.map((tp) => {
@@ -265,7 +265,7 @@
         tp.parentNode.after(copy);
         try {
           // the second phrase's first letter (SVG drops the text's final space)
-          const second = (copy.getNumberOfChars() + 1) / 4;
+          const second = (copy.getNumberOfChars() + 1) / (Number(tp.dataset.n) || 4);
           return copy.getStartPositionOfChar(second).x - copy.getStartPositionOfChar(0).x || 900;
         } catch {
           return 900;
