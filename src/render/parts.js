@@ -138,24 +138,27 @@ export function stage() {
   return '<div class="spot"></div><div class="beams" aria-hidden="true"><i></i><i></i><i></i></div>';
 }
 
-// Dark page header used by every inner page.
-export function pageHero(P, { crumbs = [], eyebrow = '', live = false, title = '', titleClass = '', lead = '', extra = '' }) {
+// Dark page header used by every inner page. f: the fields its eyebrow, title and lead show,
+// for the admin's preview (mark()).
+export function pageHero(P, { crumbs = [], eyebrow = '', live = false, title = '', titleClass = '', lead = '', extra = '', f = {} }) {
+  const at = (key) => (f[key] ? mark(P, f[key]) : '');
   return `<section class="phero">
   ${stage()}
   <div class="phero-in">
     ${breadcrumbs(P, crumbs)}
-    ${eyebrow ? `<p class="eyebrow">${live ? '<span class="live"></span>' : ''}${esc(eyebrow)}</p>` : ''}
-    <h1 class="h2 ${titleClass}" data-split>${split(title)}</h1>
-    ${lead ? `<p class="lead" data-r style="--d:200ms">${esc(lead)}</p>` : ''}
+    ${eyebrow ? `<p class="eyebrow"${at('eyebrow')}>${live ? '<span class="live"></span>' : ''}${esc(eyebrow)}</p>` : ''}
+    <h1 class="h2 ${titleClass}" data-split${at('title')}>${split(title)}</h1>
+    ${lead ? `<p class="lead" data-r style="--d:200ms"${at('lead')}>${esc(lead)}</p>` : ''}
     ${extra}
   </div>
   <div class="noise"></div>
 </section>`;
 }
 
+// items: [label, href] each, the last one [label, '', field] when it shows a field (mark()).
 export function breadcrumbs(P, items) {
   if (!items.length) return '';
-  return `<nav class="crumbs" aria-label="Caminho"><a href="${P.href('')}">Capa</a>${items.map(([label, href]) => `<span aria-hidden="true">/</span>${href ? `<a href="${href}">${esc(label)}</a>` : `<span>${esc(label)}</span>`}`).join('')}</nav>`;
+  return `<nav class="crumbs" aria-label="Caminho"><a href="${P.href('')}">Capa</a>${items.map(([label, href, f]) => `<span aria-hidden="true">/</span>${href ? `<a href="${href}">${esc(label)}</a>` : `<span${f ? mark(P, f) : ''}>${esc(label)}</span>`}`).join('')}</nav>`;
 }
 
 // The text under the name in the footer, editable in the admin (Capa e contatos → Rodapé).
@@ -379,13 +382,13 @@ export function photoGrid(P, a) {
     ['album', a.id], ['title', a.title], ['when', `${String(p.d).padStart(2, '0')}/${String(p.m).padStart(2, '0')}`], ['venue', a.venue],
     ['credit', a.photographer], ['handle', ig && ig.handle], ['mark', PHOTOS.mark ? '1' : ''],
   ].filter(([, v]) => v).map(([k, v]) => ` data-${k}="${esc(v)}"`).join('');
-  return `<div class="jg"${attrs}>${(a.photos || []).map((ph, i) => `<a href="${esc(P.src(ph.src))}" data-n="${i + 1}" data-w="${ph.w}" data-h="${ph.h}" style="--w:${ph.w || 3};--h:${ph.h || 2}" aria-label="Foto ${i + 1} de ${n}"><img src="${esc(P.src(ph.thumb))}" alt="" width="${ph.w}" height="${ph.h}" loading="lazy" decoding="async"><span class="no">${String(i + 1).padStart(2, '0')}</span><span class="go" aria-hidden="true">↗</span></a>`).join('')}</div>`;
+  return `<div class="jg"${attrs}${mark(P, 'photos')}>${(a.photos || []).map((ph, i) => `<a href="${esc(P.src(ph.src))}" data-n="${i + 1}" data-w="${ph.w}" data-h="${ph.h}" style="--w:${ph.w || 3};--h:${ph.h || 2}" aria-label="Foto ${i + 1} de ${n}"><img src="${esc(P.src(ph.thumb))}" alt="" width="${ph.w}" height="${ph.h}" loading="lazy" decoding="async"><span class="no">${String(i + 1).padStart(2, '0')}</span><span class="go" aria-hidden="true">↗</span></a>`).join('')}</div>`;
 }
 
 // The end of an album: post and tag the team, and whoever took the photos.
-export function tagMe(a) {
+export function tagMe(P, a) {
   const ig = instagramOf(a.instagram);
-  return `<div class="tagme"><div class="badge" aria-hidden="true">${ring}${llamaUse('bh')}</div><div><p class="q">Saiu na foto? <span class="red">Posta e marca a gente.</span></p><p>Salva a foto em JPEG direto daqui e marca <b>@llama.etc</b>${ig ? ` e <b>@${esc(ig.handle)}</b>, que fotografou` : ''}.</p></div><a class="btn btn-solid" href="https://instagram.com/llama.etc" target="_blank" rel="noopener">Abrir o Instagram <span class="arr">↗</span></a></div>`;
+  return `<div class="tagme"><div class="badge" aria-hidden="true">${ring}${llamaUse('bh')}</div><div><p class="q">Saiu na foto? <span class="red">Posta e marca a gente.</span></p><p>Salva a foto em JPEG direto daqui e marca <b>@llama.etc</b>${ig ? ` e <b${mark(P, 'instagram')}>@${esc(ig.handle)}</b>, que fotografou` : ''}.</p></div><a class="btn btn-solid" href="https://instagram.com/llama.etc" target="_blank" rel="noopener">Abrir o Instagram <span class="arr">↗</span></a></div>`;
 }
 
 /* ---------- artists ---------- */
@@ -395,12 +398,13 @@ export function artistUrl(P, it) {
 }
 
 // The quote with the highlighted word in red.
-export function quoteHtml(quote, highlight) {
+// P: an interview's own page, where the marked word gets its field's mark (mark()).
+export function quoteHtml(quote, highlight, P = null) {
   const q = String(quote || '');
   const h = String(highlight || '').trim();
   const idx = h ? q.toLowerCase().indexOf(h.toLowerCase()) : -1;
   if (idx < 0) return esc(q);
-  return `${esc(q.slice(0, idx))}<span class="mk">${esc(q.slice(idx, idx + h.length))}</span>${esc(q.slice(idx + h.length))}`;
+  return `${esc(q.slice(0, idx))}<span class="mk"${P ? mark(P, 'highlight') : ''}>${esc(q.slice(idx, idx + h.length))}</span>${esc(q.slice(idx + h.length))}`;
 }
 
 /* ---------- news ---------- */

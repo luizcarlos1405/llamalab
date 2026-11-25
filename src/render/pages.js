@@ -219,7 +219,7 @@ export function eventPage(P, ev) {
   ${stage()}
   <div class="phero-in phero-grid">
     <div>
-      ${breadcrumbs(P, [['Agenda', P.href('agenda/')], [ev.title]])}
+      ${breadcrumbs(P, [['Agenda', P.href('agenda/')], [ev.title, '', 'title']])}
       <div class="tags">${ev.category ? `<span class="tag"${mark(P, 'category')}>${esc(ev.category)}</span>` : ''}${ev.price ? `<span class="tag r"${mark(P, 'price')}>${esc(ev.price)}</span>` : ''}${past ? '<span class="stamp-past">Já rolou</span>' : ''}</div>
       <h1 class="h2 ${titleSize(ev.title, 20, 40)}" data-split${mark(P, 'title')}>${split(ev.title)}</h1>
       <div class="when" data-r style="--d:150ms"${mark(P, 'date')}><b>${String(p.d).padStart(2, '0')}</b><span>${esc(MONTHS[p.m - 1])} · ${p.y}<small${mark(P, 'time', 'endTime', 'endDate')}>${esc(WEEKDAYS[weekday(ev.date)])}${ev.time ? ` · ${esc(fmtHours(ev))}` : ''}${multi ? ` · até ${esc(fmtShort(ev.endDate, false))}` : ''}</small><small${mark(P, ev.venue ? 'venue' : 'city')}>${esc(ev.venue || ev.city || '')}</small></span></div>
@@ -343,34 +343,34 @@ export function albumPage(P, a) {
   const ev = a.event ? P.events.find((e) => e.id === a.event) : null;
   const ig = instagramOf(a.instagram);
   const more = P.albums.filter((x) => x.id !== a.id).slice(0, 3);
-  const when = `${esc(MONTHS[p.m - 1])} · ${p.y}<small>${esc(WEEKDAYS[weekday(a.date)])}${ev && ev.time && ev.date === a.date ? ` · ${esc(fmtTime(ev.time))}` : ''}</small>${a.venue ? `<small>${esc(a.venue)}</small>` : ''}`;
+  const when = `${esc(MONTHS[p.m - 1])} · ${p.y}<small>${esc(WEEKDAYS[weekday(a.date)])}${ev && ev.time && ev.date === a.date ? ` · ${esc(fmtTime(ev.time))}` : ''}</small>${a.venue ? `<small${mark(P, 'venue')}>${esc(a.venue)}</small>` : ''}`;
   const credit = a.photographer || ig
-    ? `<p class="byline">Fotos${a.photographer ? `: ${esc(a.photographer)}` : ''}${ig ? ` · <a href="${esc(ig.url)}" target="_blank" rel="noopener">@${esc(ig.handle)}</a>` : ''}</p>`
+    ? `<p class="byline"${mark(P, 'photographer')}>Fotos${a.photographer ? `: ${esc(a.photographer)}` : ''}${ig ? ` · <a href="${esc(ig.url)}" target="_blank" rel="noopener"${mark(P, 'instagram')}>@${esc(ig.handle)}</a>` : ''}</p>`
     : '';
   const hero = `<section class="phero">
   ${stage()}<div class="flash" aria-hidden="true" style="--fx:74%;--fy:38%"></div>
   <div class="phero-in phero-grid">
     <div>
-      ${breadcrumbs(P, [['Fotos', P.href('fotos/')], [excerpt(a.title, 40)]])}
-      <div class="tags">${a.category ? `<span class="tag">${esc(a.category)}</span>` : ''}<span class="tag r">${esc(photoCount(a))}</span></div>
-      <h1 class="h2 ${titleSize(a.title, 20, 40)}" data-split>${split(a.title)}</h1>
-      <div class="when" data-r style="--d:150ms"><b>${String(p.d).padStart(2, '0')}</b><span>${when}</span></div>
+      ${breadcrumbs(P, [['Fotos', P.href('fotos/')], [excerpt(a.title, 40), '', 'title']])}
+      <div class="tags">${a.category ? `<span class="tag"${mark(P, 'category')}>${esc(a.category)}</span>` : ''}<span class="tag r"${mark(P, 'photos')}>${esc(photoCount(a))}</span></div>
+      <h1 class="h2 ${titleSize(a.title, 20, 40)}" data-split${mark(P, 'title')}>${split(a.title)}</h1>
+      <div class="when" data-r style="--d:150ms"${mark(P, 'date')}><b>${String(p.d).padStart(2, '0')}</b><span>${when}</span></div>
       ${credit}
       <div class="btns" data-r style="--d:250ms;margin-top:28px">
         <a class="btn btn-solid" href="#fotos">Ver as fotos <span class="arr">↓</span></a>
-        ${ev ? `<a class="btn btn-ghost" href="${eventUrl(P, ev)}">O evento</a>` : ''}
+        ${ev ? `<a class="btn btn-ghost" href="${eventUrl(P, ev)}"${mark(P, 'event')}>O evento</a>` : ''}
         <button class="btn btn-ghost sh" type="button" data-share="${esc(P.canonical)}" data-title="${esc(a.title)}" aria-label="Compartilhar o álbum">${ICON_SHARE}<span>Compartilhar</span></button>
       </div>
     </div>
-    <div class="media-glow" data-r style="--d:200ms">${pile(P, a, { count: false, eager: true })}</div>
+    <div class="media-glow" data-r style="--d:200ms"${mark(P, 'photos')}>${pile(P, a, { count: false, eager: true })}</div>
   </div>
   <div class="noise"></div>
 </section>`;
   const main = `${hero}
 <section class="panel light sec" id="fotos"><div class="wrap">
-  <div class="ph-head"><div><h2 class="h2 xs">${esc(photoCount(a))}</h2><p>Toque numa foto para ver grande e salvar.</p></div><button class="btn btn-ghost btn-sm dl" type="button" data-zip hidden>${ICON_SAVE} Baixar todas (.zip)</button></div>
+  <div class="ph-head"><div><h2 class="h2 xs"${mark(P, 'photos')}>${esc(photoCount(a))}</h2><p>Toque numa foto para ver grande e salvar.</p></div><button class="btn btn-ghost btn-sm dl" type="button" data-zip hidden>${ICON_SAVE} Baixar todas (.zip)</button></div>
   ${photoGrid(P, a)}
-  ${tagMe(a)}
+  ${tagMe(P, a)}
   ${more.length ? `<div class="more-fotos"><div class="more-head"><h2 class="h2 xs">Mais fotos</h2><a class="link" href="${P.href('fotos/')}">Todos os álbuns →</a></div><div class="albs row-x">${more.map((x) => albumCard(P, x)).join('')}</div></div>` : ''}
 </div></section>`;
   const ld = {
@@ -414,16 +414,17 @@ export function newsPage(P, n) {
   const others = P.news.filter((x) => x.id !== n.id).slice(0, 3);
   const showLede = n.summary && !sameStart(n.summary, n.body);
   const main = `${pageHero(P, {
-    crumbs: [['Radar Cultural', P.href('radar-cultural/')], [excerpt(n.title, 40)]],
+    crumbs: [['Radar Cultural', P.href('radar-cultural/')], [excerpt(n.title, 40), '', 'title']],
     eyebrow: [n.kicker, fmtLong(n.date), n.author && `por ${n.author}`].filter(Boolean).join(' · '),
     title: n.title,
     titleClass: titleSize(n.title, 40, 80),
     lead: showLede ? n.summary : '',
+    f: { eyebrow: 'kicker date author', title: 'title', lead: 'summary' },
   })}
 <section class="panel light sec">
-  ${n.image && n.image.src ? `<figure class="wrap" style="max-width:1040px;margin:0 auto clamp(40px,5vw,70px)"><div class="media wide">${img(P, n.image, { eager: true })}</div>${n.image.credit || n.image.alt ? `<figcaption style="margin-top:14px;font-size:14px;color:#6b6b6b">${esc([n.image.alt, n.image.credit && `Foto: ${n.image.credit}`].filter(Boolean).join(' · '))}</figcaption>` : ''}</figure>` : ''}
+  ${n.image && n.image.src ? `<figure class="wrap"${mark(P, 'image')} style="max-width:1040px;margin:0 auto clamp(40px,5vw,70px)"><div class="media wide">${img(P, n.image, { eager: true })}</div>${n.image.credit || n.image.alt ? `<figcaption style="margin-top:14px;font-size:14px;color:#6b6b6b">${esc([n.image.alt, n.image.credit && `Foto: ${n.image.credit}`].filter(Boolean).join(' · '))}</figcaption>` : ''}</figure>` : ''}
   <div class="detail">
-    <div class="prose dropcap">${md(P, n.body)}</div>
+    <div class="prose dropcap"${mark(P, 'body')}>${md(P, n.body)}</div>
     <aside class="aside">${shareBox(P, n.title, P.canonical)}<div class="box k"><b>Radar Cultural</b><a href="${P.href('radar-cultural/')}">Tudo no Radar →</a></div></aside>
   </div>
   ${others.length ? `<div class="wrap" style="margin-top:clamp(70px,8vw,120px)"><div class="more-head"><h2 class="h2 xs">Mais do Radar</h2><a class="link" href="${P.href('radar-cultural/')}">Ver tudo →</a></div><div class="ncards" style="margin-top:0">${others.map((x) => newsFeature(P, x)).join('')}</div></div>` : ''}
@@ -467,18 +468,19 @@ export function interviewPage(P, it) {
   const showLede = it.summary && !sameStart(it.summary, it.body);
   const firstName = String(it.name || '').split(/\s+/)[0].toUpperCase();
   const vid = youtubeId(it.video);
-  const qa = (it.qa || []).filter((x) => x.q || x.a);
+  // the rows with something in them, numbered as in the form (the preview's marks)
+  const qa = (it.qa || []).map((x, i) => ({ ...x, i })).filter((x) => x.q || x.a);
   const hero = `<section class="phero">
   ${stage()}
   <div class="phero-in phero-grid">
     <div>
-      ${breadcrumbs(P, [['Entrevistas', P.href('entrevistas/')], [it.name || excerpt(it.title, 30)]])}
-      <div class="tags">${interviewNo(P, it) ? `<span class="tag r">${esc(interviewNo(P, it))}</span>` : ''}${it.area ? `<span class="tag">${esc(it.area)}</span>` : ''}</div>
-      <h1 class="h2 ${titleSize(it.title, 24, 50)}" data-split>${split(it.title)}</h1>
-      ${it.role ? `<p class="lead" data-r style="--d:150ms;margin-top:22px">${esc(it.name)}${it.name ? ' — ' : ''}${esc(it.role)}</p>` : ''}
-      <p class="byline">${[it.author && `por ${esc(it.author)}`, esc(fmtLong(it.date))].filter(Boolean).join(' · ')}</p>
+      ${breadcrumbs(P, [['Entrevistas', P.href('entrevistas/')], [it.name || excerpt(it.title, 30), '', it.name ? 'name' : 'title']])}
+      <div class="tags">${interviewNo(P, it) ? `<span class="tag r">${esc(interviewNo(P, it))}</span>` : ''}${it.area ? `<span class="tag"${mark(P, 'area')}>${esc(it.area)}</span>` : ''}</div>
+      <h1 class="h2 ${titleSize(it.title, 24, 50)}" data-split${mark(P, 'title')}>${split(it.title)}</h1>
+      ${it.role ? `<p class="lead" data-r style="--d:150ms;margin-top:22px"${mark(P, 'role', 'name')}>${esc(it.name)}${it.name ? ' — ' : ''}${esc(it.role)}</p>` : ''}
+      <p class="byline"${mark(P, ...(it.author ? ['author', 'date'] : ['date']))}>${[it.author && `por ${esc(it.author)}`, esc(fmtLong(it.date))].filter(Boolean).join(' · ')}</p>
     </div>
-    ${it.photo && it.photo.src ? `<div class="media-glow" data-r style="--d:200ms"><div class="media cover">${img(P, it.photo, { eager: true })}<span class="num">${esc(interviewNo(P, it))}</span></div></div>` : ''}
+    ${it.photo && it.photo.src ? `<div class="media-glow" data-r style="--d:200ms"${mark(P, 'photo')}><div class="media cover">${img(P, it.photo, { eager: true })}<span class="num">${esc(interviewNo(P, it))}</span></div></div>` : ''}
   </div>
   <div class="noise"></div>
 </section>`;
@@ -486,12 +488,12 @@ export function interviewPage(P, it) {
 <section class="panel light sec">
   <div class="detail">
     <div>
-      ${showLede ? `<p class="lead" style="font-size:clamp(19px,1.6vw,23px);color:#222;max-width:720px;margin-bottom:1.4em">${esc(it.summary)}</p>` : ''}
-      ${it.quote ? `<blockquote class="pull" data-r><p class="q">“${quoteHtml(it.quote, it.highlight)}”</p>${it.name ? `<cite>— ${esc(it.name)}</cite>` : ''}</blockquote>` : ''}
-      ${it.body ? `<div class="prose${it.quote ? '' : ' dropcap'}">${md(P, it.body)}</div>` : ''}
-      ${qa.length ? `<div class="qa-full">${qa.map((x) => `<div><p class="q"><b>LLAMA</b>${esc(x.q)}</p><p class="a"><b>${esc(firstName || 'RESPOSTA')}</b>${esc(x.a).replace(/\n/g, '<br>')}</p></div>`).join('')}</div>` : ''}
-      ${vid ? `<div class="video"><a class="yt" href="https://www.youtube.com/watch?v=${vid}" data-yt="${vid}" target="_blank" rel="noopener" aria-label="Ver o vídeo: ${esc(it.title)}"><img src="https://i.ytimg.com/vi/${vid}/hqdefault.jpg" alt="" loading="lazy" decoding="async"><span class="yt-play" aria-hidden="true"></span></a></div>` : it.video ? `<p class="linkrow"><a class="btn btn-k" href="${esc(it.video)}" target="_blank" rel="noopener">Assistir ao vídeo <span class="arr">→</span></a></p>` : ''}
-      ${(it.links || []).length ? `<div class="linkrow">${it.links.map((l, i) => `<a class="btn ${i ? 'btn-ghost' : 'btn-k'} btn-sm" href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label)} <span class="arr">↗</span></a>`).join('')}</div>` : ''}
+      ${showLede ? `<p class="lead"${mark(P, 'summary')} style="font-size:clamp(19px,1.6vw,23px);color:#222;max-width:720px;margin-bottom:1.4em">${esc(it.summary)}</p>` : ''}
+      ${it.quote ? `<blockquote class="pull" data-r${mark(P, 'quote')}><p class="q">“${quoteHtml(it.quote, it.highlight, P)}”</p>${it.name ? `<cite${mark(P, 'name')}>— ${esc(it.name)}</cite>` : ''}</blockquote>` : ''}
+      ${it.body ? `<div class="prose${it.quote ? '' : ' dropcap'}"${mark(P, 'body')}>${md(P, it.body)}</div>` : ''}
+      ${qa.length ? `<div class="qa-full"${mark(P, 'qa')}>${qa.map((x) => `<div><p class="q"${mark(P, `qa.${x.i}.q`)}><b>LLAMA</b>${esc(x.q)}</p><p class="a"${mark(P, `qa.${x.i}.a`)}><b${mark(P, 'name')}>${esc(firstName || 'RESPOSTA')}</b>${esc(x.a).replace(/\n/g, '<br>')}</p></div>`).join('')}</div>` : ''}
+      ${vid ? `<div class="video"${mark(P, 'video')}><a class="yt" href="https://www.youtube.com/watch?v=${vid}" data-yt="${vid}" target="_blank" rel="noopener" aria-label="Ver o vídeo: ${esc(it.title)}"><img src="https://i.ytimg.com/vi/${vid}/hqdefault.jpg" alt="" loading="lazy" decoding="async"><span class="yt-play" aria-hidden="true"></span></a></div>` : it.video ? `<p class="linkrow"${mark(P, 'video')}><a class="btn btn-k" href="${esc(it.video)}" target="_blank" rel="noopener">Assistir ao vídeo <span class="arr">→</span></a></p>` : ''}
+      ${(it.links || []).length ? `<div class="linkrow"${mark(P, 'links')}>${it.links.map((l, i) => `<a class="btn ${i ? 'btn-ghost' : 'btn-k'} btn-sm" href="${esc(l.url)}" target="_blank" rel="noopener"${mark(P, `links.${i}.label`, `links.${i}.url`)}>${esc(l.label)} <span class="arr">↗</span></a>`).join('')}</div>` : ''}
     </div>
     <aside class="aside">${shareBox(P, it.title, P.canonical)}<div class="box k"><b>Backstage</b><a href="${P.href('entrevistas/')}">Todas as entrevistas →</a></div></aside>
   </div>
@@ -525,13 +527,13 @@ export function artistPage(P, it) {
   ${stage()}
   <div class="phero-in phero-grid">
     <div>
-      ${breadcrumbs(P, [['Artistas', P.href('artistas/')], [it.name]])}
-      <div class="tags">${it.area ? `<span class="tag">${esc(it.area)}</span>` : ''}</div>
-      <h1 class="h2 ${titleSize(it.name, 24, 50)}" data-split>${split(it.name)}</h1>
-      ${it.role ? `<p class="lead" data-r style="--d:150ms;margin-top:22px">${esc(it.role)}</p>` : ''}
-      ${it.author ? `<p class="byline">por ${esc(it.author)}</p>` : ''}
+      ${breadcrumbs(P, [['Artistas', P.href('artistas/')], [it.name, '', 'name']])}
+      <div class="tags">${it.area ? `<span class="tag"${mark(P, 'area')}>${esc(it.area)}</span>` : ''}</div>
+      <h1 class="h2 ${titleSize(it.name, 24, 50)}" data-split${mark(P, 'name')}>${split(it.name)}</h1>
+      ${it.role ? `<p class="lead" data-r style="--d:150ms;margin-top:22px"${mark(P, 'role')}>${esc(it.role)}</p>` : ''}
+      ${it.author ? `<p class="byline"${mark(P, 'author')}>por ${esc(it.author)}</p>` : ''}
     </div>
-    ${it.photo && it.photo.src ? `<div class="media-glow" data-r style="--d:200ms"><div class="media cover">${img(P, it.photo, { eager: true })}</div></div>` : ''}
+    ${it.photo && it.photo.src ? `<div class="media-glow" data-r style="--d:200ms"${mark(P, 'photo')}><div class="media cover">${img(P, it.photo, { eager: true })}</div></div>` : ''}
   </div>
   <div class="noise"></div>
 </section>`;
@@ -539,10 +541,10 @@ export function artistPage(P, it) {
 <section class="panel light sec">
   <div class="detail">
     <div>
-      ${showLede ? `<p class="lead" style="font-size:clamp(19px,1.6vw,23px);color:#222;max-width:720px;margin-bottom:1.4em">${esc(it.summary)}</p>` : ''}
-      ${it.body ? `<div class="prose dropcap">${md(P, it.body)}</div>` : ''}
-      ${vid ? `<div class="video"><a class="yt" href="https://www.youtube.com/watch?v=${vid}" data-yt="${vid}" target="_blank" rel="noopener" aria-label="Ver o vídeo: ${esc(it.name)}"><img src="https://i.ytimg.com/vi/${vid}/hqdefault.jpg" alt="" loading="lazy" decoding="async"><span class="yt-play" aria-hidden="true"></span></a></div>` : it.video ? `<p class="linkrow"><a class="btn btn-k" href="${esc(it.video)}" target="_blank" rel="noopener">Assistir ao vídeo <span class="arr">→</span></a></p>` : ''}
-      ${(it.links || []).length ? `<div class="linkrow">${it.links.map((l, i) => `<a class="btn ${i ? 'btn-ghost' : 'btn-k'} btn-sm" href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label)} <span class="arr">↗</span></a>`).join('')}</div>` : ''}
+      ${showLede ? `<p class="lead"${mark(P, 'summary')} style="font-size:clamp(19px,1.6vw,23px);color:#222;max-width:720px;margin-bottom:1.4em">${esc(it.summary)}</p>` : ''}
+      ${it.body ? `<div class="prose dropcap"${mark(P, 'body')}>${md(P, it.body)}</div>` : ''}
+      ${vid ? `<div class="video"${mark(P, 'video')}><a class="yt" href="https://www.youtube.com/watch?v=${vid}" data-yt="${vid}" target="_blank" rel="noopener" aria-label="Ver o vídeo: ${esc(it.name)}"><img src="https://i.ytimg.com/vi/${vid}/hqdefault.jpg" alt="" loading="lazy" decoding="async"><span class="yt-play" aria-hidden="true"></span></a></div>` : it.video ? `<p class="linkrow"${mark(P, 'video')}><a class="btn btn-k" href="${esc(it.video)}" target="_blank" rel="noopener">Assistir ao vídeo <span class="arr">→</span></a></p>` : ''}
+      ${(it.links || []).length ? `<div class="linkrow"${mark(P, 'links')}>${it.links.map((l, i) => `<a class="btn ${i ? 'btn-ghost' : 'btn-k'} btn-sm" href="${esc(l.url)}" target="_blank" rel="noopener"${mark(P, `links.${i}.label`, `links.${i}.url`)}>${esc(l.label)} <span class="arr">↗</span></a>`).join('')}</div>` : ''}
     </div>
     <aside class="aside">${shareBox(P, it.name, P.canonical)}<div class="box k"><b>Artistas</b><a href="${P.href('artistas/')}">Todos os artistas →</a></div></aside>
   </div>
@@ -556,12 +558,12 @@ export function artistPage(P, it) {
 export function sobrePage(P) {
   const s = P.data.sobre || {};
   const c = P.site.contact || {};
-  const main = `${pageHero(P, { crumbs: [['Sobre']], eyebrow: 'Quem é a LLama', title: s.title || 'Sobre', titleClass: titleSize(s.title || '', 14, 30), lead: s.lead })}
+  const main = `${pageHero(P, { crumbs: [['Sobre']], eyebrow: 'Quem é a LLama', title: s.title || 'Sobre', titleClass: titleSize(s.title || '', 14, 30), lead: s.lead, f: { title: 'title', lead: 'lead' } })}
 <section class="panel light sec">
   <div class="detail">
-    <div class="prose dropcap">${md(P, s.body)}</div>
+    <div class="prose dropcap"${mark(P, 'body')}>${md(P, s.body)}</div>
     <aside class="aside">
-      ${s.image && s.image.src ? `<div class="media wide">${img(P, s.image, { cls: 'bw' })}</div>` : ''}
+      ${s.image && s.image.src ? `<div class="media wide"${mark(P, 'image')}>${img(P, s.image, { cls: 'bw' })}</div>` : ''}
       <div class="box k"><b>Fala com a gente</b>${c.whatsapp ? `<a href="${esc(waLink(c.whatsapp))}" target="_blank" rel="noopener">WhatsApp ↗</a>` : ''}${c.email ? `<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>` : ''}${c.instagram ? `<a href="https://instagram.com/${esc(c.instagram)}" target="_blank" rel="noopener">@${esc(c.instagram)}</a>` : ''}</div>
     </aside>
   </div>
@@ -572,12 +574,13 @@ export function sobrePage(P) {
 export function contratePage(P) {
   const s = P.data.contrate || {};
   const link = waLink((P.site.contact || {}).whatsapp, s.ctaMessage) || rolêLink(P);
-  const services = (s.services || []).filter((x) => x.title);
-  const main = `${pageHero(P, { crumbs: [['Contrate']], eyebrow: 'Bora trabalhar junto?', title: s.title || 'Contrate', titleClass: titleSize(s.title || '', 14, 30), lead: s.lead })}
+  // the services with a name, numbered as in the form (the preview's marks)
+  const services = (s.services || []).map((x, n) => ({ ...x, n })).filter((x) => x.title);
+  const main = `${pageHero(P, { crumbs: [['Contrate']], eyebrow: 'Bora trabalhar junto?', title: s.title || 'Contrate', titleClass: titleSize(s.title || '', 14, 30), lead: s.lead, f: { title: 'title', lead: 'lead' } })}
 <section class="panel light sec"><div class="wrap">
-  ${services.length ? `<ol class="services">${services.map((x, i) => `<li data-r style="--d:${(i % 2) * 120}ms"><h2>${esc(x.title)}</h2>${x.text ? `<p>${esc(x.text)}</p>` : ''}</li>`).join('')}</ol>` : ''}
-  ${s.body ? `<div class="prose" style="margin-top:clamp(40px,5vw,70px)">${md(P, s.body)}</div>` : ''}
-  <div class="pull" style="margin-top:clamp(50px,6vw,80px);display:flex;flex-wrap:wrap;gap:24px;align-items:center;justify-content:space-between"><p class="q" style="max-width:720px">${esc(s.ctaText || 'Conta pra gente o que você precisa.')}</p><a class="btn btn-red" href="${esc(link)}" target="_blank" rel="noopener">${esc(s.ctaLabel || 'Chamar no WhatsApp')} <span class="arr">→</span></a></div>
+  ${services.length ? `<ol class="services"${mark(P, 'services')}>${services.map((x, i) => `<li data-r style="--d:${(i % 2) * 120}ms"${mark(P, `services.${x.n}`)}><h2${mark(P, `services.${x.n}.title`)}>${esc(x.title)}</h2>${x.text ? `<p${mark(P, `services.${x.n}.text`)}>${esc(x.text)}</p>` : ''}</li>`).join('')}</ol>` : ''}
+  ${s.body ? `<div class="prose"${mark(P, 'body')} style="margin-top:clamp(40px,5vw,70px)">${md(P, s.body)}</div>` : ''}
+  <div class="pull" style="margin-top:clamp(50px,6vw,80px);display:flex;flex-wrap:wrap;gap:24px;align-items:center;justify-content:space-between"><p class="q" style="max-width:720px"${mark(P, 'ctaText')}>${esc(s.ctaText || 'Conta pra gente o que você precisa.')}</p><a class="btn btn-red" href="${esc(link)}" target="_blank" rel="noopener"${mark(P, 'ctaLabel', 'ctaMessage')}>${esc(s.ctaLabel || 'Chamar no WhatsApp')} <span class="arr">→</span></a></div>
 </div></section>`;
   return layout(P, { title: s.title || 'Contrate', description: s.lead || 'Serviços de divulgação cultural da LLama Lab.', current: 'contrate', main, cta: false, edit: 'contrate' });
 }
