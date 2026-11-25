@@ -355,8 +355,10 @@ function imageField(field, get, set, ctx) {
     const alt = h('input', { type: 'text', value: v.alt || '', placeholder: 'Ex.: Banda tocando no palco do Galpão 7', oninput: () => set({ ...get(), alt: alt.value }) });
     const credit = slot === 'noticia' ? h('input', { type: 'text', value: v.credit || '', placeholder: 'Nome de quem fotografou', oninput: () => { const next = { ...get(), credit: credit.value }; if (!credit.value) delete next.credit; set(next); } }) : null;
     const thumb = h('div', { class: 'img-thumb' }, h('img', { src: store.assetUrl(v.src) || '', alt: '', draggable: 'false' }));
+    // null for the slots without cards to frame (flyer, notícia, página): add() skips it,
+    // where append() would write "null" under the image
     const frame = framing(slot, thumb, get, set);
-    box.append(h('div', { class: `img-card ${slot}` },
+    add(box, h('div', { class: `img-card ${slot}` },
       thumb,
       h('div', { class: 'img-meta' },
         h('span', { class: 'img-info' }, info),
