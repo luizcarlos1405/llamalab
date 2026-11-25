@@ -1,1 +1,495 @@
-[]
+[
+  {
+    "id": "gold-times-2026-11-08",
+    "event": "",
+    "title": "Gold Times",
+    "date": "2026-11-08",
+    "venue": "Douradina",
+    "category": "Festa",
+    "photographer": "Daniel Haas",
+    "instagram": "@dan_haas67",
+    "photos": [
+      {
+        "src": "images/fotos/gold-times-q6izzt.webp",
+        "thumb": "images/fotos/gold-times-q6izzt-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-r8lb8g.webp",
+        "thumb": "images/fotos/gold-times-r8lb8g-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-3c0z44.webp",
+        "thumb": "images/fotos/gold-times-3c0z44-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-1q6faj.webp",
+        "thumb": "images/fotos/gold-times-1q6faj-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-r4a9f6.webp",
+        "thumb": "images/fotos/gold-times-r4a9f6-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-dhbrko.webp",
+        "thumb": "images/fotos/gold-times-dhbrko-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-ke84bn.webp",
+        "thumb": "images/fotos/gold-times-ke84bn-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-7ex3se.webp",
+        "thumb": "images/fotos/gold-times-7ex3se-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-6j7m5g.webp",
+        "thumb": "images/fotos/gold-times-6j7m5g-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-h1ja1a.webp",
+        "thumb": "images/fotos/gold-times-h1ja1a-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-6au792.webp",
+        "thumb": "images/fotos/gold-times-6au792-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-rajrjl.webp",
+        "thumb": "images/fotos/gold-times-rajrjl-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-qydjhp.webp",
+        "thumb": "images/fotos/gold-times-qydjhp-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-c40d6s.webp",
+        "thumb": "images/fotos/gold-times-c40d6s-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-87r9tt.webp",
+        "thumb": "images/fotos/gold-times-87r9tt-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-9iv9h5.webp",
+        "thumb": "images/fotos/gold-times-9iv9h5-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-0e2ae9.webp",
+        "thumb": "images/fotos/gold-times-0e2ae9-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-ts8wi5.webp",
+        "thumb": "images/fotos/gold-times-ts8wi5-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-r74jhz.webp",
+        "thumb": "images/fotos/gold-times-r74jhz-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-z5b7di.webp",
+        "thumb": "images/fotos/gold-times-z5b7di-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-nihygh.webp",
+        "thumb": "images/fotos/gold-times-nihygh-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-jbazsq.webp",
+        "thumb": "images/fotos/gold-times-jbazsq-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-y7xshd.webp",
+        "thumb": "images/fotos/gold-times-y7xshd-mini.webp",
+        "w": 1024,
+        "h": 683
+      },
+      {
+        "src": "images/fotos/gold-times-6y41lg.webp",
+        "thumb": "images/fotos/gold-times-6y41lg-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-4jfgj9.webp",
+        "thumb": "images/fotos/gold-times-4jfgj9-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-l7yef0.webp",
+        "thumb": "images/fotos/gold-times-l7yef0-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-66qteu.webp",
+        "thumb": "images/fotos/gold-times-66qteu-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-obu5yf.webp",
+        "thumb": "images/fotos/gold-times-obu5yf-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-th5y3n.webp",
+        "thumb": "images/fotos/gold-times-th5y3n-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-kzfzri.webp",
+        "thumb": "images/fotos/gold-times-kzfzri-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-getuwi.webp",
+        "thumb": "images/fotos/gold-times-getuwi-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-f0fd5t.webp",
+        "thumb": "images/fotos/gold-times-f0fd5t-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-2fvg1v.webp",
+        "thumb": "images/fotos/gold-times-2fvg1v-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-zvg3pc.webp",
+        "thumb": "images/fotos/gold-times-zvg3pc-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-10vng2.webp",
+        "thumb": "images/fotos/gold-times-10vng2-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-3sptdx.webp",
+        "thumb": "images/fotos/gold-times-3sptdx-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-2y240e.webp",
+        "thumb": "images/fotos/gold-times-2y240e-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-8s5gvz.webp",
+        "thumb": "images/fotos/gold-times-8s5gvz-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-4cnxsr.webp",
+        "thumb": "images/fotos/gold-times-4cnxsr-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-njt5pr.webp",
+        "thumb": "images/fotos/gold-times-njt5pr-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-zk5a2a.webp",
+        "thumb": "images/fotos/gold-times-zk5a2a-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-23krq5.webp",
+        "thumb": "images/fotos/gold-times-23krq5-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-vs44h9.webp",
+        "thumb": "images/fotos/gold-times-vs44h9-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-tsvjrp.webp",
+        "thumb": "images/fotos/gold-times-tsvjrp-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-dvhpei.webp",
+        "thumb": "images/fotos/gold-times-dvhpei-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-rdqdgx.webp",
+        "thumb": "images/fotos/gold-times-rdqdgx-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-3y6qgk.webp",
+        "thumb": "images/fotos/gold-times-3y6qgk-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-h4ua6w.webp",
+        "thumb": "images/fotos/gold-times-h4ua6w-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-543nd3.webp",
+        "thumb": "images/fotos/gold-times-543nd3-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-py0i19.webp",
+        "thumb": "images/fotos/gold-times-py0i19-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-p7n984.webp",
+        "thumb": "images/fotos/gold-times-p7n984-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-iakn34.webp",
+        "thumb": "images/fotos/gold-times-iakn34-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-vggdx8.webp",
+        "thumb": "images/fotos/gold-times-vggdx8-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-zwznbz.webp",
+        "thumb": "images/fotos/gold-times-zwznbz-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-vs9tam.webp",
+        "thumb": "images/fotos/gold-times-vs9tam-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-8q1j74.webp",
+        "thumb": "images/fotos/gold-times-8q1j74-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-x62yjl.webp",
+        "thumb": "images/fotos/gold-times-x62yjl-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-j57d7c.webp",
+        "thumb": "images/fotos/gold-times-j57d7c-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-gq4gcf.webp",
+        "thumb": "images/fotos/gold-times-gq4gcf-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-qzfdzn.webp",
+        "thumb": "images/fotos/gold-times-qzfdzn-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-99b69n.webp",
+        "thumb": "images/fotos/gold-times-99b69n-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-52gwa4.webp",
+        "thumb": "images/fotos/gold-times-52gwa4-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-us2k5f.webp",
+        "thumb": "images/fotos/gold-times-us2k5f-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-fml97t.webp",
+        "thumb": "images/fotos/gold-times-fml97t-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-bpueck.webp",
+        "thumb": "images/fotos/gold-times-bpueck-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-vvziy4.webp",
+        "thumb": "images/fotos/gold-times-vvziy4-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-0muc1v.webp",
+        "thumb": "images/fotos/gold-times-0muc1v-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-fneony.webp",
+        "thumb": "images/fotos/gold-times-fneony-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-vu14cc.webp",
+        "thumb": "images/fotos/gold-times-vu14cc-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-46fw2r.webp",
+        "thumb": "images/fotos/gold-times-46fw2r-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-jay9sz.webp",
+        "thumb": "images/fotos/gold-times-jay9sz-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-gjw6z2.webp",
+        "thumb": "images/fotos/gold-times-gjw6z2-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-050zej.webp",
+        "thumb": "images/fotos/gold-times-050zej-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-mz350n.webp",
+        "thumb": "images/fotos/gold-times-mz350n-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-xrv0jy.webp",
+        "thumb": "images/fotos/gold-times-xrv0jy-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-p2no5x.webp",
+        "thumb": "images/fotos/gold-times-p2no5x-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-so4l4a.webp",
+        "thumb": "images/fotos/gold-times-so4l4a-mini.webp",
+        "w": 1024,
+        "h": 683
+      },
+      {
+        "src": "images/fotos/gold-times-y0un9w.webp",
+        "thumb": "images/fotos/gold-times-y0un9w-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-37nt5q.webp",
+        "thumb": "images/fotos/gold-times-37nt5q-mini.webp",
+        "w": 683,
+        "h": 1024
+      },
+      {
+        "src": "images/fotos/gold-times-pj1g6k.webp",
+        "thumb": "images/fotos/gold-times-pj1g6k-mini.webp",
+        "w": 683,
+        "h": 1024
+      }
+    ],
+    "cover": "images/fotos/gold-times-q6izzt.webp"
+  }
+]
