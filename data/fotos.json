@@ -2,7 +2,7 @@
   {
     "id": "gold-times-2026-11-08",
     "event": "",
-    "title": "Gold Times",
+    "title": "3ª Paquera Gold Times",
     "date": "2026-11-08",
     "venue": "Douradina",
     "category": "Festa",
@@ -10,8 +10,8 @@
     "instagram": "@dan_haas67",
     "photos": [
       {
-        "src": "images/fotos/gold-times-q6izzt.webp",
-        "thumb": "images/fotos/gold-times-q6izzt-mini.webp",
+        "src": "images/fotos/gold-times-2y240e.webp",
+        "thumb": "images/fotos/gold-times-2y240e-mini.webp",
         "w": 683,
         "h": 1024
       },
@@ -222,12 +222,6 @@
       {
         "src": "images/fotos/gold-times-3sptdx.webp",
         "thumb": "images/fotos/gold-times-3sptdx-mini.webp",
-        "w": 683,
-        "h": 1024
-      },
-      {
-        "src": "images/fotos/gold-times-2y240e.webp",
-        "thumb": "images/fotos/gold-times-2y240e-mini.webp",
         "w": 683,
         "h": 1024
       },
@@ -490,6 +484,6 @@
         "h": 1024
       }
     ],
-    "cover": "images/fotos/gold-times-q6izzt.webp"
+    "cover": "images/fotos/gold-times-f0fd5t.webp"
   }
 ]
