@@ -260,7 +260,7 @@ Needs Node 20 or newer, no `npm install`.
 npm run dev            # builds and serves http://localhost:8080, rebuilding on every change
 PORT=3000 npm run dev  # another port
 npm run build          # just build into _site/
-npm run check          # after changing a page's template or the schema: the admin preview's marks (below)
+npm run check          # after changing a page's template, the schema, src/markdown.js or the long-text editor (below)
 ```
 
 ## When a deploy fails
@@ -357,6 +357,46 @@ While a token is saved, the public pages show a red pencil button in the corner.
     that limit) stops asking for a while; the messages are then as they were before. A cancelled run isn't a
     failure: a later push took its place in the queue, and its deploy carries the cancelled one's changes too.
 
+### Long texts: the visual editor
+
+The long texts (an event's description, a Radar story, an interview, an artist's profile, Sobre, Contrate's extra
+text) are edited visually: bold, subtitles, quotes, lists, links and images show as they're written, and nobody
+needs to know Markdown ([`src/admin/richtext.js`](src/admin/richtext.js)). Underneath they're still Markdown, in
+the dialect of [`src/markdown.js`](src/markdown.js), so the build, the preview, the image checks and an outdated
+admin read them as before.
+
+- **What a text can hold** is exactly what that dialect can say ([`src/admin/richdoc.js`](src/admin/richdoc.js)):
+  paragraphs with line breaks (Shift+Enter), subtitles, quotes, bulleted and numbered lists, rules, and images
+  with a caption and a description; bold, italic, strikethrough, code and links. Nothing else gets in, typed or
+  pasted: colours, fonts, sizes, underlining and alignment fall away. An event's description (`short: true` in
+  the schema) has no subtitles or images: the flyer is its image.
+- **Reading and writing:** a text becomes the editor's document through `renderMarkdown()`, the renderer the pages
+  use, so the editor reads it exactly as the site does. `toMarkdown()` turns the document back into Markdown,
+  writing only what the renderer reads back the same. Opening a text changes nothing, and editing a word changes
+  only that word: the 34 texts of 25/11/2026 come back byte for byte. `npm run check` sends every text in `data/`
+  and 2,000 random documents both ways.
+- **Images** come in through the **Imagem** button, the "+ Imagem" beside an empty line, by dragging a file in, or
+  by pasting one (a screenshot, a photo copied from WhatsApp). They're prepared and go up to the bucket like every
+  other image of the admin (slot `inline`), and the text keeps their path. Each has its caption under it, a
+  description for screen readers, and buttons to move it up or down, swap it or take it out; it can be dragged too.
+  An image pasted from another site (Google Docs, a web page) can't come along, because the site's
+  Content-Security-Policy would block it: it stays as a box asking for the file, and the text leaves it out until
+  then.
+- **Pasting** from Google Docs, Word or a web page keeps the formatting a text can hold. Plain text is read as
+  Markdown, so pasted Markdown comes formatted and addresses become links; Ctrl+Shift+V pastes it as it is.
+  Typing `## `, `- `, `1. ` or `> ` at the start of a line makes a subtitle, a list or a quote, and quotes become
+  “curly”.
+- **The preview** rings the block the caret is in, and a click on the page puts the caret there (the spotlight,
+  above).
+- **ProseMirror** ([prosemirror.net](https://prosemirror.net), MIT) does the editing. `node scripts/vendor.mjs`
+  bundles it into [`src/vendor/prosemirror.js`](src/vendor/prosemirror.js) (221 KB, 69 KB gzipped): it's the
+  only script that installs anything, in a temporary folder and at the versions it pins, so the site still has no
+  dependencies. Only the admin loads the bundle, the first time a form with a long text opens; visitors never
+  download it (the service worker keeps it in the admin's pack).
+- **The Markdown box**, the old textarea with its toolbar, shows when the editor can't load, and for whoever wants
+  to see the Markdown itself: `localStorage.setItem('llamalab:markdown', '1')` in the admin's console, then reload
+  (`removeItem` to go back).
+
 ### The Instagram post
 
 The editor picks a date range and gets the carousel, drawn in the browser
@@ -433,13 +473,15 @@ assets/               CSS, the public pages' JS (site.js; radio.js for the radio
                       for the Instagram post), logos, icons (icons/: the app's, drawn by scripts/icons.mjs)
 data/                 the content, as JSON (its images are in Cloudflare R2)
 scripts/build.mjs     static build; scripts/dev.mjs is the local server; scripts/icons.mjs draws the app icons;
-                      scripts/r2.mjs looks after the bucket
+                      scripts/r2.mjs looks after the bucket; scripts/check.mjs checks the admin's preview marks and
+                      long texts; scripts/vendor.mjs bundles ProseMirror
 src/schema.js         content model; src/config.js holds the site settings and image sizes
 src/render/           page templates, shared by the build and the admin preview
 src/sw.js             the service worker (offline copies), completed by the build
 src/admin/            the CMS: GitHub client, drafts store, forms, image processing, the bucket (r2.js) and the
-                      uploads to it (uploads.js), the albums' fields (photos.js), the Instagram post, the
-                      connection (net.js)
+                      uploads to it (uploads.js), the albums' fields (photos.js), the long-text editor (richtext.js,
+                      richdoc.js), the Instagram post, the connection (net.js)
+src/vendor/           ProseMirror, bundled by scripts/vendor.mjs, for the long-text editor (admin only)
 src/zip.js            the .zip writer (an album's photos, the Instagram post's slides)
 .github/workflows/    build and deploy to Pages
 ```
