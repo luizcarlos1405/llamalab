@@ -268,6 +268,13 @@ input:focus,textarea:focus{outline:0;border-color:var(--k);box-shadow:0 0 0 4px 
 .rt-fill{flex:1}
 .rt-doc{position:relative;min-height:260px;padding:20px 24px 28px;outline:0;color:var(--k);font:400 17px/1.7 var(--sans);word-wrap:break-word;white-space:pre-wrap;white-space:break-spaces;font-variant-ligatures:none;font-feature-settings:"liga" 0}
 .rt-short .rt-doc{min-height:130px}
+/* Above phone widths the text scrolls inside its box, which fits the window with its label, its
+   toolbar and the form's save bar (src/admin/richtext.js keeps the sizes). On phones it grows
+   with the text: a box that scrolls inside a page that scrolls is hard to handle by touch. */
+@media (min-width:641px){
+  .rt-doc{max-height:max(300px,calc(100vh - var(--rt-top,86px) - var(--rt-bar-h,52px) - var(--rt-bottom,96px) - 36px));overflow-y:auto;scrollbar-width:thin;scrollbar-color:#c6c6be transparent}
+  @supports (height:100dvh){.rt-doc{max-height:max(300px,calc(100dvh - var(--rt-top,86px) - var(--rt-bar-h,52px) - var(--rt-bottom,96px) - 36px))}}
+}
 .rt-doc>*+*{margin-top:.9em}
 .rt-doc h2{margin-top:1.3em;font:400 30px/1.05 var(--disp);text-transform:uppercase}
 .rt-doc h3,.rt-doc h4{margin-top:1.2em;font:400 24px/1.05 var(--disp);text-transform:uppercase}
@@ -295,7 +302,7 @@ input:focus,textarea:focus{outline:0;border-color:var(--k);box-shadow:0 0 0 4px 
 .rt-pic{position:relative;cursor:grab}
 /* tall photos at a size the text can still be followed in (the preview shows them as the page does) */
 .rt-pic{display:flex;justify-content:center;border-radius:12px;background:#ecece7}
-.rt-pic img{display:block;max-width:100%;max-height:440px;width:auto;height:auto;min-height:60px;border-radius:12px}
+.rt-pic img{display:block;max-width:100%;max-height:min(440px,50vh);width:auto;height:auto;min-height:60px;border-radius:12px}
 .rt-up{position:absolute;left:10px;bottom:10px;padding:7px 12px;border-radius:999px;background:rgba(10,10,10,.8);color:var(--w);font:600 12px/1.2 var(--sans)}
 .rt-up.err{background:#c62a14}
 .rt-up button{color:var(--w);font-weight:700;text-decoration:underline}

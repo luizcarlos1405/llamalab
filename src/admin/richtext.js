@@ -31,13 +31,36 @@ import { net } from './net.js';
 const FULL = makeSchema();
 const SHORT = makeSchema({ short: true });
 
-// The toolbar stays in sight under the admin's top bar (sticky at 12px) while a long text scrolls.
-function underTopBar() {
+// The editor fits the window. Its toolbar sticks under the admin's top bar (sticky at 12px), and
+// above phone widths its text scrolls inside a box short enough for the whole field (label,
+// toolbar, text) to fit between that bar and the form's save bar: admin.css reads --rt-top,
+// --rt-bottom and each editor's --rt-bar-h, kept up to date here.
+let page = { top: null, save: null };
+const sizes = new ResizeObserver((entries) => {
+  let refit = false;
+  for (const { target } of entries) {
+    if (target.classList.contains('rt-bar')) {
+      if (target.parentNode) target.parentNode.style.setProperty('--rt-bar-h', `${Math.round(target.getBoundingClientRect().height)}px`);
+    } else refit = true;
+  }
+  if (refit) fitScreen();
+});
+function fitScreen() {
   const top = document.querySelector('.top');
-  document.documentElement.style.setProperty('--rt-top', `${top ? Math.round(top.getBoundingClientRect().height) + 20 : 12}px`);
+  const save = document.querySelector('.ed-bar');
+  for (const [key, el] of [['top', top], ['save', save]]) {
+    if (page[key] === el) continue;
+    if (page[key]) sizes.unobserve(page[key]);
+    if (el) sizes.observe(el);
+    page = { ...page, [key]: el };
+  }
+  const css = document.documentElement.style;
+  css.setProperty('--rt-top', `${top ? Math.round(top.getBoundingClientRect().height) + 20 : 12}px`);
+  // the save bar sticks 14px above the window's bottom
+  css.setProperty('--rt-bottom', `${save ? Math.round(save.getBoundingClientRect().height) + 24 : 16}px`);
 }
-underTopBar();
-addEventListener('resize', () => requestAnimationFrame(underTopBar));
+fitScreen();
+addEventListener('resize', () => requestAnimationFrame(fitScreen));
 
 /* ---------- icons ---------- */
 
@@ -224,7 +247,7 @@ export function richEditor({ field, id, get, set, ctx }) {
         const after = where + figure.nodeSize;
         // a line to go on writing after it, when it's the last thing
         if (after >= tr.doc.content.size) tr = tr.insert(after, nodes.paragraph.create());
-        view.dispatch(tr);
+        view.dispatch(tr.scrollIntoView());
         pos = after;
       } catch (error) {
         view.dispatch(view.state.tr.setMeta(pendingKey, { remove: key }));
@@ -383,6 +406,12 @@ export function richEditor({ field, id, get, set, ctx }) {
     chip.hidden = !show;
     if (!show) return;
     const at = view.coordsAtPos($from.pos);
+    // not while the line is scrolled out of the text's box
+    const area = view.dom.getBoundingClientRect();
+    if (at.bottom < area.top + 4 || at.top > area.bottom - 4) {
+      chip.hidden = true;
+      return;
+    }
     const box = root.getBoundingClientRect();
     chip.style.top = `${Math.round((at.top + at.bottom) / 2 - box.top)}px`;
   };
@@ -490,7 +519,10 @@ export function richEditor({ field, id, get, set, ctx }) {
   });
   view.dom.addEventListener('focus', placeChip);
   view.dom.addEventListener('blur', () => setTimeout(placeChip, 0));
+  view.dom.addEventListener('scroll', placeChip, { passive: true });
   root.append(bar, view.dom, picker);
+  sizes.observe(bar);
+  requestAnimationFrame(fitScreen);
   if (chip) root.append(chip);
   refresh(view.state);
 
@@ -588,7 +620,7 @@ export function richEditor({ field, id, get, set, ctx }) {
       for (let i = 0; i <= index && i < doc.childCount; i += 1) n += renders(doc.child(i));
       return n;
     },
-    // the caret at the start of block n, and that line in the middle of the window
+    // the caret at the start of block n, and that block in sight
     go(n, behavior = 'smooth') {
       const { doc } = view.state;
       let count = 0;
@@ -603,8 +635,20 @@ export function richEditor({ field, id, get, set, ctx }) {
       view.dispatch(view.state.tr.setSelection(sel));
       view.focus();
       const dom = view.nodeDOM(at.offset);
-      const box = dom && dom.getBoundingClientRect ? dom.getBoundingClientRect() : view.coordsAtPos(sel.from);
-      window.scrollBy({ top: box.top - innerHeight / 2 + 40, behavior });
+      const el = dom && dom.getBoundingClientRect ? dom : null;
+      const box = view.dom;
+      if (box.scrollHeight > box.clientHeight + 1) {
+        // the text scrolls in its box: the whole field in sight under the top bar, and the block
+        // near the top of the box
+        const field = root.closest('.field') || root;
+        const top = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--rt-top')) || 86;
+        window.scrollBy({ top: field.getBoundingClientRect().top - top + 6, behavior });
+        if (el) box.scrollTo({ top: box.scrollTop + el.getBoundingClientRect().top - box.getBoundingClientRect().top - 24, behavior });
+      } else {
+        // it grows with the text (phones): the block in the middle of the window
+        const r = el ? el.getBoundingClientRect() : view.coordsAtPos(sel.from);
+        window.scrollBy({ top: r.top - innerHeight / 2 + 40, behavior });
+      }
     },
   };
   return root;
