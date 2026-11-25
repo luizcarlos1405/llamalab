@@ -348,7 +348,7 @@ export function richEditor({ field, id, get, set, ctx }) {
     nodes.figure ? button('image', 'Pôr uma imagem no texto', (state, dispatch) => {
       if (dispatch) pick((files) => addFiles(files));
       return true;
-    }, { label: 'Imagem', cls: 'rt-accent' }) : null,
+    }, { label: 'Imagem' }) : null,
     h('span', { class: 'rt-fill' }),
     button('undo', 'Desfazer (Ctrl+Z)', undo),
     button('redo', 'Refazer (Ctrl+Shift+Z)', redo));
