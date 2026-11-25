@@ -9,6 +9,9 @@
 // saying where it shows instead (offPage in src/schema.js), and every mark must name a field
 // that exists. Published pages must carry no marks. It isn't part of the build, so it can
 // never stop a deploy.
+//
+// It also checks the visual editor's way with the long texts (scripts/richdoc-check.mjs):
+// after a change to src/markdown.js or src/admin/richdoc.js.
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -17,6 +20,7 @@ import { COLLECTIONS, SINGLETONS, normalize } from '../src/schema.js';
 import { renderSite, renderPreview } from '../src/render/index.js';
 import { SITE } from '../src/config.js';
 import { todayISO } from '../src/util.js';
+import { checkLongTexts } from './richdoc-check.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const ROUTES = { site: 'home', sobre: 'sobre', contrate: 'contrate' };
@@ -128,8 +132,12 @@ for (const file of renderSite(data, opts)) {
   if (/ data-f(-top)?[=\s>]/.test(file.html)) problems.push(`${file.path}: a published page carries the preview's marks`);
 }
 
+const long = await checkLongTexts(ROOT);
+problems.push(...long.problems);
+
 if (problems.length) {
   for (const p of problems) console.error(`✗ ${p}`);
   process.exit(1);
 }
 console.log(`✓ All ${count} fields of the ${Object.keys({ ...SINGLETONS, ...COLLECTIONS }).length} forms have a place in their page's preview or a note; published pages carry no marks.`);
+console.log(`✓ The visual editor keeps all ${long.texts} long texts as they are, and ${long.random} random ones.`);
