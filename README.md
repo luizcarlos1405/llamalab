@@ -260,6 +260,7 @@ Needs Node 20 or newer, no `npm install`.
 npm run dev            # builds and serves http://localhost:8080, rebuilding on every change
 PORT=3000 npm run dev  # another port
 npm run build          # just build into _site/
+npm run check          # after changing a page's template or the schema: the admin preview's marks (below)
 ```
 
 ## When a deploy fails
@@ -313,6 +314,14 @@ While a token is saved, the public pages show a red pencil button in the corner.
   Artistas removed the artists' photos.
 - **Agenda, Radar Cultural, Entrevistas, Artistas, Fotos** list, search, filter, create, duplicate (events), edit and remove items.
   The editor shows a live preview of the real page, at desktop or phone width.
+- **The form and the preview point at each other** (`src/admin/spotlight.js`). The field in focus rings its places
+  in the preview, with its name, and the preview scrolls there unless one is in sight; in a long text the ring
+  follows the paragraph the cursor is in. A field with no place on the page says why instead (empty, or where it
+  shows: `offPage` in the schema). The pointer on a part of the preview shows its field's name, and a click goes to
+  that field, in a long text to the paragraph. The templates mark the places with `data-f` and the field's path in
+  the form (`mark()` in `src/render/parts.js`), in the preview only; the published pages carry no marks.
+  `npm run check` draws each form's page with every field filled in and fails when a field has neither a mark nor a
+  note, or a mark names a field that's gone. It isn't part of the build, so it never stops a deploy.
 - **Páginas** edits the home page settings, the radio's stations, contacts, Sobre and Contrate.
 - **Post da agenda** (Agenda → Post para o Instagram) turns the events of a date range into the "Agenda
   cultural" carousel the team posts on Instagram (see below).
