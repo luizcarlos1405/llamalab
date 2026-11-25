@@ -477,7 +477,10 @@ export function followFields(formEl, pv, model, fields) {
     };
     // what the schema says about the field, or the group it's in, when it isn't on the page
     const note = ((along(fields, path) || []).filter((f) => f.offPage).at(-1) || {}).offPage || '';
-    return { path, label: nameOf(at), empty, note, block: target.matches('textarea.md-text') ? blockAt(target) : 0 };
+    // in a long text, the block the caret is in (the visual editor knows; the Markdown box counts)
+    const rich = target.closest('.rt');
+    const block = rich && rich.rt ? rich.rt.block(target) : target.matches('textarea.md-text') ? blockAt(target) : 0;
+    return { path, label: nameOf(at), empty, note, block };
   };
   const show = (e) => {
     clearTimeout(off);
@@ -511,6 +514,10 @@ export function followFields(formEl, pv, model, fields) {
   formEl.addEventListener('keyup', caret);
   formEl.addEventListener('pointerup', caret);
   formEl.addEventListener('input', caret);
+  // the visual editor says when its caret or text changed (richtext.js)
+  formEl.addEventListener('rt-caret', (e) => {
+    if (e.target.contains(document.activeElement)) show(e);
+  });
 
   // The other way: a part clicked in the preview. Its field, or the first of its fields this
   // form has (a row's "qa.2" is its first field, "qa.2.q").
@@ -520,6 +527,17 @@ export function followFields(formEl, pv, model, fields) {
       .filter((c) => !c.disabled && c.type !== 'file' && c.type !== 'hidden' && c.getClientRects().length);
     const control = controls.find((c) => c.matches('textarea.md-text')) || controls[0];
     const behavior = reduced() ? 'auto' : 'smooth';
+    const rich = at.querySelector('.rt');
+    if (rich && rich.rt) {
+      // the visual editor: the caret at the start of the block clicked, and that block in view
+      if (block) rich.rt.go(block, behavior);
+      else {
+        rich.rt.focus();
+        at.scrollIntoView({ block: 'center', behavior });
+      }
+      show({ target: rich });
+      return;
+    }
     if (control && block && control.matches('textarea.md-text')) {
       // in a long text, the caret at the start of the paragraph clicked, and that line in view
       const offset = blockStart(control.value, block);
@@ -538,7 +556,7 @@ export function followFields(formEl, pv, model, fields) {
       const at = fieldFor(path);
       if (at) {
         const text = nameOf(at);
-        return { text, label: text, md: Boolean(at.querySelector('textarea.md-text')), go: (block) => go(at, block) };
+        return { text, label: text, md: Boolean(at.querySelector('textarea.md-text, .rt')), go: (block) => go(at, block) };
       }
     }
     // the nav and the footer, on every page, come from Capa e contatos

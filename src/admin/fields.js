@@ -46,7 +46,7 @@ export function buildForm(fields, ctx) {
       const first = el.querySelector('.field.invalid');
       if (first) {
         first.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        const input = first.querySelector('input,textarea');
+        const input = first.querySelector('input,textarea,[contenteditable="true"]');
         if (input) input.focus({ preventScroll: true });
       }
     },
@@ -120,7 +120,7 @@ function renderField(field, path, ctx) {
       return wrap(field, path, ta, { id, extra: counter(field, ta) });
     }
     case 'markdown':
-      return wrap(field, path, markdownEditor(field, id, get, set, ctx), { id });
+      return wrap(field, path, longText(field, id, get, set, ctx), { id });
     case 'boolean': {
       const input = h('input', { id, type: 'checkbox', checked: Boolean(get()), onchange: () => set(input.checked) });
       return h('div', { class: 'field f-boolean', dataset: { path: path.join('.') } },
@@ -161,7 +161,44 @@ function renderField(field, path, ctx) {
   }
 }
 
-/* ---------- Markdown ---------- */
+/* ---------- long texts ---------- */
+
+// The visual editor (richtext.js) and ProseMirror under it load the first time a form with a
+// long text opens. The Markdown box below shows instead when they can't load, and for whoever
+// wants to see the Markdown itself: localStorage.setItem('llamalab:markdown', '1').
+let rich = null;
+const loadRich = () => {
+  rich = rich || import('./richtext.js');
+  return rich;
+};
+
+function longText(field, id, get, set, ctx) {
+  let mode = '';
+  try { mode = localStorage.getItem('llamalab:markdown') || ''; } catch { /* storage blocked */ }
+  const plain = markdownEditor(field, id, get, set, ctx);
+  if (mode === '1') return plain;
+  // the box keeps its place while the editor loads (from the admin's cache, almost always)
+  const box = h('div', { class: 'rt-box loading' }, plain);
+  const shown = setTimeout(() => box.classList.remove('loading'), 1500);
+  loadRich().then(({ richEditor }) => {
+    const editor = richEditor({ field, id, get, set, ctx });
+    box.replaceChildren(editor);
+    // the label names the editor, and a click on it goes there
+    const label = box.closest('.field') && box.closest('.field').querySelector(':scope > .lbl-row label');
+    if (label) {
+      label.id = `${id}-label`;
+      label.removeAttribute('for');
+      editor.querySelector('.rt-doc').setAttribute('aria-labelledby', label.id);
+      label.addEventListener('click', () => editor.rt.focus());
+    }
+  }).catch((error) => {
+    console.warn('The visual editor did not load; the Markdown box stays.', error);
+  }).finally(() => {
+    clearTimeout(shown);
+    box.classList.remove('loading');
+  });
+  return box;
+}
 
 function markdownEditor(field, id, get, set, ctx) {
   const ta = h('textarea', { id, rows: 10, class: 'md-text', value: get() || '', placeholder: 'Escreva aqui. Deixe uma linha em branco entre os parágrafos.', oninput: () => set(ta.value) });

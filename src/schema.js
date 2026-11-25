@@ -25,7 +25,8 @@
 // a repository path such as "images/agenda/noite-do-rock.webp", w/h are the
 // stored pixel size and `focus` is a CSS object-position such as "50% 30%".
 // Markdown fields use the subset in src/markdown.js and may embed images as
-// ![texto alternativo](images/noticias/foo.webp "legenda").
+// ![texto alternativo](images/noticias/foo.webp "legenda"). The admin edits them visually
+// (src/admin/richtext.js); `short: true` leaves out subtitles and images (an event's description).
 
 import { SPOTIFY_PLAYLIST } from './util.js';
 import { PHOTOS } from './config.js';
@@ -64,7 +65,7 @@ export const COLLECTIONS = {
         key: 'summary', label: 'Chamada', type: 'textarea', maxLength: 120, hint: 'Uma ou duas frases sobre o rolê. Vai no post da agenda para o Instagram e nas prévias de link.', placeholder: 'Uma noite de rock autoral com três bandas da cidade',
         offPage: 'aparece na lista da agenda, nas prévias de link e no post do Instagram. Nesta página, só quando o evento não tem descrição.',
       },
-      { key: 'description', label: 'Descrição', type: 'markdown' },
+      { key: 'description', label: 'Descrição', type: 'markdown', short: true },
       { key: 'image', label: 'Flyer', type: 'image', slot: 'flyer', hint: 'O flyer aparece inteiro, sem corte.' },
       { key: 'link', label: 'Link de ingressos ou informações', type: 'url', placeholder: 'https://…' },
       { key: 'linkLabel', label: 'Texto do botão do link', type: 'text', maxLength: 30, placeholder: 'Comprar ingresso', offPage: 'o botão só aparece quando tem um link.' },
