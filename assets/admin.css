@@ -311,7 +311,11 @@ input:focus,textarea:focus{outline:0;border-color:var(--k);box-shadow:0 0 0 4px 
 .pv-devices{display:flex;gap:4px}
 .pv .chip{min-height:32px;padding:0 12px;font-size:11px;color:#ddd;border-color:#333}
 .pv .chip.on{background:var(--w);color:var(--k);border-color:var(--w)}
-.pv-stage{position:relative;height:calc(100vh - 230px);min-height:420px;border-radius:18px;overflow:hidden;background:#000}
+/* While the page scrolls, the preview sticks 86px from the top (.ed-preview) and stops 30px
+   above the save bar, which floats 14px from the bottom and is 66px tall: the gap the bar's
+   margin leaves at the end of the page. The preview's own padding, buttons and gaps take 66px.
+   At least 360px tall: windows down to 622px high (small laptops) keep the gap. */
+.pv-stage{position:relative;height:calc(100vh - 262px);min-height:360px;border-radius:18px;overflow:hidden;background:#000}
 .pv-frame{position:absolute;left:0;top:0;border:0;transform-origin:0 0;background:#0a0a0a}
 .pv-stage.mobile{display:flex;justify-content:center}
 .pv-stage.mobile .pv-frame{position:relative;flex:0 0 auto}
