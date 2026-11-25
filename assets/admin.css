@@ -295,7 +295,9 @@ input:focus,textarea:focus{outline:0;border-color:var(--k);box-shadow:0 0 0 4px 
 .rt-fig:hover,.rt-fig.sel{background:var(--p)}
 .rt-fig.sel{box-shadow:0 0 0 2px var(--k)}
 .rt-pic{position:relative;cursor:grab}
-.rt-pic img{display:block;width:100%;height:auto;min-height:60px;border-radius:12px;background:#ecece7}
+/* tall photos at a size the text can still be followed in (the preview shows them as the page does) */
+.rt-pic{display:flex;justify-content:center;border-radius:12px;background:#ecece7}
+.rt-pic img{display:block;max-width:100%;max-height:440px;width:auto;height:auto;min-height:60px;border-radius:12px}
 .rt-up{position:absolute;left:10px;bottom:10px;padding:7px 12px;border-radius:999px;background:rgba(10,10,10,.8);color:var(--w);font:600 12px/1.2 var(--sans)}
 .rt-up.err{background:#c62a14}
 .rt-up button{color:var(--w);font-weight:700;text-decoration:underline}
