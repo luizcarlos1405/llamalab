@@ -358,8 +358,11 @@ a:hover .bw,.bw:hover{filter:none}
 .dark .meta{color:var(--g)}.dark .meta .tag{color:var(--w)}
 .nf h3,.nf h2{font:400 clamp(34px,3.3vw,56px)/.95 var(--disp);text-transform:uppercase}
 .nf p{color:#555;max-width:560px}
-.uw{background:linear-gradient(currentColor,currentColor) 0 100%/0 3px no-repeat;transition:background-size .6s var(--ease);padding-bottom:2px}
-a:hover .uw{background-size:100% 3px}
+/* a title's hover marker: a red band behind the lower half of each line, swept through the lines in
+   reading order. It stays within its own line, so a title that wraps doesn't get a line across the next
+   one. Measured from the bottom of the letter box, which is Anton's descent (.33em) under the baseline */
+.uw{background:linear-gradient(var(--r),var(--r)) 0 calc(100% - .31em)/0 .4em no-repeat;transition:background-size .7s cubic-bezier(.6,0,.2,1)}
+a:hover .uw,a:focus-visible .uw{background-size:100% .4em}
 .nl{display:flex;flex-direction:column}
 .ni{display:grid;grid-template-columns:56px 1fr 52px;gap:18px;align-items:start;padding:26px 0;border-top:1.5px solid var(--k)}
 .ni:last-child{border-bottom:1.5px solid var(--k)}
