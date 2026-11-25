@@ -6,6 +6,7 @@ import { SITE } from '../config.js';
 import { todayISO } from '../util.js';
 import { h, debounce } from './dom.js';
 import * as store from './store.js';
+import { spotlight } from './spotlight.js';
 
 export function siteUrl() {
   const { hostname } = location;
@@ -23,11 +24,13 @@ export function previewHtml(data, route) {
   }, route);
 }
 
-// getData() returns the data to show, getRoute() the page ("agenda/<id>", "home"…).
+// getData() returns the data to show, getRoute() the page ("agenda/<id>", "home"…). The form
+// and the preview point at each other through spotlight() (src/admin/spotlight.js).
 export function previewPane({ getData, getRoute }) {
   let device = 'desktop';
   const frame = h('iframe', { class: 'pv-frame', title: 'Prévia da página', loading: 'eager' });
   const stage = h('div', { class: 'pv-stage' }, frame);
+  const spot = spotlight(stage, frame);
   const buttons = ['desktop', 'mobile'].map((d) => h('button', {
     type: 'button',
     class: `chip${d === device ? ' on' : ''}`,
@@ -54,6 +57,7 @@ export function previewPane({ getData, getRoute }) {
     frame.style.height = `${height}px`;
     frame.style.transform = `scale(${scale})`;
     stage.classList.toggle('mobile', device === 'mobile');
+    requestAnimationFrame(() => spot.refresh());
   };
   new ResizeObserver(layout).observe(stage);
 
@@ -79,11 +83,12 @@ export function previewPane({ getData, getRoute }) {
         const a = e.target.closest('a');
         if (a) e.preventDefault();
       }, true);
+      spot.refresh();
     };
     frame.srcdoc = html;
   }, 300);
 
   layout();
   update.flush();
-  return { el, update };
+  return { el, update, spotlight: (spec) => spot.show(spec), pick: (fn) => spot.pick(fn) };
 }

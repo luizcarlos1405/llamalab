@@ -11,6 +11,7 @@ import { isPersistent } from './idb.js';
 import { net, onNet, setOnline, keepData, markUpdated } from './net.js';
 import { buildForm } from './fields.js';
 import { previewPane, siteUrl } from './preview.js';
+import { followFields } from './spotlight.js';
 import { postView } from './post.js';
 import * as store from './store.js';
 import * as r2 from './r2.js';
@@ -1084,6 +1085,7 @@ function itemEditor(type, id, query) {
     },
   };
   const form = buildForm(t.fields, ctx);
+  followFields(form.el, pv, model, t.fields);
   const status = existing ? store.itemStatus(type, existing.id) : 'add';
   const published = existing && store.findBase(type, existing.id);
   const save = async () => {
@@ -1200,6 +1202,7 @@ function singletonEditor(name) {
     },
   };
   const form = buildForm(s.fields, ctx);
+  followFields(form.el, pv, model, s.fields);
   shell = editorShell({
     back: '#/paginas',
     backLabel: 'Páginas',

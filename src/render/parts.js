@@ -18,6 +18,16 @@ export const NAV = [
 
 export { symbols, llama, llamaUse, ring, wordmark, hash };
 
+// Where a field shows on the page, for the admin's live preview: its path in the form, as
+// data-f ("title", "hero.text", "qa.2.a"; several fields, separated by spaces). The admin rings
+// the places of the field being edited and takes a click on one to its field
+// (src/admin/spotlight.js). Published pages carry no marks. Rows of a list keep the form's
+// numbers, also where empty rows are left out. `npm run check` finds fields without a place
+// (or a note, offPage in src/schema.js) and marks of fields that are gone.
+export function mark(P, ...paths) {
+  return P.preview ? ` data-f="${esc(paths.join(' '))}"` : '';
+}
+
 // Link for "send us your event" / "I want to be interviewed": WhatsApp with a
 // ready-made message, falling back to e-mail, then to the Contrate page.
 export function rolêLink(P, which = 'event') {
@@ -42,7 +52,7 @@ export function nav(P, current = '') {
   return `<header class="nav" id="nav">
   <a class="brand" href="${P.href('')}" aria-label="LLama Lab — capa">${lockup}</a>
   <nav class="nav-links" aria-label="Seções">${links}</nav>
-  <div class="nav-cta">${radioStations(P).length ? somControl : '<span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>'}<a class="btn btn-solid" href="${esc(rolêLink(P))}" target="_blank" rel="noopener">${esc((P.site.cta || {}).eventLabel || 'Divulgue seu evento')} <span class="arr">→</span></a><button class="burger" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="menu"><i></i><i></i></button></div>
+  <div class="nav-cta">${radioStations(P).length ? somControl : '<span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>'}<a class="btn btn-solid" href="${esc(rolêLink(P))}" target="_blank" rel="noopener"${mark(P, 'cta.eventLabel', 'cta.eventMessage')}>${esc((P.site.cta || {}).eventLabel || 'Divulgue seu evento')} <span class="arr">→</span></a><button class="burger" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="menu"><i></i><i></i></button></div>
 </header>
 <div class="menu" id="menu" hidden>
   <div class="menu-top"><a href="${P.href('')}" aria-label="LLama Lab — capa">${lockup}</a><button class="close" type="button" aria-label="Fechar menu">×</button></div>
@@ -102,7 +112,8 @@ export function radio(P) {
 // enough times to fill the path even after site.js shifts it back by one phrase to make it flow
 // (about 14.5 units a letter at 30px; phones use bigger letters, so more than enough), and says
 // how many times in data-n.
-export function ribbons(top, bottom) {
+export function ribbons(top, bottom, P = null) {
+  const at = (path) => (P ? mark(P, path) : '');
   const PATH = 2600; // each path's length, in units (2561 and 2563)
   const line = (words, path) => {
     const list = (words || []).map((w) => String(w).trim()).filter(Boolean);
@@ -117,8 +128,8 @@ export function ribbons(top, bottom) {
       <path id="rpa" d="M-520 114C-362.6 148.5-196.3 190-80 150C240 40 520 60 760 140S1220 230 1540 70C1620 30 1800 20 1980 90"/>
       <path id="rpb" d="M-520 143.1C-337.1 104.4-144.8 45.2-80 70C260 200 640 210 940 120S1320 30 1540 150C1628.8 198.4 1808.7 227.3 1980 199.9"/>
     </defs>
-    <g class="rb-b"><use href="#rpb" class="rb-band"/><text class="rb-text">${line(bottom, 'rpb')}</text></g>
-    <g class="rb-a"><use href="#rpa" class="rb-band"/><text class="rb-text">${line(top, 'rpa')}</text></g>
+    <g class="rb-b"${at('ribbons.bottom')}><use href="#rpb" class="rb-band"/><text class="rb-text">${line(bottom, 'rpb')}</text></g>
+    <g class="rb-a"${at('ribbons.top')}><use href="#rpa" class="rb-band"/><text class="rb-text">${line(top, 'rpa')}</text></g>
   </svg>
 </div>`;
 }
@@ -155,33 +166,33 @@ export function footer(P, { withCta = true } = {}) {
   const c = P.site.contact || {};
   const cta = P.site.cta || {};
   const social = [
-    c.instagram && ['Instagram', `https://instagram.com/${c.instagram.replace(/^@/, '')}`],
-    c.tiktok && ['TikTok', `https://www.tiktok.com/@${c.tiktok.replace(/^@/, '')}`],
-    c.youtube && ['YouTube', c.youtube],
-    c.spotify && ['Spotify', c.spotify],
+    c.instagram && ['Instagram', `https://instagram.com/${c.instagram.replace(/^@/, '')}`, 'contact.instagram'],
+    c.tiktok && ['TikTok', `https://www.tiktok.com/@${c.tiktok.replace(/^@/, '')}`, 'contact.tiktok'],
+    c.youtube && ['YouTube', c.youtube, 'contact.youtube'],
+    c.spotify && ['Spotify', c.spotify, 'contact.spotify'],
   ].filter(Boolean);
   const year = (parseDate(P.today) || { y: new Date().getFullYear() }).y;
   const label = cta.eventLabel || 'Divulgue seu evento';
   const ctaHtml = withCta ? `<div class="cta">
-    <h2 class="h-cta"><span data-split>${split(cta.line1 || 'Tem um rolê')}</span><br><span data-split>${split(cta.line2 || 'rolando?', 120)}</span><br><span class="red" data-split>${split(cta.highlight || 'A gente espalha.', 240)}</span></h2>
+    <h2 class="h-cta"><span data-split${mark(P, 'cta.line1')}>${split(cta.line1 || 'Tem um rolê')}</span><br><span data-split${mark(P, 'cta.line2')}>${split(cta.line2 || 'rolando?', 120)}</span><br><span class="red" data-split${mark(P, 'cta.highlight')}>${split(cta.highlight || 'A gente espalha.', 240)}</span></h2>
     <div class="cta-row">
-      <p data-r>${esc(cta.text || '')}</p>
+      <p data-r${mark(P, 'cta.text')}>${esc(cta.text || '')}</p>
       <div class="side">
-        <a class="magnet" href="${esc(rolêLink(P))}" target="_blank" rel="noopener"><span class="sr">${esc(label)}</span><svg class="mt" viewBox="0 0 200 200" aria-hidden="true"><defs><path id="mc" d="M100 100m-84 0a84 84 0 1 1 168 0a84 84 0 1 1-168 0"/></defs><text><textPath href="#mc">${esc(label)} • ${esc(label)} • </textPath></text></svg><span class="ma" aria-hidden="true">→</span></a>
-        ${cta.interviewLabel ? `<a class="link" href="${esc(rolêLink(P, 'interview'))}" target="_blank" rel="noopener">${esc(cta.interviewLabel)} →</a>` : ''}
+        <a class="magnet" href="${esc(rolêLink(P))}" target="_blank" rel="noopener"${mark(P, 'cta.eventLabel', 'cta.eventMessage')}><span class="sr">${esc(label)}</span><svg class="mt" viewBox="0 0 200 200" aria-hidden="true"><defs><path id="mc" d="M100 100m-84 0a84 84 0 1 1 168 0a84 84 0 1 1-168 0"/></defs><text><textPath href="#mc">${esc(label)} • ${esc(label)} • </textPath></text></svg><span class="ma" aria-hidden="true">→</span></a>
+        ${cta.interviewLabel ? `<a class="link" href="${esc(rolêLink(P, 'interview'))}" target="_blank" rel="noopener"${mark(P, 'cta.interviewLabel', 'cta.interviewMessage')}>${esc(cta.interviewLabel)} →</a>` : ''}
       </div>
     </div>
   </div>` : '';
   return `<section class="panel dark foot" id="contato">
   ${ctaHtml}
   <div class="fgrid">
-    <div><h2>LLama Lab</h2><p>${esc((P.site.footer || {}).text || FOOTER_TEXT)}</p><div class="btns">${c.whatsapp ? `<a class="btn btn-red btn-sm" href="${esc(waLink(c.whatsapp))}" target="_blank" rel="noopener">Chama no WhatsApp <span class="arr">→</span></a>` : ''}${installButton(' data-install hidden')}</div></div>
+    <div><h2>LLama Lab</h2><p${mark(P, 'footer.text')}>${esc((P.site.footer || {}).text || FOOTER_TEXT)}</p><div class="btns">${c.whatsapp ? `<a class="btn btn-red btn-sm" href="${esc(waLink(c.whatsapp))}" target="_blank" rel="noopener"${mark(P, 'contact.whatsapp')}>Chama no WhatsApp <span class="arr">→</span></a>` : ''}${installButton(' data-install hidden')}</div></div>
     <div><h2>Navegue</h2>${NAV.map((n) => `<a href="${P.href(n.href)}">${n.label}</a>`).join('')}</div>
-    ${social.length ? `<div><h2>Redes</h2>${social.map(([name, url]) => `<a href="${esc(url)}" target="_blank" rel="noopener">${name}</a>`).join('')}</div>` : ''}
-    <div><h2>Contato</h2>${c.email ? `<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>` : ''}${c.whatsapp ? `<a href="${esc(waLink(c.whatsapp))}" target="_blank" rel="noopener">${esc(formatPhone(c.whatsapp))}</a>` : ''}<a href="${P.href('sobre/')}">Dourados — MS</a></div>
+    ${social.length ? `<div><h2>Redes</h2>${social.map(([name, url, path]) => `<a href="${esc(url)}" target="_blank" rel="noopener"${mark(P, path)}>${name}</a>`).join('')}</div>` : ''}
+    <div><h2>Contato</h2>${c.email ? `<a href="mailto:${esc(c.email)}"${mark(P, 'contact.email')}>${esc(c.email)}</a>` : ''}${c.whatsapp ? `<a href="${esc(waLink(c.whatsapp))}" target="_blank" rel="noopener"${mark(P, 'contact.whatsapp')}>${esc(formatPhone(c.whatsapp))}</a>` : ''}<a href="${P.href('sobre/')}">Dourados — MS</a></div>
   </div>
   <div class="fwm" data-io><div class="peek" aria-hidden="true"><div class="pk">${llama('', { halo: true })}</div></div><span class="bubble" aria-hidden="true">Bora?</span>${wordmark('')}</div>
-  <div class="legal"><span>© ${year} LLama Lab — Laboratório Criativo${c.cnpj ? ` · CNPJ ${esc(c.cnpj)}` : ''}</span><span>Feito em Dourados, no volume máximo.<a class="team" href="${P.href('admin')}" data-app-only hidden>Área da equipe</a></span></div>
+  <div class="legal"><span${mark(P, 'contact.cnpj')}>© ${year} LLama Lab — Laboratório Criativo${c.cnpj ? ` · CNPJ ${esc(c.cnpj)}` : ''}</span><span>Feito em Dourados, no volume máximo.<a class="team" href="${P.href('admin')}" data-app-only hidden>Área da equipe</a></span></div>
 </section>`;
 }
 

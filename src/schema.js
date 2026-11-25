@@ -17,6 +17,10 @@
 // agenda event's id) and `hidden` (a text the form doesn't show; the album's cover, which the
 // photos field picks).
 //
+// A field's `offPage` is for the admin's live preview, where the field in focus lights up its
+// places on the page (src/admin/spotlight.js): when it has none there, the note says where it
+// shows instead. On a group, it covers the group's fields.
+//
 // Image fields hold null or { src, alt, w, h, credit?, focus? }, where `src` is
 // a repository path such as "images/agenda/noite-do-rock.webp", w/h are the
 // stored pixel size and `focus` is a CSS object-position such as "50% 30%".
@@ -56,12 +60,15 @@ export const COLLECTIONS = {
       { key: 'city', label: 'Cidade', type: 'text', default: 'Dourados', maxLength: 40, group: 'Onde' },
       { key: 'price', label: 'Entrada', type: 'text', maxLength: 30, placeholder: 'Grátis, R$ 20…' },
       { key: 'lineup', label: 'Atrações', type: 'text', maxLength: 140, hint: 'Separe com vírgulas. Aparece no cartaz.', placeholder: 'Ferrugem Elétrica, Os Tereré' },
-      { key: 'summary', label: 'Chamada', type: 'textarea', maxLength: 120, hint: 'Uma ou duas frases sobre o rolê. Vai no post da agenda para o Instagram e nas prévias de link.', placeholder: 'Uma noite de rock autoral com três bandas da cidade' },
+      {
+        key: 'summary', label: 'Chamada', type: 'textarea', maxLength: 120, hint: 'Uma ou duas frases sobre o rolê. Vai no post da agenda para o Instagram e nas prévias de link.', placeholder: 'Uma noite de rock autoral com três bandas da cidade',
+        offPage: 'aparece na lista da agenda, nas prévias de link e no post do Instagram. Nesta página, só quando o evento não tem descrição.',
+      },
       { key: 'description', label: 'Descrição', type: 'markdown' },
       { key: 'image', label: 'Flyer', type: 'image', slot: 'flyer', hint: 'O flyer aparece inteiro, sem corte.' },
       { key: 'link', label: 'Link de ingressos ou informações', type: 'url', placeholder: 'https://…' },
-      { key: 'linkLabel', label: 'Texto do botão do link', type: 'text', maxLength: 30, placeholder: 'Comprar ingresso' },
-      { key: 'featured', label: 'Destacar na capa', type: 'boolean', hint: 'O próximo evento destacado vira o "Próximo rolê" no topo da capa.' },
+      { key: 'linkLabel', label: 'Texto do botão do link', type: 'text', maxLength: 30, placeholder: 'Comprar ingresso', offPage: 'o botão só aparece quando tem um link.' },
+      { key: 'featured', label: 'Destacar na capa', type: 'boolean', hint: 'O próximo evento destacado vira o "Próximo rolê" no topo da capa.', offPage: 'destaca o evento na capa, como o "Próximo rolê".' },
     ],
   },
 
@@ -232,7 +239,7 @@ export const SINGLETONS = {
           { key: 'eventLabel', label: 'Botão redondo', type: 'text', maxLength: 26, placeholder: 'Divulgue seu evento' },
           { key: 'eventMessage', label: 'Mensagem pronta do WhatsApp (evento)', type: 'textarea', maxLength: 200 },
           { key: 'interviewLabel', label: 'Link de entrevista', type: 'text', maxLength: 30, placeholder: 'Quero dar entrevista' },
-          { key: 'interviewMessage', label: 'Mensagem pronta do WhatsApp (entrevista)', type: 'textarea', maxLength: 200 },
+          { key: 'interviewMessage', label: 'Mensagem pronta do WhatsApp (entrevista)', type: 'textarea', maxLength: 200, offPage: 'vai pronta no WhatsApp de quem toca no link de entrevista, que só aparece com um texto em "Link de entrevista".' },
         ],
       },
       {
@@ -256,6 +263,7 @@ export const SINGLETONS = {
       {
         key: 'radio', label: 'Rádio', type: 'group',
         hint: 'O rádio fica embaixo de todas as páginas: cada playlist do Spotify vira uma estação do dial, na ordem daqui. Sem estações, o rádio sai do site.',
+        offPage: 'o rádio fica de fora da prévia.',
         fields: [
           {
             key: 'stations', label: 'Estações', type: 'repeater', itemLabel: 'Estação', max: 12,
@@ -272,6 +280,7 @@ export const SINGLETONS = {
       },
       {
         key: 'seo', label: 'Busca e prévias de link', type: 'group',
+        offPage: 'aparece na aba do navegador, no Google e nas prévias de link, não na página.',
         fields: [
           { key: 'title', label: 'Título do site', type: 'text', maxLength: 70 },
           { key: 'description', label: 'Descrição', type: 'textarea', maxLength: 200 },

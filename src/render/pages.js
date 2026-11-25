@@ -8,7 +8,7 @@ import { layout } from './layout.js';
 import {
   split, ribbons, stage, pageHero, breadcrumbs, img, row, posterFollower, calendar, calendarList, eventUrl, eventLine, card, interviewUrl, interviewNo,
   quoteHtml, newsFeature, newsItem, chips, categoriesOf, shareBox, badge, rolêLink, llama, wordmark, hash,
-  albumUrl, albumCard, albumCover, photoCount, photoGrid, pile, tagMe, instagramOf, ICON_SAVE, ICON_SHARE,
+  albumUrl, albumCard, albumCover, photoCount, photoGrid, pile, tagMe, instagramOf, ICON_SAVE, ICON_SHARE, mark,
 } from './parts.js';
 
 const md = (P, text) => renderMarkdown(text, { url: P.url, image: (p) => P.imageSize(p) });
@@ -29,21 +29,23 @@ export function homePage(P) {
   const nextHtml = next
     ? `<a class="next" href="${eventUrl(P, next)}"><b>${String(p.d).padStart(2, '0')}</b><span><small>Próximo rolê · ${esc(WEEKDAYS[weekday(next.date)].split('-')[0])}${next.time ? ` ${esc(fmtTime(next.time))}` : ''}</small><em>${esc(next.title)}</em></span></a>`
     : '';
-  const hero = `<section class="hero" id="top">
+  // In the preview, data-f-top: the stage stays put while the page slides up over it, so its
+  // fields are only whole at the very top (src/admin/spotlight.js scrolls there).
+  const hero = `<section class="hero" id="top"${P.preview ? ' data-f-top' : ''}>
   <div class="hero-in">
     ${stage()}<div class="floor"></div>
     <div class="hero-wm">${wordmark('')}</div>
     <div class="hero-l">
-      <p class="eyebrow"><span class="live"></span>${esc(h.eyebrow || 'Agenda cultural · Dourados–MS')}</p>
-      <h1 class="h1">${esc(h.title || 'Cultura que faz')} <span class="red">${esc(h.highlight || 'barulho.')}</span></h1>
+      <p class="eyebrow"${mark(P, 'hero.eyebrow')}><span class="live"></span>${esc(h.eyebrow || 'Agenda cultural · Dourados–MS')}</p>
+      <h1 class="h1"${mark(P, 'hero.title')}>${esc(h.title || 'Cultura que faz')} <span class="red"${mark(P, 'hero.highlight')}>${esc(h.highlight || 'barulho.')}</span></h1>
       ${nextHtml}
     </div>
     <div class="hero-r">
-      ${h.text ? `<p class="lead">${esc(h.text)}</p>` : ''}
+      ${h.text ? `<p class="lead"${mark(P, 'hero.text')}>${esc(h.text)}</p>` : ''}
       <div class="btns"><a class="btn btn-solid" href="${P.href('agenda/')}">Ver agenda <span class="arr">→</span></a><a class="btn btn-ghost" href="${P.href('entrevistas/')}">Entrevistas</a></div>
     </div>
     <div class="hero-llama"><div class="rise"><div class="glow"></div><div class="sway">${llama('')}</div></div></div>
-    ${ribbons(r.top, r.bottom)}
+    ${ribbons(r.top, r.bottom, P)}
     <div class="noise"></div>
   </div>
 </section>`;
@@ -60,7 +62,7 @@ function agendaPanel(P) {
   const recent = P.past.slice(0, 3);
   const body = list.length
     ? `<div class="dates-wrap"><ol class="dates">${list.map((ev, i) => row(P, ev, i).replace('<li ', `<li data-month="${ev.date.slice(0, 7)}" `)).join('')}</ol>${posterFollower()}</div>`
-    : `<div class="empty" data-r><p class="h3">Nenhum rolê marcado por enquanto.</p><p>Tem show, peça, sarau ou feira vindo aí? Manda pra gente que a LLama Lab coloca na agenda.</p><a class="btn btn-k" href="${esc(rolêLink(P))}" target="_blank" rel="noopener">Enviar meu evento <span class="arr">→</span></a></div>
+    : `<div class="empty" data-r><p class="h3">Nenhum rolê marcado por enquanto.</p><p>Tem show, peça, sarau ou feira vindo aí? Manda pra gente que a LLama Lab coloca na agenda.</p><a class="btn btn-k" href="${esc(rolêLink(P))}" target="_blank" rel="noopener"${mark(P, 'cta.eventMessage')}>Enviar meu evento <span class="arr">→</span></a></div>
       ${recent.length ? `<div class="month-h" style="margin-top:clamp(50px,6vw,80px)"><h2>Já rolou</h2><span>ARQUIVO</span></div><div class="dates-wrap"><ol class="dates">${recent.map((ev, i) => row(P, ev, i, { past: true })).join('')}</ol>${posterFollower()}</div>` : ''}`;
   return `<section class="panel light sec" id="agenda">
   <div class="sec-head">
@@ -68,7 +70,7 @@ function agendaPanel(P) {
     <div class="months" data-r>${monthChips}<a class="link" href="${P.href('agenda/')}">Calendário completo →</a></div>
   </div>
   ${body}
-  ${list.length ? `<div class="agenda-foot" data-r><p>Tem evento cultural em Dourados? Manda pra gente que a LLama Lab coloca na agenda — e no volume máximo.</p><a class="btn btn-k" href="${esc(rolêLink(P))}" target="_blank" rel="noopener">Enviar meu evento <span class="arr">→</span></a></div>` : ''}
+  ${list.length ? `<div class="agenda-foot" data-r><p>Tem evento cultural em Dourados? Manda pra gente que a LLama Lab coloca na agenda — e no volume máximo.</p><a class="btn btn-k" href="${esc(rolêLink(P))}" target="_blank" rel="noopener"${mark(P, 'cta.eventMessage')}>Enviar meu evento <span class="arr">→</span></a></div>` : ''}
 </section>`;
 }
 
@@ -131,7 +133,7 @@ export function agendaPage(P) {
     const [y, m] = key.split('-').map(Number);
     return `<div class="month-block" data-month="${key}"><div class="month-h"><h2>${esc(monthLabel(y, m).split(' ')[0])}</h2><span>${y}</span></div><ol class="dates">${evs.map((ev) => row(P, ev, n++)).join('')}</ol></div>`;
   }).join('');
-  const empty = `<div class="empty"><p class="h3">Nenhum rolê marcado por enquanto.</p><p>Tem show, peça, sarau ou feira vindo aí? Manda pra gente que a LLama Lab coloca na agenda.</p><a class="btn btn-k" href="${esc(rolêLink(P))}" target="_blank" rel="noopener">Enviar meu evento <span class="arr">→</span></a></div>`;
+  const empty = `<div class="empty"><p class="h3">Nenhum rolê marcado por enquanto.</p><p>Tem show, peça, sarau ou feira vindo aí? Manda pra gente que a LLama Lab coloca na agenda.</p><a class="btn btn-k" href="${esc(rolêLink(P))}" target="_blank" rel="noopener"${mark(P, 'cta.eventMessage')}>Enviar meu evento <span class="arr">→</span></a></div>`;
   const past = P.past.length
     ? `<details class="past-list"${P.upcoming.length ? '' : ' open'}><summary><span class="h3">Já rolou</span></summary><ol class="dates">${P.past.map((ev, i) => row(P, ev, i, { past: true })).join('')}</ol></details>`
     : '';
@@ -156,7 +158,7 @@ export function agendaPage(P) {
       ${calendarList(P, P.upcoming)}
     </aside>
   </div>
-  <div class="wrap agenda-foot"><p>Tem evento cultural em Dourados? Manda pra gente que a LLama Lab coloca na agenda — e no volume máximo.</p><a class="btn btn-k" href="${esc(rolêLink(P))}" target="_blank" rel="noopener">Enviar meu evento <span class="arr">→</span></a></div>
+  <div class="wrap agenda-foot"><p>Tem evento cultural em Dourados? Manda pra gente que a LLama Lab coloca na agenda — e no volume máximo.</p><a class="btn btn-k" href="${esc(rolêLink(P))}" target="_blank" rel="noopener"${mark(P, 'cta.eventMessage')}>Enviar meu evento <span class="arr">→</span></a></div>
   <script type="application/json" id="agenda-data">${JSON.stringify(calData).replace(/</g, '\\u003c')}</script>
 </section>`;
   return layout(P, {
@@ -200,16 +202,16 @@ export function eventPage(P, ev) {
   const mapQuery = [ev.venue, ev.address, ev.city || 'Dourados', 'MS'].filter(Boolean).join(', ');
   const acts = splitList(ev.lineup);
   const rows = [
-    ['Quando', `${esc(whenText)}${ev.time ? ` · ${esc(fmtHours(ev))}` : ''}`],
-    where && ['Onde', `${esc(where)}${ev.venue || ev.address ? ` · <a href="https://www.google.com/maps/search/?api=1&amp;query=${encodeURIComponent(mapQuery)}" target="_blank" rel="noopener">ver no mapa ↗</a>` : ''}`],
-    ev.price && ['Entrada', esc(ev.price)],
-    acts.length && ['Atrações', esc(acts.join(' · '))],
-    ev.link && ['Link', `<a href="${esc(ev.link)}" target="_blank" rel="noopener">${esc(ev.linkLabel || ev.link.replace(/^https?:\/\/(www\.)?/, '').split(/[/?#]/)[0])} ↗</a>`],
+    ['Quando', `${esc(whenText)}${ev.time ? ` · ${esc(fmtHours(ev))}` : ''}`, ['date', 'endDate', 'time', 'endTime']],
+    where && ['Onde', `${esc(where)}${ev.venue || ev.address ? ` · <a href="https://www.google.com/maps/search/?api=1&amp;query=${encodeURIComponent(mapQuery)}" target="_blank" rel="noopener">ver no mapa ↗</a>` : ''}`, ['venue', 'address', 'city']],
+    ev.price && ['Entrada', esc(ev.price), ['price']],
+    acts.length && ['Atrações', esc(acts.join(' · ')), ['lineup']],
+    ev.link && ['Link', `<a href="${esc(ev.link)}" target="_blank" rel="noopener">${esc(ev.linkLabel || ev.link.replace(/^https?:\/\/(www\.)?/, '').split(/[/?#]/)[0])} ↗</a>`, ['link', 'linkLabel']],
   ].filter(Boolean);
   const v = hash(ev.id) % 5;
   const media = ev.image && ev.image.src
-    ? `<div class="media-glow" data-r style="--d:200ms"><div class="media">${img(P, ev.image, { eager: true, alt: ev.image.alt || `Flyer de ${ev.title}` })}</div></div>`
-    : `<div class="media-glow" data-r style="--d:200ms"><div class="poster on" data-v="${v}" style="position:relative;width:min(100%,380px);height:auto;aspect-ratio:25/33;scale:1;margin:0 auto"><div class="art"></div><div class="pi"><div class="pv">${esc(ev.category || 'Rolê')}</div><div><div class="pd">${String(p.d).padStart(2, '0')}</div><div class="pv" style="margin:8px 0 14px">${esc(MONTHS[p.m - 1].slice(0, 3).toUpperCase())} · ${esc(WEEKDAYS[weekday(ev.date)].slice(0, 3).toUpperCase())}</div><div class="pt">${esc(ev.title)}</div></div><div class="pv">${esc(ev.venue || 'Dourados')}</div></div></div></div>`;
+    ? `<div class="media-glow" data-r style="--d:200ms"><div class="media"${mark(P, 'image')}>${img(P, ev.image, { eager: true, alt: ev.image.alt || `Flyer de ${ev.title}` })}</div></div>`
+    : `<div class="media-glow" data-r style="--d:200ms"><div class="poster on" data-v="${v}"${mark(P, 'image')} style="position:relative;width:min(100%,380px);height:auto;aspect-ratio:25/33;scale:1;margin:0 auto"><div class="art"></div><div class="pi"><div class="pv"${mark(P, 'category')}>${esc(ev.category || 'Rolê')}</div><div><div class="pd">${String(p.d).padStart(2, '0')}</div><div class="pv" style="margin:8px 0 14px">${esc(MONTHS[p.m - 1].slice(0, 3).toUpperCase())} · ${esc(WEEKDAYS[weekday(ev.date)].slice(0, 3).toUpperCase())}</div><div class="pt"${mark(P, 'title')}>${esc(ev.title)}</div></div><div class="pv"${mark(P, 'venue')}>${esc(ev.venue || 'Dourados')}</div></div></div></div>`;
   const others = P.upcoming.filter((e) => e.id !== ev.id).slice(0, 4);
   const url = P.canonical;
   const album = P.albumOf.get(ev.id);
@@ -218,12 +220,12 @@ export function eventPage(P, ev) {
   <div class="phero-in phero-grid">
     <div>
       ${breadcrumbs(P, [['Agenda', P.href('agenda/')], [ev.title]])}
-      <div class="tags">${ev.category ? `<span class="tag">${esc(ev.category)}</span>` : ''}${ev.price ? `<span class="tag r">${esc(ev.price)}</span>` : ''}${past ? '<span class="stamp-past">Já rolou</span>' : ''}</div>
-      <h1 class="h2 ${titleSize(ev.title, 20, 40)}" data-split>${split(ev.title)}</h1>
-      <div class="when" data-r style="--d:150ms"><b>${String(p.d).padStart(2, '0')}</b><span>${esc(MONTHS[p.m - 1])} · ${p.y}<small>${esc(WEEKDAYS[weekday(ev.date)])}${ev.time ? ` · ${esc(fmtHours(ev))}` : ''}${multi ? ` · até ${esc(fmtShort(ev.endDate, false))}` : ''}</small><small>${esc(ev.venue || ev.city || '')}</small></span></div>
+      <div class="tags">${ev.category ? `<span class="tag"${mark(P, 'category')}>${esc(ev.category)}</span>` : ''}${ev.price ? `<span class="tag r"${mark(P, 'price')}>${esc(ev.price)}</span>` : ''}${past ? '<span class="stamp-past">Já rolou</span>' : ''}</div>
+      <h1 class="h2 ${titleSize(ev.title, 20, 40)}" data-split${mark(P, 'title')}>${split(ev.title)}</h1>
+      <div class="when" data-r style="--d:150ms"${mark(P, 'date')}><b>${String(p.d).padStart(2, '0')}</b><span>${esc(MONTHS[p.m - 1])} · ${p.y}<small${mark(P, 'time', 'endTime', 'endDate')}>${esc(WEEKDAYS[weekday(ev.date)])}${ev.time ? ` · ${esc(fmtHours(ev))}` : ''}${multi ? ` · até ${esc(fmtShort(ev.endDate, false))}` : ''}</small><small${mark(P, ev.venue ? 'venue' : 'city')}>${esc(ev.venue || ev.city || '')}</small></span></div>
       <div class="btns" data-r style="--d:250ms;margin-top:30px">
         ${album ? `<a class="btn btn-red" href="${albumUrl(P, album)}">Ver as ${esc(photoCount(album))} <span class="arr">→</span></a>` : ''}
-        ${ev.link ? `<a class="btn ${album ? 'btn-ghost' : 'btn-red'}" href="${esc(ev.link)}" target="_blank" rel="noopener">${esc(ev.linkLabel || 'Mais informações')} <span class="arr">→</span></a>` : ''}
+        ${ev.link ? `<a class="btn ${album ? 'btn-ghost' : 'btn-red'}" href="${esc(ev.link)}" target="_blank" rel="noopener"${mark(P, 'link', 'linkLabel')}>${esc(ev.linkLabel || 'Mais informações')} <span class="arr">→</span></a>` : ''}
         ${past ? '' : `<a class="btn btn-solid" href="${esc(googleCalendarLink(ev))}" target="_blank" rel="noopener">Salvar na agenda <span class="arr">→</span></a>`}
         <button class="btn btn-ghost" type="button" data-share="${esc(url)}" data-title="${esc(ev.title)}">Compartilhar</button>
       </div>
@@ -236,8 +238,8 @@ export function eventPage(P, ev) {
 <section class="panel light sec">
   <div class="detail">
     <div>
-      <dl class="ficha">${rows.map(([dt, dd]) => `<div><dt>${dt}</dt><dd>${dd}</dd></div>`).join('')}</dl>
-      ${ev.description || ev.summary ? `<div class="prose" style="margin-top:clamp(36px,4vw,56px)">${ev.description ? md(P, ev.description) : `<p>${esc(ev.summary)}</p>`}</div>` : ''}
+      <dl class="ficha">${rows.map(([dt, dd, paths]) => `<div${mark(P, ...paths)}><dt>${dt}</dt><dd>${dd}</dd></div>`).join('')}</dl>
+      ${ev.description || ev.summary ? `<div class="prose"${mark(P, ev.description ? 'description' : 'summary')} style="margin-top:clamp(36px,4vw,56px)">${ev.description ? md(P, ev.description) : `<p>${esc(ev.summary)}</p>`}</div>` : ''}
     </div>
     <aside class="aside">${shareBox(P, ev.title, url)}${past ? '' : `<div class="box"><b>Salvar</b><a href="${esc(googleCalendarLink(ev))}" target="_blank" rel="noopener">Google Agenda ↗</a><a href="${P.href(`agenda/${ev.id}/evento.ics`)}" download>Apple, Outlook (.ics)</a></div>`}<div class="box k"><b>Agenda</b><a href="${P.href('agenda/')}">Todos os rolês →</a></div></aside>
   </div>
