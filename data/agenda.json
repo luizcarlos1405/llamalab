@@ -423,5 +423,30 @@
     "link": "https://www.instagram.com/p/DgIW7OTpa8y/",
     "linkLabel": "Mais Informações",
     "featured": false
+  },
+  {
+    "id": "fresh-ink-festival-2026-12-19",
+    "title": "Fresh Ink Festival",
+    "category": "Festival",
+    "date": "2026-12-19",
+    "time": "12:30",
+    "endTime": "",
+    "endDate": "",
+    "venue": "O Pico Tatuaria",
+    "address": "",
+    "city": "Dourados",
+    "price": "",
+    "lineup": "Hyndira e DJs Jamba e Izabala",
+    "summary": "",
+    "description": "Dia 19 de Dezembro  no Pico Tatuaria, vai rolar um evento organizado e pensado no público que curte Tattoos e Piercings com aquele som de qualidade!\n“Um sabadão desses uma Lua deeeessas…” e é num Sabadão desses que se inicia, a partir de meio dia e meio (12:30h, JURO!) pra gente conseguir fazer aquela resenha durar até tarde, e lançar as tattoos mais incríveis e piercings.\nTeremos também, produtinhos artesanais, feitos com muito amor e zelo: brechó, panetones, docinhos, quadrinhos e coisinhas fofas dos nossos Artesãos colaboradores! Amou?!\nAlém de todo um ambiente Underground, som ao Vivo Rock n’ Roll (combina muito com o rabiscar do couro) e aquele som Zika dos DJs Jamba e Izabala! Quem vem?\nEstaremos vendendo Copão de uma Bebida Hard & Gostosinha por míseros 15 R$.. compensa demais!\nBora né?!\nRolê começa à tarde e acaba quando acabar!\nLocal: O Pico Tatuaria 📍\nHorário: 12:30 h\nRua Albino Torraca, 73.\nDourados - MS",
+    "image": {
+      "src": "images/agenda/fresh-ink-festival-ykzy.webp",
+      "alt": "Flyer de Fresh Ink Festival",
+      "w": 1080,
+      "h": 1350
+    },
+    "link": "",
+    "linkLabel": "",
+    "featured": false
   }
 ]
