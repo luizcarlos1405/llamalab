@@ -221,6 +221,29 @@
     "author": ""
   },
   {
+    "id": "made-in-90",
+    "name": "Made in 90",
+    "role": "Banda de rock alternativo",
+    "area": "Música",
+    "date": "2026-11-27",
+    "photo": {
+      "src": "images/artistas/made-in-90-nbw8.webp",
+      "alt": "Retrato de Made in 90",
+      "w": 960,
+      "h": 1200
+    },
+    "summary": "",
+    "body": "Formada em meados de 2015 na cidade de Dourados-MS, a banda Made in 90 é composta por quatro integrantes: Igor Além (vocal e guitarra), PH (vocal e guitarra), Rodrigo Dunha (contrabaixo) e Juanito (bateria).\n\nCom o repertório majoritariamente composto por clássicos do rock alternativo e indie, a banda é conhecida por apresentar shows animados e contagiantes, tocando de Nirvana a Arctic Monkeys, passando por Faith no More, Radiohead e outros grandes nomes.",
+    "video": "",
+    "links": [
+      {
+        "label": "Instagram",
+        "url": "https://www.instagram.com/bandamadein90/"
+      }
+    ],
+    "author": ""
+  },
+  {
     "id": "mc-anaranda",
     "name": "MC Anarandá",
     "role": "Rapper, cantora, professora, atriz e comunicadora",
