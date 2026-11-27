@@ -180,6 +180,29 @@
     "author": "Kati Duarte"
   },
   {
+    "id": "juanito-borges",
+    "name": "Juanito Borges",
+    "role": "Baterista Profissional",
+    "area": "Música",
+    "date": "2026-11-27",
+    "photo": {
+      "src": "images/artistas/juanito-borges-slfd.webp",
+      "alt": "Retrato de Juanito Borges",
+      "w": 769,
+      "h": 961
+    },
+    "summary": "",
+    "body": "Baterista profissional atuante no Mato Grosso do Sul, com sólida trajetória em palcos, festivais, gravações e projetos incentivados por políticas públicas de cultura. Com experiência em shows de médio e grande porte, eventos institucionais, circuitos culturais e estúdios profissionais, atua como músico freelance e integrante de diversos projetos autorais e coletivos. Sua linguagem musical transita entre rock, groove, música brasileira, alternativa e fusões urbanas, sempre com forte presença de palco, precisão rítmica e identidade artística.\n\nJuanito possui histórico em festivais, programas de TV, circulação interestadual, gravações oficiais e projetos contemplados por leis de incentivo como a Lei Aldir Blanc e a Lei Paulo Gustavo. Além da atuação artística, Juanito Borges desenvolve trabalho contínuo no ensino de música, com foco na bateria acústica, ministrando aulas particulares e atuando em academias de música da cidade de Dourados (MS).\n\nDesde 2016, é proprietário e idealizador do espaço “Central do Groove”, dedicado à formação musical, prática de conjunto e desenvolvimento rítmico. Desde 2023, integra o corpo docente da Academia de Música Santa Cecília, ampliando sua atuação na área educacional. Atualmente atua como baterista freelancer, músico de estúdio, performer e educador musical, colaborando com artistas, bandas, produtoras culturais e projetos formativos.",
+    "video": "",
+    "links": [
+      {
+        "label": "Instagram",
+        "url": "https://www.instagram.com/juanitoborgess/"
+      }
+    ],
+    "author": ""
+  },
+  {
     "id": "junior-de-oliveira",
     "name": "Junior de Oliveira",
     "role": "Artista circense, produtor e gestor cultural, iluminador, sonoplasta e técnico de montagem",
