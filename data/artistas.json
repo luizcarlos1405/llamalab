@@ -175,6 +175,29 @@
     "author": "Kati Duarte"
   },
   {
+    "id": "lumar",
+    "name": "Lumar",
+    "role": "Artista Visual, Grafiteiro e Artesão",
+    "area": "Artes visuais",
+    "date": "2026-11-27",
+    "photo": {
+      "src": "images/artistas/lumar-7eux.webp",
+      "alt": "Retrato de Lumar",
+      "w": 960,
+      "h": 1200
+    },
+    "summary": "",
+    "body": "Com apenas 22 anos, ele vem construindo uma linguagem visual marcada pela mistura entre afeto, identidade LGBTQIA+, memória periférica e elementos da fauna e flora sul-mato-grossense. Suas obras, que vão das paredes grafitadas às performances e peças de cerâmica, têm atraído olhares por onde passam, justamente por carregarem uma sinceridade rara e uma força estética que nasce de suas vivências mais profundas.\n*(Folha de Dourados)*",
+    "video": "",
+    "links": [
+      {
+        "label": "Instagram",
+        "url": "https://www.instagram.com/lumar.sant/"
+      }
+    ],
+    "author": ""
+  },
+  {
     "id": "mc-anaranda",
     "name": "MC Anarandá",
     "role": "Rapper, cantora, professora, atriz e comunicadora",
