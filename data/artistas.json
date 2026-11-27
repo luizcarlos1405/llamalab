@@ -46,6 +46,29 @@
     "author": "Kati Duarte"
   },
   {
+    "id": "argonautas",
+    "name": "Argonautas",
+    "role": "Banda de rock regional e nacional",
+    "area": "Música",
+    "date": "2026-11-27",
+    "photo": {
+      "src": "images/artistas/argonautas-20t3.webp",
+      "alt": "Retrato de Argonautas",
+      "w": 960,
+      "h": 1200
+    },
+    "summary": "",
+    "body": "Formada em 2024, a banda é composta por quatro integrantes: Lucas Mota (Vocal e Guitarra), Fred Canhete (Guitarra), Luis Eduardo (Bateria) e Arthur Guarienti (Baixo).\n\nO repertório homenageia grandes canções do rock regional (Almir Sater, Tetê Espindola, etc) e também nacional, como Rita Lee, Elis Regina, Cachorro Grande, entre outros.",
+    "video": "",
+    "links": [
+      {
+        "label": "Instagram",
+        "url": "https://www.instagram.com/argonautas_band/"
+      }
+    ],
+    "author": ""
+  },
+  {
     "id": "bro-mcs",
     "name": "Brô MCs",
     "role": "Grupo indígena de rap",
